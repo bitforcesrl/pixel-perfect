@@ -1,6 +1,6 @@
 {
   "name": "pixel-perfect",
-  "version": "0.1.0",
+  "version": "0.2.0-beta.1",
   "description": "Design QA tool: overlay a live website on its Figma design and spot every pixel that does not match.",
   "private": true,
   "license": "MIT",
