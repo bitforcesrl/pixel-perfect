@@ -1,0 +1,9 @@
+# Code owners are requested automatically as reviewers on every pull request.
+# With the "Require review from Code Owners" rule on `main`, a PR can only be
+# merged once one of them approves it.
+#
+# An organization name alone (@bitforcesrl) is not a valid owner: GitHub only
+# accepts users (@username) and teams (@org/team). The team must have at least
+# write access to this repository, or the line is ignored.
+
+* @bitforcesrl/maintainers
