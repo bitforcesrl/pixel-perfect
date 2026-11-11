@@ -1,0 +1,14 @@
+services:
+  pixel-perfect:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pixel-perfect
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

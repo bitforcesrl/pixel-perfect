@@ -1,0 +1,261 @@
+@import "tailwindcss";
+
+/*
+ * Pixel Perfect runs on press-room colour.
+ *
+ * The tool stacks two layers and asks whether they line up, so the palette
+ * names the layers rather than decorating them: cyan is always the site
+ * capture, magenta is always the Figma export, and violet — what those two
+ * inks make where they overlap — only shows up once both are on the canvas.
+ * Nothing here is an accent for its own sake.
+ */
+@theme {
+/*
+ * Surfaces run dark; every step from 500 up is a text colour and clears 7:1
+ * (AAA) on the lightest surface, because the type in this app is 11-12px and
+ * small type needs more contrast, not less. 600 carries control edges and
+ * graphics at 4.5:1; 700 and below are dividers and fills only.
+ */
+  --color-ink-void: #090b11;
+  --color-ink-950: #0b0e14;
+  --color-ink-900: #0f131b;
+  --color-ink-850: #141926;
+  --color-ink-800: #1e2634;
+  --color-ink-700: #3a4559;
+  --color-ink-600: #74829b;
+  --color-ink-500: #9aa7bd;
+  --color-ink-400: #adb9cc;
+  --color-ink-300: #c6d0e0;
+  --color-ink-200: #dfe6f2;
+  --color-ink-100: #f4f7fd;
+
+  --color-press-cyan: #4fdcf5;
+  --color-press-magenta: #ff77b6;
+  --color-press-violet: #a99cff;
+  --color-press-amber: #ffd06b;
+  --color-press-red: #ff8080;
+
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /*
+   * The inspector column is a tool palette, not a web sidebar: neutral
+   * photo-editor greys, so the coloured inks on the canvas are the only
+   * saturated thing on screen. These sit beside the ink ramp above rather than
+   * replacing it — the canvas, menus and modals keep the press palette.
+   */
+  --color-ps-950: #161616;
+  --color-ps-900: #1e1e1e;
+  --color-ps-850: #252525;
+  --color-ps-800: #2b2b2b;
+  --color-ps-750: #323232;
+  --color-ps-700: #3d3d3d;
+  --color-ps-600: #4a4a4a;
+  --color-ps-500: #6e6e6e;
+  --color-ps-400: #9b9b9b;
+  --color-ps-300: #c4c4c4;
+  --color-ps-200: #dcdcdc;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-ink-void);
+  color: var(--color-ink-100);
+  font-family: var(--font-sans);
+}
+
+/* One keyboard ring for the whole app, in the registered colour */
+:focus-visible {
+  outline: 2px solid var(--color-press-violet);
+  outline-offset: 1px;
+}
+
+/*
+ * The press colour bar: patches of each ink across the head of the sheet, the
+ * strip a printer reads to check the run. It wipes in once on load and then
+ * holds still.
+ */
+.press-bar {
+  height: 2px;
+  flex-shrink: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-press-cyan) 0 28px,
+    var(--color-press-magenta) 28px 56px,
+    var(--color-press-amber) 56px 84px,
+    var(--color-press-violet) 84px 112px
+  );
+  transform-origin: left center;
+  animation: press-ink 620ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+@keyframes press-ink {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Ink rings sit out of register until both layers line up, then close on the
+   crosshair — the only movement in the app that isn't a page load */
+.reg-ring {
+  mix-blend-mode: screen;
+  transition:
+    cx 320ms cubic-bezier(0.34, 1.3, 0.64, 1),
+    cy 320ms cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+/*
+ * ── The tool palette ────────────────────────────────────────────────────────
+ *
+ * Photoshop's panel column, rebuilt: every surface is a 1px black seam with a
+ * one-pixel highlight under it, controls are 2px-radius chips that press in
+ * when they are on, and fields are cut into the panel rather than sitting on
+ * it. Nothing here rounds more than 2px and nothing animates — the panel is
+ * meant to read as machined, and the eye is supposed to stay on the canvas.
+ */
+.ps-panel {
+  background: var(--color-ps-800);
+}
+
+/* Panel header bar — the strip you collapse a panel by */
+.ps-titlebar {
+  background: linear-gradient(180deg, #383838, #303030);
+  border-top: 1px solid #454545;
+  border-bottom: 1px solid #171717;
+}
+.ps-titlebar:hover {
+  background: linear-gradient(180deg, #3f3f3f, #363636);
+}
+
+/* Buttons: raised chip, pressed when `data-on` */
+.ps-btn {
+  background: linear-gradient(180deg, #3b3b3b, #2f2f2f);
+  border: 1px solid #1b1b1b;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 1px 0 rgba(0, 0, 0, 0.35);
+  border-radius: 2px;
+  color: var(--color-ps-200);
+}
+.ps-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #474747, #3a3a3a);
+  color: #fff;
+}
+.ps-btn:active:not(:disabled),
+.ps-btn[data-on="true"] {
+  background: #1d1d1d;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
+  border-color: #141414;
+  color: #fff;
+}
+.ps-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Fields are cut into the panel, not laid on it */
+.ps-input {
+  background: #1c1c1c;
+  border: 1px solid #121212;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+  color: var(--color-ps-200);
+}
+.ps-input:focus {
+  border-color: var(--color-press-violet);
+  outline: none;
+}
+
+/* The engraved rule that separates groups inside a panel */
+.ps-groove {
+  height: 2px;
+  background: linear-gradient(180deg, #1a1a1a 0 1px, #414141 1px 2px);
+}
+
+/* Segmented tool group — the pan/move pair reads as one control */
+.ps-segment {
+  background: #1d1d1d;
+  border: 1px solid #131313;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+}
+
+/* Photoshop's zoom slider: thin machined track, square handle */
+.ps-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 14px;
+  background: transparent;
+}
+.ps-range::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #1a1a1a;
+  border: 1px solid #121212;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.ps-range::-moz-range-track {
+  height: 4px;
+  background: #1a1a1a;
+  border: 1px solid #121212;
+  border-radius: 2px;
+}
+.ps-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -5px;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  border: 1px solid #151515;
+  background: linear-gradient(180deg, #bdbdbd, #8d8d8d);
+}
+.ps-range::-moz-range-thumb {
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  border: 1px solid #151515;
+  background: linear-gradient(180deg, #bdbdbd, #8d8d8d);
+}
+
+/* Dark, thin scrollbars — the canvas is the thing being looked at */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-700) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-ink-700);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-ink-600);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .press-bar {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# Git pre-commit hook: blocks the commit when gitleaks finds secrets
+# (API keys, tokens, passwords, private keys...) in the STAGED changes.
+#
+# Only the staged diff is scanned, not the whole history, so it runs in
+# milliseconds. Installed by scripts/install-git-hooks.mjs (runs on `npm i`).
+#
+# Bypass in an emergency (false positive): git commit --no-verify
+# Better: mark the line with a `gitleaks:allow` comment, or add the
+# finding's fingerprint to .gitleaksignore.
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  # Missing tool must not block contributors who have not installed it yet,
+  # but they must know the check was skipped.
+  echo "⚠️  gitleaks not installed: secret scan SKIPPED."
+  echo "   Install it: brew install gitleaks  (or see https://github.com/gitleaks/gitleaks)"
+  exit 0
+fi
+
+# --staged     : scan only what is about to be committed
+# --redact     : never print the secret itself in the terminal output
+# --verbose    : show file, line and rule for each finding
+gitleaks git --pre-commit --staged --redact --verbose --no-banner
+status=$?
+
+if [ $status -ne 0 ]; then
+  echo ""
+  echo "❌ Commit blocked: gitleaks found possible secrets in the staged changes."
+  echo "   Remove them (use .env, which is git-ignored) and stage again."
+  echo "   False positive? Add a 'gitleaks:allow' comment on that line."
+  exit 1
+fi
+
+exit 0
