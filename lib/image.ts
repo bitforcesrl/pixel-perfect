@@ -1,4 +1,4 @@
-import {unpackTiles} from './tile-container';
+import { unpackTiles } from './tile-container';
 
 export interface ImageSize {
   width: number;
@@ -13,7 +13,7 @@ export async function readImageSize(objectUrl: string): Promise<ImageSize> {
   const tiled = await unpackTiles(await (await fetch(objectUrl)).blob()).catch(
     () => null,
   );
-  if (tiled) return {width: tiled.width, height: tiled.height};
+  if (tiled) return { width: tiled.width, height: tiled.height };
   return decodeImageSize(objectUrl);
 }
 
@@ -21,7 +21,7 @@ function decodeImageSize(objectUrl: string): Promise<ImageSize> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () =>
-      resolve({width: img.naturalWidth, height: img.naturalHeight});
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
     img.onerror = () => reject(new Error('Could not read the image'));
     img.src = objectUrl;
   });

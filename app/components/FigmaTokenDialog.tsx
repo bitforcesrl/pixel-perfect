@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useState, useSyncExternalStore } from "react";
-import Modal from "./Modal";
+import { useState, useSyncExternalStore } from 'react';
+import Modal from './Modal';
 import {
   clearFigmaToken,
   loadFigmaToken,
   saveFigmaToken,
   subscribeFigmaToken,
-} from "@/lib/figma-token";
+} from '@/lib/figma-token';
 
 export interface FigmaTokenDialogProps {
   open: boolean;
@@ -19,7 +19,7 @@ export interface FigmaTokenDialogProps {
 }
 
 const FIELD =
-  "w-full rounded border border-ink-700 bg-ink-950 px-2.5 py-1.5 font-mono text-[12px] text-ink-100 placeholder:text-ink-600 focus:border-press-violet focus:outline-none";
+  'w-full rounded border border-ink-700 bg-ink-950 px-2.5 py-1.5 font-mono text-[12px] text-ink-100 placeholder:text-ink-600 focus:border-press-violet focus:outline-none';
 
 /**
  * Where the user's own Figma token is typed.
@@ -39,12 +39,12 @@ export default function FigmaTokenDialog({
     loadFigmaToken,
     () => null,
   );
-  const [value, setValue] = useState(() => loadFigmaToken() ?? "");
+  const [value, setValue] = useState(() => loadFigmaToken() ?? '');
 
   const trimmed = value.trim();
 
   const handleSave = () => {
-    if (trimmed === "") return;
+    if (trimmed === '') return;
     saveFigmaToken(trimmed);
     onSaved();
     onClose();
@@ -52,7 +52,7 @@ export default function FigmaTokenDialog({
 
   const handleRemove = () => {
     clearFigmaToken();
-    setValue("");
+    setValue('');
     onSaved();
   };
 
@@ -61,7 +61,7 @@ export default function FigmaTokenDialog({
       open={open}
       onClose={onClose}
       title="Figma token"
-      subtitle={stored ? "saved in this browser" : "not set"}
+      subtitle={stored ? 'saved in this browser' : 'not set'}
     >
       <div className="flex flex-col gap-4">
         {error && (
@@ -74,12 +74,12 @@ export default function FigmaTokenDialog({
         )}
 
         <p className="text-[12px] leading-5 text-ink-400">
-          Frames are rendered at 2x by the Figma API, and this deployment has
-          no token of its own. In Figma open{" "}
+          Frames are rendered at 2x by the Figma API, and this deployment has no
+          token of its own. In Figma open{' '}
           <span className="text-ink-200">
             Settings ▸ Security ▸ Personal access tokens
           </span>
-          , generate one with the{" "}
+          , generate one with the{' '}
           <span className="text-ink-200">File content: Read-only</span> scope
           and paste it below — it is kept in this browser and sent with each
           export, never stored on the server.
@@ -98,7 +98,7 @@ export default function FigmaTokenDialog({
             placeholder="figd_…"
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleSave();
+              if (e.key === 'Enter') handleSave();
             }}
             className={FIELD}
           />
@@ -108,7 +108,7 @@ export default function FigmaTokenDialog({
           <button
             type="button"
             onClick={handleSave}
-            disabled={trimmed === "" || trimmed === stored}
+            disabled={trimmed === '' || trimmed === stored}
             className="rounded bg-press-magenta px-3 py-1.5 text-[12px] font-semibold text-ink-950 transition-colors hover:bg-press-magenta/85 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save token

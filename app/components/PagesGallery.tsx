@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import BrowserLoginControl from "./BrowserLoginControl";
-import RegistrationMark from "./RegistrationMark";
-import { parseFigmaUrl } from "@/lib/figma";
-import { MAX_NAME_LENGTH, type Page } from "@/lib/projects";
-import { loadPreviews } from "@/lib/storage";
-import { MAX_SITE_PASSWORD_LENGTH } from "@/lib/validation";
-import type { ViewportKey, ViewportPreset } from "@/lib/viewports";
+import { useEffect, useState } from 'react';
+import BrowserLoginControl from './BrowserLoginControl';
+import RegistrationMark from './RegistrationMark';
+import { parseFigmaUrl } from '@/lib/figma';
+import { MAX_NAME_LENGTH, type Page } from '@/lib/projects';
+import { loadPreviews } from '@/lib/storage';
+import { MAX_SITE_PASSWORD_LENGTH } from '@/lib/validation';
+import type { ViewportKey, ViewportPreset } from '@/lib/viewports';
 
 export interface PagesGalleryProps {
   open: boolean;
@@ -27,9 +27,9 @@ export interface PagesGalleryProps {
 }
 
 const FIELD =
-  "w-full rounded border border-ink-700 bg-ink-850 px-2 py-1.5 text-[11px] text-ink-100 outline-none placeholder:text-ink-600 focus:border-press-violet";
+  'w-full rounded border border-ink-700 bg-ink-850 px-2 py-1.5 text-[11px] text-ink-100 outline-none placeholder:text-ink-600 focus:border-press-violet';
 const ACTION =
-  "rounded px-1.5 py-1 text-[10px] text-ink-500 transition-colors hover:bg-ink-800 hover:text-ink-100";
+  'rounded px-1.5 py-1 text-[10px] text-ink-500 transition-colors hover:bg-ink-800 hover:text-ink-100';
 
 /**
  * Every page of the project, as the thing it last captured.
@@ -57,18 +57,18 @@ function Gallery({
   onFigmaUrlChange,
 }: PagesGalleryProps) {
   const [previews, setPreviews] = useState<Record<string, string>>({});
-  const [newName, setNewName] = useState("");
-  const [newUrl, setNewUrl] = useState("");
+  const [newName, setNewName] = useState('');
+  const [newUrl, setNewUrl] = useState('');
   const [renamingId, setRenamingId] = useState<string | null>(null);
-  const [renameText, setRenameText] = useState("");
+  const [renameText, setRenameText] = useState('');
   // Delete asks once, in place: the page's captures, exports and notes go too
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
-  const ids = pages.map((page) => page.id).join(",");
+  const ids = pages.map((page) => page.id).join(',');
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const stored = await loadPreviews(ids.length > 0 ? ids.split(",") : []);
+      const stored = await loadPreviews(ids.length > 0 ? ids.split(',') : []);
       if (!cancelled) setPreviews(stored);
     })();
     return () => {
@@ -78,18 +78,18 @@ function Gallery({
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === 'Escape') onClose();
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
   const create = () => {
     const trimmed = newName.trim();
     if (trimmed.length === 0) return;
     onCreate(trimmed, newUrl.trim());
-    setNewName("");
-    setNewUrl("");
+    setNewName('');
+    setNewUrl('');
     onClose();
   };
 
@@ -154,8 +154,8 @@ function Gallery({
                   key={page.id}
                   className={`flex flex-col overflow-hidden rounded-lg border transition-colors ${
                     active
-                      ? "border-press-violet bg-press-violet/10"
-                      : "border-ink-800 bg-ink-850/40 hover:border-ink-600"
+                      ? 'border-press-violet bg-press-violet/10'
+                      : 'border-ink-800 bg-ink-850/40 hover:border-ink-600'
                   }`}
                 >
                   {/* The preview is the page: clicking it opens that page */}
@@ -195,15 +195,15 @@ function Gallery({
                         onChange={(e) => setRenameText(e.target.value)}
                         onBlur={commitRename}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") commitRename();
-                          if (e.key === "Escape") setRenamingId(null);
+                          if (e.key === 'Enter') commitRename();
+                          if (e.key === 'Escape') setRenamingId(null);
                         }}
                         className={FIELD}
                       />
                     ) : (
                       <span
                         className={`truncate text-[12px] font-medium ${
-                          active ? "text-press-violet" : "text-ink-100"
+                          active ? 'text-press-violet' : 'text-ink-100'
                         }`}
                         title={page.name}
                       >
@@ -256,11 +256,14 @@ function Gallery({
                         Figma frame URL
                       </span>
                       {presets.map((preset) => {
-                        const value = page.figmaUrls[preset.key] ?? "";
+                        const value = page.figmaUrls[preset.key] ?? '';
                         const unreadable =
-                          value.trim() !== "" && parseFigmaUrl(value) === null;
+                          value.trim() !== '' && parseFigmaUrl(value) === null;
                         return (
-                          <label key={preset.key} className="flex flex-col gap-0.5">
+                          <label
+                            key={preset.key}
+                            className="flex flex-col gap-0.5"
+                          >
                             <span className="text-[10px] text-ink-500">
                               {preset.label} · {preset.width}
                             </span>
@@ -277,7 +280,7 @@ function Gallery({
                                 )
                               }
                               className={`${FIELD} font-mono text-[10px] ${
-                                unreadable ? "border-press-red/60" : ""
+                                unreadable ? 'border-press-red/60' : ''
                               }`}
                             />
                             {unreadable && (
@@ -315,22 +318,24 @@ function Gallery({
                       <button
                         type="button"
                         onClick={() =>
-                          confirming ? onDelete(page.id) : setConfirmingId(page.id)
+                          confirming
+                            ? onDelete(page.id)
+                            : setConfirmingId(page.id)
                         }
                         onBlur={() => setConfirmingId(null)}
                         disabled={pages.length === 1}
                         title={
                           pages.length === 1
-                            ? "The last page cannot be deleted"
-                            : "Delete this page and everything in it"
+                            ? 'The last page cannot be deleted'
+                            : 'Delete this page and everything in it'
                         }
                         className={`rounded px-1.5 py-1 text-[10px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                           confirming
-                            ? "bg-press-red/15 text-press-red"
-                            : "text-ink-500 hover:bg-ink-800 hover:text-press-red"
+                            ? 'bg-press-red/15 text-press-red'
+                            : 'text-ink-500 hover:bg-ink-800 hover:text-press-red'
                         }`}
                       >
-                        {confirming ? "Sure?" : "Delete"}
+                        {confirming ? 'Sure?' : 'Delete'}
                       </button>
                     </div>
                   </div>
@@ -350,7 +355,7 @@ function Gallery({
                 placeholder="Page name"
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") create();
+                  if (e.key === 'Enter') create();
                 }}
                 className={FIELD}
               />
@@ -360,7 +365,7 @@ function Gallery({
                 placeholder="https://example.com"
                 onChange={(e) => setNewUrl(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") create();
+                  if (e.key === 'Enter') create();
                 }}
                 className={`${FIELD} font-mono text-[10px]`}
               />

@@ -1,4 +1,4 @@
-import {authHeaders} from './gate';
+import { authHeaders } from './gate';
 
 /**
  * The Browserless key — client side.
@@ -64,7 +64,7 @@ export function clearKey(): void {
  * the deployment asks for one, and the Browserless key when the user has one.
  */
 export async function captureHeaders(
-  opts: {local?: boolean} = {},
+  opts: { local?: boolean } = {},
 ): Promise<Record<string, string>> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

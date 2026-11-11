@@ -1,25 +1,23 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 /** A command. `marker` turns it into a checkbox or a radio member. */
 export interface MenuCommand {
-  kind?: "item";
+  kind?: 'item';
   label: string;
   onSelect: () => void;
   /** Printed on the right, the way a desktop menu advertises its accelerator */
   shortcut?: string;
   disabled?: boolean;
   checked?: boolean;
-  marker?: "check" | "radio";
+  marker?: 'check' | 'radio';
   danger?: boolean;
   title?: string;
 }
 
 export type MenuEntry =
-  | MenuCommand
-  | { kind: "separator" }
-  | { kind: "heading"; label: string };
+  MenuCommand | { kind: 'separator' } | { kind: 'heading'; label: string };
 
 export interface Menu {
   id: string;
@@ -38,7 +36,7 @@ export interface MenuBarProps {
 }
 
 function isCommand(entry: MenuEntry): entry is MenuCommand {
-  return entry.kind === undefined || entry.kind === "item";
+  return entry.kind === undefined || entry.kind === 'item';
 }
 
 /**
@@ -49,7 +47,12 @@ function isCommand(entry: MenuEntry): entry is MenuCommand {
  * arms the rest: with a menu open, moving across the titles switches to them
  * without a second click — the behaviour the pattern is recognised by.
  */
-export default function MenuBar({ menus, brand, title, actions }: MenuBarProps) {
+export default function MenuBar({
+  menus,
+  brand,
+  title,
+  actions,
+}: MenuBarProps) {
   const [openId, setOpenId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const titlesRef = useRef<HTMLDivElement>(null);
@@ -62,8 +65,8 @@ export default function MenuBar({ menus, brand, title, actions }: MenuBarProps) 
     const onPointerDown = (e: PointerEvent) => {
       if (!titlesRef.current?.contains(e.target as Node)) setOpenId(null);
     };
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [openId]);
 
   // Hand the keyboard the first item as the menu opens. Mouse users never see
@@ -71,7 +74,7 @@ export default function MenuBar({ menus, brand, title, actions }: MenuBarProps) 
   useEffect(() => {
     if (openId === null) return;
     dropdownRef.current
-      ?.querySelector<HTMLButtonElement>("button:not(:disabled)")
+      ?.querySelector<HTMLButtonElement>('button:not(:disabled)')
       ?.focus();
   }, [openId]);
 
@@ -90,28 +93,28 @@ export default function MenuBar({ menus, brand, title, actions }: MenuBarProps) 
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (openId === null) return;
-    if (e.key === "Escape") {
+    if (e.key === 'Escape') {
       e.preventDefault();
       const id = openId;
       setOpenId(null);
       focusTitle(id);
       return;
     }
-    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
-      stepMenu(e.key === "ArrowLeft" ? -1 : 1);
+      stepMenu(e.key === 'ArrowLeft' ? -1 : 1);
       return;
     }
-    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
     e.preventDefault();
     const items = Array.from(
       dropdownRef.current?.querySelectorAll<HTMLButtonElement>(
-        "button:not(:disabled)",
+        'button:not(:disabled)',
       ) ?? [],
     );
     if (items.length === 0) return;
     const at = items.indexOf(document.activeElement as HTMLButtonElement);
-    const next = e.key === "ArrowDown" ? at + 1 : at - 1;
+    const next = e.key === 'ArrowDown' ? at + 1 : at - 1;
     items[(next + items.length) % items.length].focus();
   };
 
@@ -138,8 +141,8 @@ export default function MenuBar({ menus, brand, title, actions }: MenuBarProps) 
                 onMouseEnter={() => openId !== null && setOpenId(menu.id)}
                 className={`rounded px-2.5 py-1 text-[12px] font-medium transition-colors ${
                   open
-                    ? "bg-press-violet/15 text-press-violet"
-                    : "text-ink-300 hover:bg-ink-850 hover:text-ink-100"
+                    ? 'bg-press-violet/15 text-press-violet'
+                    : 'text-ink-300 hover:bg-ink-850 hover:text-ink-100'
                 }`}
               >
                 {menu.label}
@@ -153,7 +156,7 @@ export default function MenuBar({ menus, brand, title, actions }: MenuBarProps) 
                   className="absolute top-full left-0 mt-1 min-w-60 rounded-md border border-ink-700 bg-ink-850 p-1 shadow-2xl shadow-ink-void/60"
                 >
                   {menu.entries.map((entry, index) => {
-                    if (entry.kind === "separator") {
+                    if (entry.kind === 'separator') {
                       return (
                         <div
                           key={`sep-${index}`}
@@ -162,7 +165,7 @@ export default function MenuBar({ menus, brand, title, actions }: MenuBarProps) 
                         />
                       );
                     }
-                    if (entry.kind === "heading") {
+                    if (entry.kind === 'heading') {
                       return (
                         <div
                           key={`head-${index}`}
@@ -186,8 +189,8 @@ export default function MenuBar({ menus, brand, title, actions }: MenuBarProps) 
                         }}
                         className={`flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-[12px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                           entry.danger
-                            ? "text-ink-200 hover:bg-press-red/15 hover:text-press-red"
-                            : "text-ink-200 hover:bg-press-violet/15 hover:text-ink-100"
+                            ? 'text-ink-200 hover:bg-press-red/15 hover:text-press-red'
+                            : 'text-ink-200 hover:bg-press-violet/15 hover:text-ink-100'
                         } disabled:hover:bg-transparent disabled:hover:text-ink-200`}
                       >
                         {/* One gutter for every row, ticked or not, so the
@@ -195,14 +198,14 @@ export default function MenuBar({ menus, brand, title, actions }: MenuBarProps) 
                         <span
                           aria-hidden="true"
                           className={`w-2.5 shrink-0 text-center text-[11px] leading-none ${
-                            entry.checked ? "text-press-violet" : "text-ink-700"
+                            entry.checked ? 'text-press-violet' : 'text-ink-700'
                           }`}
                         >
                           {entry.checked
-                            ? entry.marker === "radio"
-                              ? "●"
-                              : "✓"
-                            : ""}
+                            ? entry.marker === 'radio'
+                              ? '●'
+                              : '✓'
+                            : ''}
                         </span>
                         <span className="flex-1 truncate">{entry.label}</span>
                         {entry.shortcut && (

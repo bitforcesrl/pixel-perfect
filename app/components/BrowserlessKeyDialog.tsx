@@ -1,8 +1,13 @@
-"use client";
+'use client';
 
-import { useState, useSyncExternalStore } from "react";
-import Modal from "./Modal";
-import { clearKey, loadKey, saveKey, subscribeKey } from "@/lib/browserless-key";
+import { useState, useSyncExternalStore } from 'react';
+import Modal from './Modal';
+import {
+  clearKey,
+  loadKey,
+  saveKey,
+  subscribeKey,
+} from '@/lib/browserless-key';
 
 export interface BrowserlessKeyDialogProps {
   open: boolean;
@@ -14,7 +19,7 @@ export interface BrowserlessKeyDialogProps {
 }
 
 const FIELD =
-  "w-full rounded border border-ink-700 bg-ink-950 px-2.5 py-1.5 font-mono text-[12px] text-ink-100 placeholder:text-ink-600 focus:border-press-violet focus:outline-none";
+  'w-full rounded border border-ink-700 bg-ink-950 px-2.5 py-1.5 font-mono text-[12px] text-ink-100 placeholder:text-ink-600 focus:border-press-violet focus:outline-none';
 
 /**
  * Where the user's own Browserless key is typed.
@@ -33,12 +38,12 @@ export default function BrowserlessKeyDialog({
   // The dialog is mounted when it opens, so the field starts on whatever is
   // stored and the store keeps the rest of the sheet honest from there
   const stored = useSyncExternalStore(subscribeKey, loadKey, () => null);
-  const [value, setValue] = useState(() => loadKey() ?? "");
+  const [value, setValue] = useState(() => loadKey() ?? '');
 
   const trimmed = value.trim();
 
   const handleSave = () => {
-    if (trimmed === "") return;
+    if (trimmed === '') return;
     saveKey(trimmed);
     onSaved();
     onClose();
@@ -46,7 +51,7 @@ export default function BrowserlessKeyDialog({
 
   const handleRemove = () => {
     clearKey();
-    setValue("");
+    setValue('');
     onSaved();
   };
 
@@ -55,7 +60,7 @@ export default function BrowserlessKeyDialog({
       open={open}
       onClose={onClose}
       title="Browserless key"
-      subtitle={stored ? "saved in this browser" : "not set"}
+      subtitle={stored ? 'saved in this browser' : 'not set'}
     >
       <div className="flex flex-col gap-4">
         {error && (
@@ -68,7 +73,7 @@ export default function BrowserlessKeyDialog({
         )}
 
         <p className="text-[12px] leading-5 text-ink-400">
-          Captures run in a browser hosted at{" "}
+          Captures run in a browser hosted at{' '}
           <a
             href="https://www.browserless.io/"
             target="_blank"
@@ -95,7 +100,7 @@ export default function BrowserlessKeyDialog({
             placeholder="2S1a…"
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleSave();
+              if (e.key === 'Enter') handleSave();
             }}
             className={FIELD}
           />
@@ -105,7 +110,7 @@ export default function BrowserlessKeyDialog({
           <button
             type="button"
             onClick={handleSave}
-            disabled={trimmed === "" || trimmed === stored}
+            disabled={trimmed === '' || trimmed === stored}
             className="rounded bg-press-cyan px-3 py-1.5 text-[12px] font-semibold text-ink-950 transition-colors hover:bg-press-cyan/85 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save key

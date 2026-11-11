@@ -1,0 +1,13 @@
+# Generated or vendored output: never formatted by hand.
+.next/
+out/
+build/
+coverage/
+node_modules/
+package-lock.json
+next-env.d.ts
+*.tsbuildinfo
+
+# Local-only data
+.sessions/
+.playwright-mcp/

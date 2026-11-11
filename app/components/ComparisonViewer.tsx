@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { clampOffset } from "@/lib/offset";
-import TiledImage from "./TiledImage";
-import type { BlendMode, ViewMode } from "@/lib/types";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { clampOffset } from '@/lib/offset';
+import TiledImage from './TiledImage';
+import type { BlendMode, ViewMode } from '@/lib/types';
 
 export interface ComparisonViewerProps {
   screenshotSrc: string | null; // data URL from API (null = not captured yet)
@@ -23,10 +23,10 @@ export interface ComparisonViewerProps {
 
 /** Where a pointer drag started, and what it is allowed to move. */
 type Drag =
-  | { kind: "split" }
-  | { kind: "figma"; y: number; offset: number }
+  | { kind: 'split' }
+  | { kind: 'figma'; y: number; offset: number }
   | {
-      kind: "pan";
+      kind: 'pan';
       x: number;
       y: number;
       scrollLeft: number;
@@ -38,8 +38,7 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 /** Layer chips carry their plate's ink so a glance names what you are seeing. */
-const CHIP =
-  "rounded border px-2 py-1 text-xs font-medium bg-ink-void";
+const CHIP = 'rounded border px-2 py-1 text-xs font-medium bg-ink-void';
 const CHIP_SITE = `${CHIP} border-press-cyan/40 text-press-cyan`;
 const CHIP_FIGMA = `${CHIP} border-press-magenta/40 text-press-magenta`;
 
@@ -79,26 +78,26 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
   useEffect(() => {
     const isTyping = (target: EventTarget | null) => {
       const tag = (target as HTMLElement | null)?.tagName;
-      return tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA";
+      return tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.code !== "Space" || isTyping(e.target)) return;
+      if (e.code !== 'Space' || isTyping(e.target)) return;
       e.preventDefault(); // Space would otherwise scroll the canvas
       setSpaceHeld(true);
     };
     const onKeyUp = (e: KeyboardEvent) => {
-      if (e.code === "Space") setSpaceHeld(false);
+      if (e.code === 'Space') setSpaceHeld(false);
     };
     // A blurred window never delivers keyup, and a stuck flag is worse than a
     // dropped one
     const onBlur = () => setSpaceHeld(false);
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    window.addEventListener("blur", onBlur);
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onBlur);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-      window.removeEventListener("blur", onBlur);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onBlur);
     };
   }, []);
 
@@ -119,7 +118,9 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
     setMeasured({ src: figmaSrc, ratio, width: naturalWidth });
     // Without a capture there is nothing to fit the layer to, so the panel's
     // align controls stay out of it
-    onFigmaHeightChange(screenshotWidth === null ? null : screenshotWidth * ratio);
+    onFigmaHeightChange(
+      screenshotWidth === null ? null : screenshotWidth * ratio,
+    );
   };
 
   const updateSplitFromPointer = useCallback((clientX: number) => {
@@ -130,28 +131,28 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
 
   // Split owns the drag unless Space suspends it or the toolbar hands drags to
   // the Figma layer; then this behaves exactly like overlay and tap
-  const splitting = viewMode === "split" && !spaceHeld && !figmaDragEnabled;
+  const splitting = viewMode === 'split' && !spaceHeld && !figmaDragEnabled;
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (viewMode === "tap") setIsPressing(true);
+    if (viewMode === 'tap') setIsPressing(true);
 
     // Alt works at press time; Space is tracked because it must also change the
     // cursor before anything is pressed
     if (splitting && !e.altKey) {
       e.currentTarget.setPointerCapture(e.pointerId);
-      dragRef.current = { kind: "split" };
+      dragRef.current = { kind: 'split' };
       setIsDragging(true);
       updateSplitFromPointer(e.clientX);
       return;
     }
 
     if (figmaDragEnabled) {
-      dragRef.current = { kind: "figma", y: e.clientY, offset: offsetY };
+      dragRef.current = { kind: 'figma', y: e.clientY, offset: offsetY };
     } else {
       const surface = scrollRef.current;
       if (!surface) return;
       dragRef.current = {
-        kind: "pan",
+        kind: 'pan',
         x: e.clientX,
         y: e.clientY,
         scrollLeft: surface.scrollLeft,
@@ -167,12 +168,12 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
     const drag = dragRef.current;
     if (!drag) return;
 
-    if (drag.kind === "split") {
+    if (drag.kind === 'split') {
       updateSplitFromPointer(e.clientX);
       return;
     }
 
-    if (drag.kind === "pan") {
+    if (drag.kind === 'pan') {
       const surface = scrollRef.current;
       if (!surface) return;
       surface.scrollLeft = drag.scrollLeft - (e.clientX - drag.x);
@@ -200,16 +201,20 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
   const aligned = Math.round(offsetY) === 0;
 
   const cursor = splitting
-    ? "cursor-ew-resize"
+    ? 'cursor-ew-resize'
     : figmaDragEnabled
-      ? "cursor-ns-resize"
+      ? 'cursor-ns-resize'
       : isDragging
-        ? "cursor-grabbing"
-        : "cursor-grab";
+        ? 'cursor-grabbing'
+        : 'cursor-grab';
 
   // Nothing captured yet — show the Figma export on its own. Its own pixels are
   // the only size reference here, so zoom rides the natural width.
-  if (screenshotSrc === null || displayWidth === null || displayHeight === null) {
+  if (
+    screenshotSrc === null ||
+    displayWidth === null ||
+    displayHeight === null
+  ) {
     if (!figmaSrc) return null;
     const figmaWidth =
       measured && measured.src === figmaSrc ? measured.width * zoom : undefined;
@@ -267,7 +272,7 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
         className={`relative isolate touch-none overflow-hidden select-none ${cursor}`}
         style={{ width: displayWidth, height: displayHeight }}
       >
-        {viewMode === "tap" ? (
+        {viewMode === 'tap' ? (
           <>
             {/* Tap mode: site screenshot always visible, Figma only while pressing */}
             <TiledImage
@@ -305,7 +310,7 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
               className="pointer-events-none absolute inset-x-0"
               style={{
                 top: offsetY * zoom,
-                ...(viewMode === "split"
+                ...(viewMode === 'split'
                   ? { clipPath: `inset(0 ${100 - splitPos}% 0 0)` }
                   : {}),
               }}
@@ -318,7 +323,7 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
                 onSize={handleFigmaSize}
                 className="block w-full"
                 style={
-                  viewMode === "overlay"
+                  viewMode === 'overlay'
                     ? { mixBlendMode: blendMode, opacity: opacity / 100 }
                     : undefined
                 }
@@ -329,14 +334,14 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
       </div>
 
       {/* Tap label — outside the clipping container so it can stick */}
-      {viewMode === "tap" && (
+      {viewMode === 'tap' && (
         <div className="pointer-events-none absolute inset-0 z-10">
           <div className="sticky top-3 px-3">
             <span
               className={`inline-block ${isPressing ? CHIP_FIGMA : CHIP_SITE}`}
             >
-              {isPressing ? "Figma" : "Site"} —{" "}
-              {isPressing ? "release to hide" : "hold to see Figma"}
+              {isPressing ? 'Figma' : 'Site'} —{' '}
+              {isPressing ? 'release to hide' : 'hold to see Figma'}
             </span>
           </div>
         </div>
@@ -347,25 +352,25 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
       <div
         className={`pointer-events-none absolute top-3 right-3 z-20 flex items-center gap-2 rounded-md border bg-ink-void px-2 py-1 transition-colors ${
           aligned
-            ? "border-press-violet/60 text-press-violet"
-            : "border-ink-700 text-ink-200"
+            ? 'border-press-violet/60 text-press-violet'
+            : 'border-ink-700 text-ink-200'
         }`}
       >
         <span className="font-mono text-[11px] tabular-nums">
-          offset {offsetY > 0 ? "+" : ""}
+          offset {offsetY > 0 ? '+' : ''}
           {Math.round(offsetY)}px
         </span>
         <span className="border-l border-ink-700 pl-2 text-[11px] text-ink-500">
           {splitting
-            ? "hold Space to pan"
+            ? 'hold Space to pan'
             : figmaDragEnabled
-              ? "drag ↕ to align"
-              : "drag to pan"}
+              ? 'drag ↕ to align'
+              : 'drag to pan'}
         </span>
       </div>
 
       {/* Split divider */}
-      {viewMode === "split" && (
+      {viewMode === 'split' && (
         <div
           className="pointer-events-none absolute inset-y-0 z-10"
           style={{ left: `${splitPos}%` }}

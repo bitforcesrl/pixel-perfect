@@ -1,4 +1,4 @@
-import {describe, expect, it} from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   allPresets,
   DEFAULT_SETTINGS,
@@ -10,17 +10,17 @@ import {
 
 /** DEFAULT_SETTINGS with the named viewports turned off. */
 const only = (...keys: Array<keyof ViewportSettings>): ViewportSettings => ({
-  mobile: {...DEFAULT_SETTINGS.mobile, enabled: keys.includes('mobile')},
-  tablet: {...DEFAULT_SETTINGS.tablet, enabled: keys.includes('tablet')},
-  desktop: {...DEFAULT_SETTINGS.desktop, enabled: keys.includes('desktop')},
+  mobile: { ...DEFAULT_SETTINGS.mobile, enabled: keys.includes('mobile') },
+  tablet: { ...DEFAULT_SETTINGS.tablet, enabled: keys.includes('tablet') },
+  desktop: { ...DEFAULT_SETTINGS.desktop, enabled: keys.includes('desktop') },
 });
 
 describe('DEFAULT_SETTINGS', () => {
   it("keeps today's sizes, with tablet off", () => {
     expect(DEFAULT_SETTINGS).toEqual({
-      mobile: {label: 'Mobile', enabled: true, width: 375, height: 812},
-      tablet: {label: 'Tablet', enabled: false, width: 768, height: 1024},
-      desktop: {label: 'Desktop', enabled: true, width: 1440, height: 900},
+      mobile: { label: 'Mobile', enabled: true, width: 375, height: 812 },
+      tablet: { label: 'Tablet', enabled: false, width: 768, height: 1024 },
+      desktop: { label: 'Desktop', enabled: true, width: 1440, height: 900 },
     });
   });
 });
@@ -39,8 +39,8 @@ describe('sanitizeSettings', () => {
 
   it('keeps only the viewports the record has, labelled from the defaults', () => {
     const stored = {
-      mobile: {enabled: false, width: 390, height: 844},
-      desktop: {enabled: true, width: 1440, height: 900},
+      mobile: { enabled: false, width: 390, height: 844 },
+      desktop: { enabled: true, width: 1440, height: 900 },
     };
     const settings = sanitizeSettings(stored);
     expect(settings.mobile).toEqual({
@@ -55,7 +55,7 @@ describe('sanitizeSettings', () => {
 
   it('replaces a wrongly typed field with that viewport default', () => {
     const settings = sanitizeSettings({
-      mobile: {enabled: 'yes', width: '390', height: 844},
+      mobile: { enabled: 'yes', width: '390', height: 844 },
     });
     expect(settings.mobile).toEqual({
       label: 'Mobile',
@@ -67,8 +67,8 @@ describe('sanitizeSettings', () => {
 
   it('clamps dimensions to the range the API accepts', () => {
     const settings = sanitizeSettings({
-      mobile: {enabled: true, width: 12, height: 99_999},
-      desktop: {enabled: true, width: 1280.6, height: 900},
+      mobile: { enabled: true, width: 12, height: 99_999 },
+      desktop: { enabled: true, width: 1280.6, height: 900 },
     });
     expect(settings.mobile.width).toBe(200);
     expect(settings.mobile.height).toBe(4000);
@@ -84,7 +84,10 @@ describe('sanitizeSettings', () => {
       },
     });
     // The stored `enabled` still stands — only the dimensions fall back
-    expect(settings.tablet).toEqual({...DEFAULT_SETTINGS.tablet, enabled: true});
+    expect(settings.tablet).toEqual({
+      ...DEFAULT_SETTINGS.tablet,
+      enabled: true,
+    });
   });
 
   it('returns the defaults when the record enables nothing', () => {
@@ -111,13 +114,13 @@ describe('enabledPresets', () => {
   it('returns the enabled viewports, ascending by width', () => {
     // Tablet is off by default, so it is absent here but present in allPresets
     expect(enabledPresets(DEFAULT_SETTINGS)).toEqual([
-      {key: 'mobile', label: 'Mobile', width: 375, height: 812},
-      {key: 'desktop', label: 'Desktop', width: 1440, height: 900},
+      { key: 'mobile', label: 'Mobile', width: 375, height: 812 },
+      { key: 'desktop', label: 'Desktop', width: 1440, height: 900 },
     ]);
     expect(enabledPresets(only('mobile', 'tablet', 'desktop'))).toEqual([
-      {key: 'mobile', label: 'Mobile', width: 375, height: 812},
-      {key: 'tablet', label: 'Tablet', width: 768, height: 1024},
-      {key: 'desktop', label: 'Desktop', width: 1440, height: 900},
+      { key: 'mobile', label: 'Mobile', width: 375, height: 812 },
+      { key: 'tablet', label: 'Tablet', width: 768, height: 1024 },
+      { key: 'desktop', label: 'Desktop', width: 1440, height: 900 },
     ]);
   });
 
@@ -130,7 +133,7 @@ describe('enabledPresets', () => {
   it('sorts by the configured width, not by key order', () => {
     const settings: ViewportSettings = {
       ...only('mobile', 'tablet', 'desktop'),
-      desktop: {label: 'Desktop', enabled: true, width: 500, height: 900},
+      desktop: { label: 'Desktop', enabled: true, width: 500, height: 900 },
     };
     expect(enabledPresets(settings).map((p) => p.key)).toEqual([
       'mobile',
@@ -143,9 +146,9 @@ describe('enabledPresets', () => {
 describe('allPresets', () => {
   it('returns every viewport, enabled or not, ascending by width', () => {
     expect(allPresets(DEFAULT_SETTINGS)).toEqual([
-      {key: 'mobile', label: 'Mobile', width: 375, height: 812},
-      {key: 'tablet', label: 'Tablet', width: 768, height: 1024},
-      {key: 'desktop', label: 'Desktop', width: 1440, height: 900},
+      { key: 'mobile', label: 'Mobile', width: 375, height: 812 },
+      { key: 'tablet', label: 'Tablet', width: 768, height: 1024 },
+      { key: 'desktop', label: 'Desktop', width: 1440, height: 900 },
     ]);
   });
 
@@ -160,7 +163,7 @@ describe('allPresets', () => {
   it('sorts by the configured width, not by key order', () => {
     const settings: ViewportSettings = {
       ...DEFAULT_SETTINGS,
-      desktop: {label: 'Desktop', enabled: false, width: 500, height: 900},
+      desktop: { label: 'Desktop', enabled: false, width: 500, height: 900 },
     };
     expect(allPresets(settings).map((p) => p.key)).toEqual([
       'mobile',

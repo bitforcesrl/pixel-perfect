@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { SHORTCUT_GROUPS } from "@/lib/shortcuts";
-import Modal from "./Modal";
-import ShortcutsReference from "./ShortcutsReference";
+import { SHORTCUT_GROUPS } from '@/lib/shortcuts';
+import Modal from './Modal';
+import ShortcutsReference from './ShortcutsReference';
 
 export interface HelpDialogProps {
   open: boolean;

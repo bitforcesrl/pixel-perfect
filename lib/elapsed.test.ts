@@ -1,5 +1,5 @@
-import {describe, expect, it} from 'vitest';
-import {elapsedLabel, savedAtLabel} from './elapsed';
+import { describe, expect, it } from 'vitest';
+import { elapsedLabel, savedAtLabel } from './elapsed';
 
 const NOW = 1_700_000_000_000;
 const SECOND = 1000;

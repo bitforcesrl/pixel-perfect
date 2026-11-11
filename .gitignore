@@ -44,3 +44,7 @@ next-env.d.ts
 .playwright-mcp
 # login sessions saved by the browser login window (auth cookies)
 /.sessions
+
+# personal working notes, not part of the project
+/note.txt
+/prompt.md

@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import RegistrationMark from "./RegistrationMark";
+import { useEffect, useState } from 'react';
+import RegistrationMark from './RegistrationMark';
 import {
   checkPassword,
   forgetPassword,
   isGateRequired,
   readPassword,
   rememberPassword,
-} from "@/lib/gate";
+} from '@/lib/gate';
 
 /**
  * Holds the app back until this browser has the site password in IndexedDB.
@@ -17,15 +17,15 @@ import {
  * asked. Never entered, or no longer accepted → the form. A deployment with no
  * `SITE_PASSWORD` set (local, by default) opens straight through.
  */
-type Phase = "checking" | "locked" | "open";
+type Phase = 'checking' | 'locked' | 'open';
 
 export default function PasswordGate({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [phase, setPhase] = useState<Phase>("checking");
-  const [password, setPassword] = useState("");
+  const [phase, setPhase] = useState<Phase>('checking');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -35,14 +35,14 @@ export default function PasswordGate({
     void (async () => {
       try {
         if (!(await isGateRequired())) {
-          if (!cancelled) setPhase("open");
+          if (!cancelled) setPhase('open');
           return;
         }
         const stored = await readPassword();
         // A stored password the server no longer accepts is worse than none:
         // drop it so the form is the only thing left.
         if (stored && (await checkPassword(stored))) {
-          if (!cancelled) setPhase("open");
+          if (!cancelled) setPhase('open');
           return;
         }
         if (stored) await forgetPassword();
@@ -50,7 +50,7 @@ export default function PasswordGate({
         // Offline, or the check itself failed — stay closed and let the visitor
         // try, rather than opening on an error.
       }
-      if (!cancelled) setPhase("locked");
+      if (!cancelled) setPhase('locked');
     })();
 
     return () => {
@@ -65,20 +65,20 @@ export default function PasswordGate({
     setError(null);
     try {
       if (!(await checkPassword(password))) {
-        setError("Wrong password.");
+        setError('Wrong password.');
         return;
       }
       await rememberPassword(password);
-      setPassword("");
-      setPhase("open");
+      setPassword('');
+      setPhase('open');
     } catch {
-      setError("Could not reach the server.");
+      setError('Could not reach the server.');
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  if (phase === "open") return <>{children}</>;
+  if (phase === 'open') return <>{children}</>;
 
   return (
     <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-7 overflow-y-auto bg-ink-void p-6">
@@ -88,11 +88,13 @@ export default function PasswordGate({
           Pixel Perfect
         </h1>
         <p className="text-xs text-ink-500">
-          {phase === "checking" ? "Checking…" : "This site is password protected."}
+          {phase === 'checking'
+            ? 'Checking…'
+            : 'This site is password protected.'}
         </p>
       </div>
 
-      {phase === "locked" ? (
+      {phase === 'locked' ? (
         <form onSubmit={submit} className="flex w-full max-w-xs flex-col gap-3">
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-ink-400">
@@ -121,7 +123,7 @@ export default function PasswordGate({
             disabled={isSubmitting}
             className="rounded bg-press-violet px-3 py-2 text-sm font-semibold text-ink-950 transition-colors hover:bg-press-violet/85 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSubmitting ? "Checking…" : "Enter"}
+            {isSubmitting ? 'Checking…' : 'Enter'}
           </button>
         </form>
       ) : null}

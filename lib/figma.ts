@@ -19,7 +19,7 @@ const NODE_ID = /^I?\d+:\d+(;\d+:\d+)*$/;
 
 export function isFigmaTarget(value: unknown): value is FigmaTarget {
   if (typeof value !== 'object' || value === null) return false;
-  const {fileKey, nodeId} = value as Partial<FigmaTarget>;
+  const { fileKey, nodeId } = value as Partial<FigmaTarget>;
   return (
     typeof fileKey === 'string' &&
     FILE_KEY.test(fileKey) &&

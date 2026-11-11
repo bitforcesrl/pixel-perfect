@@ -1,4 +1,4 @@
-import {authHeaders} from './gate';
+import { authHeaders } from './gate';
 
 /**
  * The Figma token — client side.

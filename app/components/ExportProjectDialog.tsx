@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import type { ExportOptions } from "@/lib/transfer";
-import Modal from "./Modal";
+import { useState } from 'react';
+import type { ExportOptions } from '@/lib/transfer';
+import Modal from './Modal';
 
 export interface ExportProjectDialogProps {
   open: boolean;
@@ -31,9 +31,8 @@ function Dialog({ projectName, onExport, onCancel }: ExportProjectDialogProps) {
     <Modal open onClose={onCancel} title="Export project" size="sm">
       <div className="flex flex-col gap-4">
         <p className="text-[12px] leading-5 text-ink-300">
-          Packs{" "}
-          <span className="font-medium text-ink-100">{projectName}</span> into
-          a ZIP: pages, URLs, notes, settings, captures and Figma exports.
+          Packs <span className="font-medium text-ink-100">{projectName}</span>{' '}
+          into a ZIP: pages, URLs, notes, settings, captures and Figma exports.
         </p>
 
         <label className="flex cursor-pointer items-start gap-2.5 rounded border border-ink-700 bg-ink-850 px-3 py-2.5">

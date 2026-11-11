@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /*
  * Pixel Perfect runs on press-room colour.
@@ -10,7 +10,7 @@
  * Nothing here is an accent for its own sake.
  */
 @theme {
-/*
+  /*
  * Surfaces run dark; every step from 500 up is a text colour and clears 7:1
  * (AAA) on the lightest surface, because the type in this app is 11-12px and
  * small type needs more contrast, not less. 600 carries control edges and
@@ -149,7 +149,7 @@ body {
   color: #fff;
 }
 .ps-btn:active:not(:disabled),
-.ps-btn[data-on="true"] {
+.ps-btn[data-on='true'] {
   background: #1d1d1d;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
   border-color: #141414;

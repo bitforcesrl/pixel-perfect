@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/bitforcesrl/pixel-perfect/security/advisories/new
+    about: Please report vulnerabilities privately, never in a public issue.
+  - name: Questions and ideas
+    url: https://github.com/bitforcesrl/pixel-perfect/discussions
+    about: Ask how to use Pixel Perfect or share ideas with the community.

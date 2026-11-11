@@ -1,4 +1,4 @@
-import {unpackTiles, type TileSet} from './tile-container';
+import { unpackTiles, type TileSet } from './tile-container';
 
 /**
  * One way to read pixels, whatever holds them: an ordinary image file or a

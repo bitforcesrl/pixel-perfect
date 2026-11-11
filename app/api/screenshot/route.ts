@@ -1,8 +1,8 @@
-import {verifyRequest} from '@/lib/auth';
-import {canLaunchLocally, captureEnv} from '@/lib/browser';
-import {isLocalRequest} from '@/lib/localhost';
-import {takeScreenshot} from '@/lib/screenshot';
-import {validateScreenshotRequest} from '@/lib/validation';
+import { verifyRequest } from '@/lib/auth';
+import { canLaunchLocally, captureEnv } from '@/lib/browser';
+import { isLocalRequest } from '@/lib/localhost';
+import { takeScreenshot } from '@/lib/screenshot';
+import { validateScreenshotRequest } from '@/lib/validation';
 
 export const runtime = 'nodejs';
 
@@ -44,7 +44,7 @@ function hasEnvToken(): boolean {
  */
 export async function GET(request: Request) {
   if (!(await verifyRequest(request))) {
-    return Response.json({error: 'Unauthorized'}, {status: 401});
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
   return Response.json({
     source: hasEnvToken() ? 'env' : 'key',
@@ -56,14 +56,14 @@ export async function POST(request: Request) {
   // Capturing is the expensive thing this app can be asked to do, so the gate
   // covers it too: the browser sends the password it has stored with the call.
   if (!(await verifyRequest(request))) {
-    return Response.json({error: 'Unauthorized'}, {status: 401});
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const wantsLocal = request.headers.get(LOCAL_HEADER) === '1';
   if (wantsLocal && !localAvailable(request)) {
     return Response.json(
-      {error: 'Local capture is only available on localhost'},
-      {status: 403},
+      { error: 'Local capture is only available on localhost' },
+      { status: 403 },
     );
   }
 
@@ -72,8 +72,8 @@ export async function POST(request: Request) {
   // that takes a key, so the flag matters more than the message.
   if (!wantsLocal && !hasEnvToken() && !clientToken) {
     return Response.json(
-      {error: 'Add a Browserless key to capture', needsKey: true},
-      {status: 400},
+      { error: 'Add a Browserless key to capture', needsKey: true },
+      { status: 400 },
     );
   }
 
@@ -82,24 +82,24 @@ export async function POST(request: Request) {
     body = await request.json();
   } catch {
     return Response.json(
-      {error: 'Request body must be valid JSON'},
-      {status: 400},
+      { error: 'Request body must be valid JSON' },
+      { status: 400 },
     );
   }
 
   const parsed = validateScreenshotRequest(body);
   if (!parsed.ok) {
-    return Response.json({error: parsed.error}, {status: 400});
+    return Response.json({ error: parsed.error }, { status: 400 });
   }
 
   try {
     const result = await takeScreenshot(
       parsed.data,
-      captureEnv(process.env, {clientToken, forceLocal: wantsLocal}),
+      captureEnv(process.env, { clientToken, forceLocal: wantsLocal }),
     );
     return Response.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Screenshot failed';
-    return Response.json({error: message}, {status: 500});
+    return Response.json({ error: message }, { status: 500 });
   }
 }

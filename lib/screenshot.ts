@@ -72,7 +72,7 @@ function resolveTargetUrl(raw: string, remote: boolean): string {
   if (remote) {
     throw new RemoteBrowserUnsuitable(
       `${parsed.hostname} is not reachable from the remote browser at ` +
-      'Browserless.',
+        'Browserless.',
       ' Use a publicly reachable URL, or capture with a local browser.',
     );
   }
@@ -247,12 +247,28 @@ function answerConsent(): boolean {
    * an "ok" on its own matches half the buttons on a normal page.
    */
   const ACCEPT_WORDS = [
-    'accept all cookies', 'accept all', 'accept cookies', 'accept & close',
-    'accept and close', 'allow all cookies', 'allow all', 'allow cookies',
-    'i accept', 'agree and close', 'agree to all', 'i agree',
-    'accetta tutti i cookie', 'accetta tutti', 'accetta tutto',
-    'accetto tutti', 'accetto tutto', 'accetta e chiudi', 'accetta i cookie',
-    'consenti tutti', 'consenti tutto', 'acconsento',
+    'accept all cookies',
+    'accept all',
+    'accept cookies',
+    'accept & close',
+    'accept and close',
+    'allow all cookies',
+    'allow all',
+    'allow cookies',
+    'i accept',
+    'agree and close',
+    'agree to all',
+    'i agree',
+    'accetta tutti i cookie',
+    'accetta tutti',
+    'accetta tutto',
+    'accetto tutti',
+    'accetto tutto',
+    'accetta e chiudi',
+    'accetta i cookie',
+    'consenti tutti',
+    'consenti tutto',
+    'acconsento',
   ];
 
   /**
@@ -346,8 +362,8 @@ function answerConsent(): boolean {
     if (!isControl(el) || !clickable(el) || !inConsentLayer(el)) continue;
     const label = norm(
       el.innerText ||
-      (el as HTMLInputElement).value ||
-      el.getAttribute('aria-label'),
+        (el as HTMLInputElement).value ||
+        el.getAttribute('aria-label'),
     );
     if (label.length === 0 || label.length > 60) continue;
     for (const word of ACCEPT_WORDS) {
@@ -386,7 +402,7 @@ async function preventNavigation(page: import('playwright').Page) {
         (window as unknown as Record<string, unknown>)[key] = guard;
         document.addEventListener('click', guard, true);
       }, KEY)
-      .catch(() => { });
+      .catch(() => {});
   }
   return async () => {
     for (const frame of page.frames()) {
@@ -397,7 +413,7 @@ async function preventNavigation(page: import('playwright').Page) {
           if (guard) document.removeEventListener('click', guard, true);
           delete store[key];
         }, KEY)
-        .catch(() => { });
+        .catch(() => {});
     }
   };
 }
@@ -433,7 +449,7 @@ async function withoutNavigation(
     // Something on the page that will not close is not a reason to lose the
     // capture
   } finally {
-    await release().catch(() => { });
+    await release().catch(() => {});
   }
 
   try {
@@ -490,9 +506,18 @@ function closePopups(mode: 'click' | 'hide'): number {
   const STRONG_NAMES =
     /newsletter|popup|pop-up|klaviyo|privy|omnisend|mailchimp|signup|sign-up|subscribe|discount|promo|lightbox|optinmonster|justuno|wisepops|attentive|spin-?wheel|exit-?intent/i;
   const WEAK_NAMES = /modal|overlay|backdrop|dialog/i;
-  const DIALOG = 'dialog[open], [role="dialog"], [role="alertdialog"], [aria-modal="true"]';
-  const CLOSE_LABELS = /\b(close|chiudi|dismiss|no,? thanks|no,? grazie|not now|non ora|maybe later|continue shopping)\b/;
-  const CLOSE_GLYPHS = new Set(['x', '\u00d7', '\u2715', '\u2716', '\u2573', '\u2717']);
+  const DIALOG =
+    'dialog[open], [role="dialog"], [role="alertdialog"], [aria-modal="true"]';
+  const CLOSE_LABELS =
+    /\b(close|chiudi|dismiss|no,? thanks|no,? grazie|not now|non ora|maybe later|continue shopping)\b/;
+  const CLOSE_GLYPHS = new Set([
+    'x',
+    '\u00d7',
+    '\u2715',
+    '\u2716',
+    '\u2573',
+    '\u2717',
+  ]);
   const CLOSE_NAMES = /close|dismiss/i;
 
   const norm = (raw: string | null | undefined) =>
@@ -548,7 +573,10 @@ function closePopups(mode: 'click' | 'hide'): number {
     const cx = vw / 2;
     const cy = Math.min(vh, 900) / 2;
     const covers =
-      rect.left <= cx && rect.right >= cx && rect.top <= cy && rect.bottom >= cy;
+      rect.left <= cx &&
+      rect.right >= cx &&
+      rect.top <= cy &&
+      rect.bottom >= cy;
     return covers || (rect.width * rect.height) / (vw * vh) >= 0.25;
   };
 
@@ -588,7 +616,10 @@ function closePopups(mode: 'click' | 'hide'): number {
     );
     if (CLOSE_LABELS.test(label)) return true;
     const text = norm(el.innerText);
-    if (CLOSE_GLYPHS.has(text) || (text.length <= 30 && CLOSE_LABELS.test(text)))
+    if (
+      CLOSE_GLYPHS.has(text) ||
+      (text.length <= 30 && CLOSE_LABELS.test(text))
+    )
       return true;
     // An icon-only button: nothing to read but its class
     const control =
@@ -598,14 +629,20 @@ function closePopups(mode: 'click' | 'hide'): number {
 
   let clicked = 0;
   for (const popup of outer) {
-    const inside = [popup, ...all.filter((el) => el !== popup && popup.contains(el))];
+    const inside = [
+      popup,
+      ...all.filter((el) => el !== popup && popup.contains(el)),
+    ];
     // Shadow content is not `contains`-reachable; walk the popup's own tree
     if (popup.shadowRoot) inside.push(...walk(popup.shadowRoot, []));
     const close = inside.find(
       (el) =>
         isCloseControl(el) &&
         // A real destination is a link to somewhere, not a close button
-        !(el.tagName === 'A' && /^(https?:)?\/\//.test(el.getAttribute('href') || '')),
+        !(
+          el.tagName === 'A' &&
+          /^(https?:)?\/\//.test(el.getAttribute('href') || '')
+        ),
     );
     if (!close) continue;
     close.click();
@@ -614,7 +651,10 @@ function closePopups(mode: 'click' | 'hide'): number {
   return clicked;
 }
 
-async function dismissPopups(page: import('playwright').Page, timeoutMs: number) {
+async function dismissPopups(
+  page: import('playwright').Page,
+  timeoutMs: number,
+) {
   await withoutNavigation(page, timeoutMs, async () => {
     if ((await page.evaluate(closePopups, 'click' as const)) > 0) {
       // Close animations, and the theme lifting its scroll lock
@@ -792,7 +832,7 @@ async function forceEagerRendering(
         new Promise((r) => setTimeout(r, budget)),
       ]);
     }, budgetMs)
-    .catch(() => { });
+    .catch(() => {});
 }
 
 /** Statuses a host uses to turn a caller away for who it is. */
@@ -854,7 +894,13 @@ async function findPasswordField(page: import('playwright').Page) {
   const firstVisible = async () => {
     const count = await fields.count().catch(() => 0);
     for (let i = 0; i < count; i++) {
-      if (await fields.nth(i).isVisible().catch(() => false)) return fields.nth(i);
+      if (
+        await fields
+          .nth(i)
+          .isVisible()
+          .catch(() => false)
+      )
+        return fields.nth(i);
     }
     return null;
   };
@@ -867,14 +913,17 @@ async function findPasswordField(page: import('playwright').Page) {
     .locator('details:has(input[type="password"]) > summary')
     .first();
   if ((await disclosure.count().catch(() => 0)) > 0) {
-    await disclosure.click({ timeout: 3_000 }).catch(() => { });
+    await disclosure.click({ timeout: 3_000 }).catch(() => {});
     await page.waitForTimeout(300);
   }
   return (await firstVisible()) ?? fields.first();
 }
 
 /** Resolves once the main frame has navigated, or after `timeoutMs` regardless. */
-function mainFrameNavigation(page: import('playwright').Page, timeoutMs: number) {
+function mainFrameNavigation(
+  page: import('playwright').Page,
+  timeoutMs: number,
+) {
   return page
     .waitForEvent('framenavigated', {
       predicate: (frame) => frame === page.mainFrame(),
@@ -957,7 +1006,7 @@ async function passPasswordGate(
   await submitSitePassword(page, field, password);
   await page
     .waitForLoadState('domcontentloaded', { timeout: timeoutMs })
-    .catch(() => { });
+    .catch(() => {});
 
   const reloaded = await page.goto(targetUrl, {
     waitUntil: 'domcontentloaded',
@@ -988,7 +1037,7 @@ async function assertNotPasswordGated(
   if (!(await findPasswordField(page))) return;
   throw new Error(
     'The site is password protected. Add its password to this page in Pages ' +
-    'and capture again.',
+      'and capture again.',
   );
 }
 
@@ -1016,7 +1065,6 @@ async function applyViewport(
   await page.setViewportSize(viewport);
 }
 
-
 async function captureWith(
   lease: BrowserLease,
   req: ScreenshotRequest,
@@ -1035,11 +1083,11 @@ async function captureWith(
       lease.remote
         ? {}
         : {
-          viewport,
-          deviceScaleFactor: scale,
-          // Already logged in, the way the person left the login window
-          ...(session ? { storageState: session } : {}),
-        },
+            viewport,
+            deviceScaleFactor: scale,
+            // Already logged in, the way the person left the login window
+            ...(session ? { storageState: session } : {}),
+          },
     );
   } catch (err) {
     // A session dropped before the context opened still holds its slot in the
@@ -1087,8 +1135,10 @@ async function captureWith(
     // Best-effort: let the page finish loading resources, but don't crash the
     // capture if something hangs.
     await page
-      .waitForLoadState('networkidle', { timeout: budget(NETWORK_IDLE_TIMEOUT_MS) })
-      .catch(() => { });
+      .waitForLoadState('networkidle', {
+        timeout: budget(NETWORK_IDLE_TIMEOUT_MS),
+      })
+      .catch(() => {});
 
     // Accept the cookies before anything measures or scrolls the page: the
     // banner blocks scrolling on many themes and shifts the layout on its way
@@ -1115,7 +1165,9 @@ async function captureWith(
 
     // Wait for any network activity triggered by scrolling to settle
     await page
-      .waitForLoadState('networkidle', { timeout: budget(NETWORK_IDLE_TIMEOUT_MS) })
+      .waitForLoadState('networkidle', {
+        timeout: budget(NETWORK_IDLE_TIMEOUT_MS),
+      })
       .catch(() => {
         // Timeout is acceptable — proceed with what we have
       });
@@ -1141,7 +1193,7 @@ async function captureWith(
       });
       await page
         .waitForLoadState('networkidle', { timeout: budget(15_000) })
-        .catch(() => { });
+        .catch(() => {});
       await page.waitForTimeout(500);
     }
 
@@ -1170,7 +1222,7 @@ async function captureWith(
   } finally {
     // A remote session may already be gone (timed out, dropped); closing the
     // context then throws, and must not mask the real error.
-    await context.close().catch(() => { });
+    await context.close().catch(() => {});
     await lease.release();
   }
 }
@@ -1208,10 +1260,16 @@ export async function takeScreenshot(
 ): Promise<ScreenshotResult> {
   // A login saved on this machine only means anything to the browser on this
   // machine: the remote one would land on the login page, so take it from here
-  const session = canLaunchLocally(env) ? await readSavedSession(req.url) : null;
+  const session = canLaunchLocally(env)
+    ? await readSavedSession(req.url)
+    : null;
   if (session) {
     try {
-      return await captureAtBestScale(await acquireLocalBrowser(), req, session);
+      return await captureAtBestScale(
+        await acquireLocalBrowser(),
+        req,
+        session,
+      );
     } catch (err) {
       throw captureFailed(err);
     }

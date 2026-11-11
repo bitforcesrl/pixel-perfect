@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { type ViewportKey, type ViewportPreset } from "@/lib/viewports";
-import { dropSide, hasFiles, imageFiles, type DropSide } from "@/lib/drop";
+import { useState } from 'react';
+import { type ViewportKey, type ViewportPreset } from '@/lib/viewports';
+import { dropSide, hasFiles, imageFiles, type DropSide } from '@/lib/drop';
 
 export interface ViewportCardsProps {
   presets: ViewportPreset[];
@@ -24,8 +24,8 @@ interface DropTarget {
 
 /** Each half's ink while a file hovers it — the same inks the canvas uses. */
 const HALF_INK: Record<DropSide, string> = {
-  figma: "border-press-magenta bg-press-magenta/15 text-press-magenta",
-  site: "border-press-cyan bg-press-cyan/15 text-press-cyan",
+  figma: 'border-press-magenta bg-press-magenta/15 text-press-magenta',
+  site: 'border-press-cyan bg-press-cyan/15 text-press-cyan',
 };
 
 /**
@@ -68,12 +68,13 @@ export default function ViewportCards({
             onDragOver={(e) => {
               if (!hasFiles(e.dataTransfer)) return;
               e.preventDefault();
-              e.dataTransfer.dropEffect = "copy";
+              e.dataTransfer.dropEffect = 'copy';
               const side = dropSide(e.currentTarget, e.clientX);
               if (hovered !== side) setDropTarget({ key: preset.key, side });
             }}
             onDragLeave={(e) => {
-              if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+              if (e.currentTarget.contains(e.relatedTarget as Node | null))
+                return;
               setDropTarget((current) =>
                 current?.key === preset.key ? null : current,
               );
@@ -89,13 +90,13 @@ export default function ViewportCards({
                 onDropRejected(e.dataTransfer);
                 return;
               }
-              if (side === "site") onDropSite(preset.key, file);
+              if (side === 'site') onDropSite(preset.key, file);
               else onDropFigma(preset.key, file);
             }}
             title={
-              hovered === "figma"
+              hovered === 'figma'
                 ? `Drop as the ${preset.label} Figma export`
-                : hovered === "site"
+                : hovered === 'site'
                   ? `Drop as the ${preset.label} site screenshot`
                   : preset.label
             }
@@ -103,8 +104,8 @@ export default function ViewportCards({
               hovered
                 ? HALF_INK[hovered]
                 : isActive
-                  ? "border-press-violet bg-ink-900 text-press-violet"
-                  : "border-ink-800 bg-ink-900/40 text-ink-400 hover:border-ink-700 hover:text-ink-300"
+                  ? 'border-press-violet bg-ink-900 text-press-violet'
+                  : 'border-ink-800 bg-ink-900/40 text-ink-400 hover:border-ink-700 hover:text-ink-300'
             }`}
           >
             {/* While a file hovers, the half it would land on lights up */}
@@ -112,9 +113,9 @@ export default function ViewportCards({
               <span
                 aria-hidden="true"
                 className={`pointer-events-none absolute inset-y-0 w-1/2 ${
-                  hovered === "figma"
-                    ? "left-0 bg-press-magenta/20"
-                    : "right-0 bg-press-cyan/20"
+                  hovered === 'figma'
+                    ? 'left-0 bg-press-magenta/20'
+                    : 'right-0 bg-press-cyan/20'
                 }`}
               />
             )}

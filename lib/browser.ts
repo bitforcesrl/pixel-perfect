@@ -157,6 +157,21 @@ function isRunningInDocker(): boolean {
   return process.env.RUNNING_IN_DOCKER === '1';
 }
 
+/**
+ * Firefox is not downloaded on `npm install` (it is optional: drag & drop and
+ * Figma export work without it), so the first local capture may find no
+ * browser. Playwright's own error points at `npx playwright install`, which
+ * would fetch every browser; this one names the project script instead.
+ */
+function explainMissingBrowser(error: unknown): unknown {
+  const message = error instanceof Error ? error.message : String(error);
+  if (!message.includes("Executable doesn't exist")) return error;
+  return new Error(
+    'Firefox for local captures is not installed. ' +
+      'Run `npm run playwright:install` once, then capture again.',
+  );
+}
+
 async function launchLocalBrowser(): Promise<Browser> {
   if (!localBrowser) {
     const firefox = await getFirefox();
@@ -167,16 +182,20 @@ async function launchLocalBrowser(): Promise<Browser> {
     // MOZ_WEBRENDER=0 disables GPU-accelerated rendering, avoiding the
     // SWGL framebuffer failure that happens when no display is available.
     const docker = isRunningInDocker();
-    localBrowser = firefox.launch({
-      args: docker ? ['--no-sandbox'] : [],
-      env: docker
-        ? {
-          ...process.env,
-          MOZ_DISABLE_CONTENT_SANDBOX: '1',
-          MOZ_WEBRENDER: '0',
-        }
-        : undefined,
-    });
+    localBrowser = firefox
+      .launch({
+        args: docker ? ['--no-sandbox'] : [],
+        env: docker
+          ? {
+              ...process.env,
+              MOZ_DISABLE_CONTENT_SANDBOX: '1',
+              MOZ_WEBRENDER: '0',
+            }
+          : undefined,
+      })
+      .catch((error: unknown) => {
+        throw explainMissingBrowser(error);
+      });
     const launching = localBrowser;
     launching.then(
       (browser) => {
@@ -220,8 +239,10 @@ function createSemaphore(limit: number) {
   };
 }
 
-let sessions: { limit: number; gate: ReturnType<typeof createSemaphore> } | null =
-  null;
+let sessions: {
+  limit: number;
+  gate: ReturnType<typeof createSemaphore>;
+} | null = null;
 
 function sessionGate(env: Env) {
   const limit = positiveInt(env.BROWSERLESS_CONCURRENCY, DEFAULT_CONCURRENCY);
@@ -301,7 +322,7 @@ export function canLaunchLocally(env: Env = process.env): boolean {
  */
 export async function acquireLocalBrowser(): Promise<BrowserLease> {
   const browser = await launchLocalBrowser();
-  return { browser, remote: false, budgetMs: null, release: async () => { } };
+  return { browser, remote: false, budgetMs: null, release: async () => {} };
 }
 
 /**
@@ -323,8 +344,8 @@ export async function acquireBrowser(
     if (!canLaunchLocally(env)) {
       throw new Error(
         'BROWSERLESS_TOKEN is not set. Serverless deployments have no local ' +
-        'browser to launch — add the token from browserless.io to the ' +
-        'project environment variables.',
+          'browser to launch — add the token from browserless.io to the ' +
+          'project environment variables.',
       );
     }
     return acquireLocalBrowser();
@@ -351,7 +372,7 @@ export async function acquireBrowser(
     release: async () => {
       if (released) return;
       released = true;
-      await browser.close().catch(() => { });
+      await browser.close().catch(() => {});
       gate.release();
     },
   };
@@ -362,6 +383,6 @@ export async function closeBrowser() {
   const pending = localBrowser;
   localBrowser = null;
   if (pending) {
-    await pending.then((browser) => browser.close()).catch(() => { });
+    await pending.then((browser) => browser.close()).catch(() => {});
   }
 }

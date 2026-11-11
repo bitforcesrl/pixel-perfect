@@ -1,5 +1,5 @@
-import {describe, expect, it} from 'vitest';
-import {DEFAULT_SETTINGS, allPresets, enabledPresets} from './settings';
+import { describe, expect, it } from 'vitest';
+import { DEFAULT_SETTINGS, allPresets, enabledPresets } from './settings';
 import {
   VIEWPORT_KEYS,
   assignViewport,
@@ -19,7 +19,8 @@ const ALL = allPresets(DEFAULT_SETTINGS); // 375 / 768 / 1440
 /** The named viewports at the default sizes, ascending by width. */
 const some = (
   ...keys: Array<'mobile' | 'tablet' | 'desktop'>
-): ViewportPreset[] => ALL.filter((preset) => (keys as string[]).includes(preset.key));
+): ViewportPreset[] =>
+  ALL.filter((preset) => (keys as string[]).includes(preset.key));
 
 const slot = (overrides: Partial<ViewportSlot> = {}): ViewportSlot => ({
   ...createSlot(),
@@ -28,7 +29,7 @@ const slot = (overrides: Partial<ViewportSlot> = {}): ViewportSlot => ({
 
 const ready = () =>
   slot({
-    screenshot: {image: 'data:image/png;base64,x', width: 375, height: 900},
+    screenshot: { image: 'data:image/png;base64,x', width: 375, height: 900 },
     figmaSrc: 'blob:figma',
     figmaFileName: 'figma.png',
     status: 'ready',
@@ -53,8 +54,8 @@ describe('assignViewport', () => {
   it('follows the configured widths rather than fixed thresholds', () => {
     const presets = enabledPresets({
       ...DEFAULT_SETTINGS,
-      tablet: {...DEFAULT_SETTINGS.tablet, enabled: true},
-      desktop: {label: 'Desktop', enabled: true, width: 1024, height: 900},
+      tablet: { ...DEFAULT_SETTINGS.tablet, enabled: true },
+      desktop: { label: 'Desktop', enabled: true, width: 1024, height: 900 },
     });
     // 1024 would have been tablet under the old 1100 threshold
     expect(assignViewport(1024, presets)).toBe('desktop');
@@ -96,9 +97,11 @@ describe('createSlots', () => {
 describe('isSlotReady', () => {
   it('requires both a screenshot and a Figma export', () => {
     expect(isSlotReady(ready())).toBe(true);
-    expect(isSlotReady(slot({figmaSrc: 'blob:figma'}))).toBe(false);
+    expect(isSlotReady(slot({ figmaSrc: 'blob:figma' }))).toBe(false);
     expect(
-      isSlotReady(slot({screenshot: {image: 'x', width: 375, height: 900}})),
+      isSlotReady(
+        slot({ screenshot: { image: 'x', width: 375, height: 900 } }),
+      ),
     ).toBe(false);
     expect(isSlotReady(slot())).toBe(false);
   });
@@ -106,17 +109,17 @@ describe('isSlotReady', () => {
 
 describe('firstReadyViewport', () => {
   it('keeps the preferred viewport when it is ready and enabled', () => {
-    const slots = {...createSlots(), mobile: ready(), desktop: ready()};
+    const slots = { ...createSlots(), mobile: ready(), desktop: ready() };
     expect(firstReadyViewport(slots, 'desktop', ALL)).toBe('desktop');
   });
 
   it('falls back to the first ready viewport by width', () => {
-    const slots = {...createSlots(), tablet: ready()};
+    const slots = { ...createSlots(), tablet: ready() };
     expect(firstReadyViewport(slots, 'desktop', ALL)).toBe('tablet');
   });
 
   it('refuses a ready viewport that is disabled', () => {
-    const slots = {...createSlots(), desktop: ready(), mobile: ready()};
+    const slots = { ...createSlots(), desktop: ready(), mobile: ready() };
     expect(firstReadyViewport(slots, 'desktop', some('mobile'))).toBe('mobile');
     expect(firstReadyViewport(slots, 'desktop', some('tablet'))).toBeNull();
   });
@@ -126,7 +129,7 @@ describe('firstReadyViewport', () => {
   });
 
   it('tolerates a null preference', () => {
-    const slots = {...createSlots(), desktop: ready()};
+    const slots = { ...createSlots(), desktop: ready() };
     expect(firstReadyViewport(slots, null, ALL)).toBe('desktop');
   });
 });

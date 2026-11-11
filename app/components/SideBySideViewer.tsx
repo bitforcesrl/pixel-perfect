@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useLayoutEffect, useRef, useState } from "react";
-import { clampOffset } from "@/lib/offset";
-import type { ScrollPos } from "@/lib/scrollsync";
-import TiledImage from "./TiledImage";
+import { useLayoutEffect, useRef, useState } from 'react';
+import { clampOffset } from '@/lib/offset';
+import type { ScrollPos } from '@/lib/scrollsync';
+import TiledImage from './TiledImage';
 
 export interface SideBySideViewerProps {
   screenshotSrc: string;
@@ -22,9 +22,9 @@ export interface SideBySideViewerProps {
 
 /** Where a pointer drag started, and what it is allowed to move. */
 type Drag =
-  | { kind: "figma"; y: number; offset: number }
+  | { kind: 'figma'; y: number; offset: number }
   | {
-      kind: "pan";
+      kind: 'pan';
       pane: HTMLDivElement;
       x: number;
       y: number;
@@ -32,9 +32,9 @@ type Drag =
       scrollTop: number;
     };
 
-const PANE = "min-w-0 flex-1 overflow-auto select-none";
+const PANE = 'min-w-0 flex-1 overflow-auto select-none';
 const CHIP =
-  "pointer-events-none absolute top-2 left-2 z-10 rounded border bg-ink-void px-2 py-1 text-xs font-medium";
+  'pointer-events-none absolute top-2 left-2 z-10 rounded border bg-ink-void px-2 py-1 text-xs font-medium';
 const CHIP_SITE = `${CHIP} border-press-cyan/40 text-press-cyan`;
 const CHIP_FIGMA = `${CHIP} border-press-magenta/40 text-press-magenta`;
 
@@ -60,7 +60,7 @@ export default function SideBySideViewer(props: SideBySideViewerProps) {
   // write fires does not bounce straight back
   const syncingRef = useRef(false);
   const dragRef = useRef<Drag | null>(null);
-  const [dragging, setDragging] = useState<Drag["kind"] | null>(null);
+  const [dragging, setDragging] = useState<Drag['kind'] | null>(null);
 
   const width = screenshotWidth * zoom;
 
@@ -92,7 +92,8 @@ export default function SideBySideViewer(props: SideBySideViewerProps) {
   // The Figma export has no known height until it decodes, so the pane
   // clamped it at the top — line it up again now there is room to scroll
   const handleFigmaSize = (naturalWidth: number, naturalHeight: number) => {
-    if (naturalWidth) onFigmaHeightChange(screenshotWidth * (naturalHeight / naturalWidth));
+    if (naturalWidth)
+      onFigmaHeightChange(screenshotWidth * (naturalHeight / naturalWidth));
     const site = siteRef.current;
     const figma = figmaRef.current;
     if (site && figma) mirror(site, figma);
@@ -124,10 +125,10 @@ export default function SideBySideViewer(props: SideBySideViewerProps) {
     if (e.button !== 0 || e.target === e.currentTarget) return;
     const pane = e.currentTarget;
     if (figmaDragEnabled && pane === figmaRef.current) {
-      dragRef.current = { kind: "figma", y: e.clientY, offset: offsetY };
+      dragRef.current = { kind: 'figma', y: e.clientY, offset: offsetY };
     } else {
       dragRef.current = {
-        kind: "pan",
+        kind: 'pan',
         pane,
         x: e.clientX,
         y: e.clientY,
@@ -144,7 +145,7 @@ export default function SideBySideViewer(props: SideBySideViewerProps) {
     if (!drag) return;
 
     // The pane's own scroll handler carries the pan over to its partner
-    if (drag.kind === "pan") {
+    if (drag.kind === 'pan') {
       drag.pane.scrollLeft = drag.scrollLeft - (e.clientX - drag.x);
       drag.pane.scrollTop = drag.scrollTop - (e.clientY - drag.y);
       return;
@@ -165,7 +166,7 @@ export default function SideBySideViewer(props: SideBySideViewerProps) {
     setDragging(null);
   };
 
-  const panCursor = dragging === "pan" ? "cursor-grabbing" : "cursor-grab";
+  const panCursor = dragging === 'pan' ? 'cursor-grabbing' : 'cursor-grab';
   const dragHandlers = {
     onPointerDown: handlePointerDown,
     onPointerMove: handlePointerMove,
@@ -176,7 +177,7 @@ export default function SideBySideViewer(props: SideBySideViewerProps) {
   // Each pane is exactly as wide as the image it holds, so the two meet at the
   // divider and the pair sits centred. Past half the canvas they shrink to fit
   // and scroll internally, still flush against the divider.
-  const paneStyle = { flex: "0 1 auto", width } as const;
+  const paneStyle = { flex: '0 1 auto', width } as const;
 
   return (
     <div className="flex h-full w-full justify-center">
@@ -187,7 +188,7 @@ export default function SideBySideViewer(props: SideBySideViewerProps) {
           ref={figmaRef}
           onScroll={handleFigmaScroll}
           {...dragHandlers}
-          className={`${PANE} ${figmaDragEnabled ? "cursor-ns-resize" : panCursor}`}
+          className={`${PANE} ${figmaDragEnabled ? 'cursor-ns-resize' : panCursor}`}
         >
           <TiledImage
             src={figmaSrc}

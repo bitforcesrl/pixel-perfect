@@ -1,32 +1,32 @@
-import type { Metadata } from "next";
-import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
+import './globals.css';
 
 // Display — the wordmark and nothing else, set tight and loud like a plate label
 const archivo = Archivo({
-  variable: "--font-archivo",
-  subsets: ["latin"],
+  variable: '--font-archivo',
+  subsets: ['latin'],
 });
 
 // UI — drawn for instrument panels: open apertures and unambiguous letterforms,
 // which is what 10-12px of dense label copy actually needs
 const plexSans = IBM_Plex_Sans({
-  variable: "--font-plex-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  variable: '--font-plex-sans',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
 });
 
 // Data — offsets, dimensions, percentages
 const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  variable: '--font-plex-mono',
+  subsets: ['latin'],
+  weight: ['400', '500'],
 });
 
 export const metadata: Metadata = {
-  title: "Pixel Perfect — Figma vs Site Diff",
+  title: 'Pixel Perfect — Figma vs Site Diff',
   description:
-    "Compare a live website screenshot with your Figma design, pixel by pixel.",
+    'Compare a live website screenshot with your Figma design, pixel by pixel.',
 };
 
 export default function RootLayout({

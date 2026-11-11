@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, type ReactNode } from 'react';
 
 export interface ModalProps {
   open: boolean;
@@ -9,14 +9,14 @@ export interface ModalProps {
   /** A line under the title saying what this dialog is for. */
   subtitle?: string;
   /** How wide the sheet gets. Panels are narrow; galleries are wide. */
-  size?: "sm" | "md" | "lg";
+  size?: 'sm' | 'md' | 'lg';
   children: ReactNode;
 }
 
-const WIDTH: Record<NonNullable<ModalProps["size"]>, string> = {
-  sm: "w-[min(24rem,calc(100vw-2rem))]",
-  md: "w-[min(34rem,calc(100vw-2rem))]",
-  lg: "w-[min(64rem,calc(100vw-2rem))]",
+const WIDTH: Record<NonNullable<ModalProps['size']>, string> = {
+  sm: 'w-[min(24rem,calc(100vw-2rem))]',
+  md: 'w-[min(34rem,calc(100vw-2rem))]',
+  lg: 'w-[min(64rem,calc(100vw-2rem))]',
 };
 
 /**
@@ -32,16 +32,16 @@ export default function Modal({
   onClose,
   title,
   subtitle,
-  size = "md",
+  size = 'md',
   children,
 }: ModalProps) {
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === 'Escape') onClose();
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
 
   if (!open) return null;
@@ -64,7 +64,9 @@ export default function Modal({
             {title}
           </h2>
           {subtitle && (
-            <span className="truncate text-[11px] text-ink-500">{subtitle}</span>
+            <span className="truncate text-[11px] text-ink-500">
+              {subtitle}
+            </span>
           )}
           <span className="h-px flex-1 bg-ink-800" aria-hidden="true" />
           <button

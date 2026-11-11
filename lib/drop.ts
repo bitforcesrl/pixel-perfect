@@ -23,7 +23,10 @@ export const IMAGE_TYPES = [
 const IMAGE_EXTENSIONS = /\.(png|jpe?g|webp|avif|gif|bmp)$/i;
 
 /** The `accept` attribute for a picker that takes what a drop takes. */
-export const IMAGE_ACCEPT = [...IMAGE_TYPES, '.png,.jpg,.jpeg,.webp,.avif,.gif,.bmp'].join(',');
+export const IMAGE_ACCEPT = [
+  ...IMAGE_TYPES,
+  '.png,.jpg,.jpeg,.webp,.avif,.gif,.bmp',
+].join(',');
 
 /** Whether `file` is an image this app can put on a layer. */
 export function isImageFile(file: File): boolean {

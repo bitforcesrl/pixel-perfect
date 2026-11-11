@@ -1,5 +1,12 @@
 # Pixel Perfect
 
+[![CI](https://github.com/bitforcesrl/pixel-perfect/actions/workflows/ci.yml/badge.svg)](https://github.com/bitforcesrl/pixel-perfect/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20.9-339933.svg?logo=node.js&logoColor=white)](.nvmrc)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-black.svg?logo=next.js)](https://nextjs.org)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+
 > Put the live site and its Figma design on top of each other, and see every pixel that doesn't match.
 
 Pixel Perfect is a web app for **design QA**. For each page and each viewport (mobile, tablet, desktop or your own sizes) it stacks a screenshot of the website over the matching Figma frame, then gives you four ways to compare them, plus tools to align, measure, annotate and share what you find.
@@ -21,6 +28,8 @@ Start with two images dragged onto the canvas. Add a Figma token and the design 
 - [Keyboard shortcuts](#keyboard-shortcuts)
 - [Project structure](#project-structure)
 - [Contributing](#contributing)
+- [Community](#community)
+- [License](#license)
 
 ---
 
@@ -60,10 +69,10 @@ Pixel Perfect keeps the whole loop in one place:
 
 ## Three ways to use it
 
-| Level | Figma layer | Site layer | Needs |
-| --- | --- | --- | --- |
-| **1. Drag & drop** (base) | Drop a PNG/JPEG export | Drop a PNG/JPEG screenshot | Nothing: works anywhere |
-| **2. Figma API** | Fetched automatically at 2x | Drop a screenshot | A Figma personal access token |
+| Level                         | Figma layer                 | Site layer                             | Needs                           |
+| ----------------------------- | --------------------------- | -------------------------------------- | ------------------------------- |
+| **1. Drag & drop** (base)     | Drop a PNG/JPEG export      | Drop a PNG/JPEG screenshot             | Nothing: works anywhere         |
+| **2. Figma API**              | Fetched automatically at 2x | Drop a screenshot                      | A Figma personal access token   |
 | **3. Local, fully automatic** | Fetched automatically at 2x | Captured automatically with Playwright | The app running on your machine |
 
 You can mix them freely: a layer you drop and a layer the app fetched behave exactly the same.
@@ -72,28 +81,28 @@ You can mix them freely: a layer you drop and a layer the app fetched behave exa
 
 ## Features
 
-| Area | What it does |
-| --- | --- |
-| **Drag & drop** | Drop images on the canvas (left half = Figma, right half = site) or on a viewport tab, split the same way. PNG, JPEG, WebP, AVIF, GIF and BMP are accepted; a retina screenshot is recognised by its width and shown at the viewport's CSS size. |
-| **Figma export** | Renders a frame at 2x through the Figma REST API, for one viewport (`M`) or all of them (`⇧M`). |
-| **Site capture** | Full-page screenshots at each viewport's exact width with Playwright, when running locally. |
-| **Projects & pages** | A project holds many pages. Each page has a URL and one Figma link per viewport. Gallery with thumbnails. |
-| **Viewports** | Mobile, Tablet and Desktop by default. Add, rename, resize or disable them in the settings. |
-| **Comparison modes** | **Split**, **Overlay** (opacity + `difference`, `normal`, `overlay`, `exclusion` blend modes), **Tap**, **Side by side** (synced scroll). |
-| **Alignment** | Pixel vertical offset, align top/bottom, drag the Figma layer, zoom and fit. |
-| **Annotations** | Vertical and horizontal guides, a pen with colors and widths, per-page text notes. |
-| **History** | Save Figma exports as named snapshots to compare design versions over time. |
-| **Sharing** | Export/import a whole project as a ZIP: layers, guides, drawings, notes and settings. |
-| **Diff map** | Download the difference image to attach to a ticket. |
-| **Persistence** | Everything is kept in the browser (IndexedDB). Reload and pick up where you left off. |
-| **Access control** | Optional password for a public deployment. |
+| Area                 | What it does                                                                                                                                                                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Drag & drop**      | Drop images on the canvas (left half = Figma, right half = site) or on a viewport tab, split the same way. PNG, JPEG, WebP, AVIF, GIF and BMP are accepted; a retina screenshot is recognised by its width and shown at the viewport's CSS size. |
+| **Figma export**     | Renders a frame at 2x through the Figma REST API, for one viewport (`M`) or all of them (`⇧M`).                                                                                                                                                  |
+| **Site capture**     | Full-page screenshots at each viewport's exact width with Playwright, when running locally.                                                                                                                                                      |
+| **Projects & pages** | A project holds many pages. Each page has a URL and one Figma link per viewport. Gallery with thumbnails.                                                                                                                                        |
+| **Viewports**        | Mobile, Tablet and Desktop by default. Add, rename, resize or disable them in the settings.                                                                                                                                                      |
+| **Comparison modes** | **Split**, **Overlay** (opacity + `difference`, `normal`, `overlay`, `exclusion` blend modes), **Tap**, **Side by side** (synced scroll).                                                                                                        |
+| **Alignment**        | Pixel vertical offset, align top/bottom, drag the Figma layer, zoom and fit.                                                                                                                                                                     |
+| **Annotations**      | Vertical and horizontal guides, a pen with colors and widths, per-page text notes.                                                                                                                                                               |
+| **History**          | Save Figma exports as named snapshots to compare design versions over time.                                                                                                                                                                      |
+| **Sharing**          | Export/import a whole project as a ZIP: layers, guides, drawings, notes and settings.                                                                                                                                                            |
+| **Diff map**         | Download the difference image to attach to a ticket.                                                                                                                                                                                             |
+| **Persistence**      | Everything is kept in the browser (IndexedDB). Reload and pick up where you left off.                                                                                                                                                            |
+| **Access control**   | Optional password for a public deployment.                                                                                                                                                                                                       |
 
 ## Core concepts
 
 - **Project**: a site or feature under review.
 - **Page**: a site URL plus links to its Figma frames, one per viewport. Managed under **File ▸ Pages**.
 - **Viewport**: a size (width × height) at which both layers are compared.
-- **Layers**: each viewport has two plates, *Figma* (magenta) and *Site* (cyan). The **Layers** panel shows the state of each and lets you fetch it again or remove it.
+- **Layers**: each viewport has two plates, _Figma_ (magenta) and _Site_ (cyan). The **Layers** panel shows the state of each and lets you fetch it again or remove it.
 
 > Data lives **only in the browser you're using**. To move it to another machine or share it, use **File ▸ Export project as ZIP** and **File ▸ Import project from ZIP**.
 
@@ -128,9 +137,9 @@ Instead of exporting from Figma by hand, add a Figma token once:
 2. Create a token with the **File content: Read-only** scope.
 3. Paste it when the app asks, or via **Capture ▸ Figma token…**. It is stored only in your browser.
 4. In **File ▸ Pages**, paste each viewport's frame link (right-click the frame in Figma ▸ **Copy link to selection**).
-5. Press **Capture** on the *Figma* row of the **Layers** panel (`M`), or **All** (`⇧M`) for every viewport.
+5. Press **Capture** on the _Figma_ row of the **Layers** panel (`M`), or **All** (`⇧M`) for every viewport.
 
-> Figma's image-rendering endpoint is tightly rate limited for *View* and *Collab* seats. Use a *Dev* or *Full* seat.
+> Figma's image-rendering endpoint is tightly rate limited for _View_ and _Collab_ seats. Use a _Dev_ or _Full_ seat.
 
 ### 5. Compare, annotate, share
 
@@ -165,37 +174,38 @@ Running the app on your own machine unlocks **fully automatic capture**. Configu
 ### Install
 
 ```bash
-git clone <repo-url> pixel-perfect
+git clone https://github.com/bitforcesrl/pixel-perfect.git
 cd pixel-perfect
-npm install          # also downloads Firefox for Playwright (postinstall)
+npm install
 cp .env.example .env # optional: no variable is required locally
 npm run dev
 ```
 
 Open **http://localhost:7654**.
 
-If the browser download fails during install (you were offline, for example), run it later:
+Drag & drop and Figma export work right away. **Automatic site capture is optional** and needs a browser that Playwright drives; download it once (about 100 MB) only if you want it:
 
 ```bash
-npm run playwright:install
+npm run playwright:install   # downloads Firefox for local captures
 ```
 
 ### Set up automatic capture
 
-1. **Figma token**: set `FIGMA_TOKEN` in `.env`, or paste your own token in the app (see [above](#4-optional-fetch-figma-frames-automatically)).
-2. **Pages**: in **File ▸ Pages**, give each page its **Capture URL** and one **Figma frame link** per viewport.
-3. **Viewports**: adjust sizes or add new ones under **Capture ▸ Viewport settings…** (`,`).
+1. **Browser**: run `npm run playwright:install` once, if you haven't already.
+2. **Figma token**: set `FIGMA_TOKEN` in `.env`, or paste your own token in the app (see [above](#4-optional-fetch-figma-frames-automatically)).
+3. **Pages**: in **File ▸ Pages**, give each page its **Capture URL** and one **Figma frame link** per viewport.
+4. **Viewports**: adjust sizes or add new ones under **Capture ▸ Viewport settings…** (`,`).
 
 ### Capture
 
-When the app is opened from `localhost`, the *Site* row in the **Layers** panel shows the **Local** button:
+When the app is opened from `localhost`, the _Site_ row in the **Layers** panel shows the **Local** button:
 
-| Action | Button | Key | Menu |
-| --- | --- | --- | --- |
-| Capture the site, current viewport | **Local** | `L` | Capture ▸ Capture *viewport* on this machine |
-| Capture the site, every viewport | **All** | `⇧L` | Capture ▸ Capture all on this machine |
-| Export Figma, current viewport | **Capture** (Figma row) | `M` | Capture ▸ Export *viewport* Figma frame at 2x |
-| Export Figma, every viewport | **All** (Figma row) | `⇧M` | Capture ▸ Export every Figma frame at 2x |
+| Action                             | Button                  | Key  | Menu                                          |
+| ---------------------------------- | ----------------------- | ---- | --------------------------------------------- |
+| Capture the site, current viewport | **Local**               | `L`  | Capture ▸ Capture _viewport_ on this machine  |
+| Capture the site, every viewport   | **All**                 | `⇧L` | Capture ▸ Capture all on this machine         |
+| Export Figma, current viewport     | **Capture** (Figma row) | `M`  | Capture ▸ Export _viewport_ Figma frame at 2x |
+| Export Figma, every viewport       | **All** (Figma row)     | `⇧M` | Capture ▸ Export every Figma frame at 2x      |
 
 A site capture opens the page at the viewport's exact width, waits for it to load and saves a full-page screenshot. You can capture:
 
@@ -237,14 +247,17 @@ The image ships with Firefox for captures. To capture a server running on your h
 
 ### Scripts
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Dev server on port `7654` |
-| `npm run build` / `npm start` | Production build and start |
-| `npm run lint` | ESLint |
-| `npm test` | Tests (Vitest) |
-| `npm run playwright:install` | Download the browser used for local captures |
-| `npm run secrets:scan` | Scan git history for leaked secrets (gitleaks) |
+| Command                           | Description                                    |
+| --------------------------------- | ---------------------------------------------- |
+| `npm run dev`                     | Dev server on port `7654`                      |
+| `npm run build` / `npm start`     | Production build and start                     |
+| `npm run lint` / `lint:fix`       | ESLint (report / auto-fix)                     |
+| `npm run typecheck`               | TypeScript check, no output                    |
+| `npm run format` / `format:check` | Prettier (write / verify)                      |
+| `npm test`                        | Tests (Vitest)                                 |
+| `npm run check`                   | Lint + typecheck + format check + tests, as CI |
+| `npm run playwright:install`      | Download the browser used for local captures   |
+| `npm run secrets:scan`            | Scan git history for leaked secrets (gitleaks) |
 
 ---
 
@@ -252,10 +265,10 @@ The image ships with Firefox for captures. To capture a server running on your h
 
 Every variable is optional. See [`.env.example`](.env.example) for details.
 
-| Variable | Purpose |
-| --- | --- |
+| Variable        | Purpose                                                                                                                    |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `SITE_PASSWORD` | Protects the instance with a password. Empty means no gate (the local default). Changing it makes every browser ask again. |
-| `FIGMA_TOKEN` | A server-wide Figma token. When unset, each user enters their own. |
+| `FIGMA_TOKEN`   | A server-wide Figma token. When unset, each user enters their own.                                                         |
 
 For a public deployment, set at least `SITE_PASSWORD`.
 
@@ -265,19 +278,19 @@ For a public deployment, set at least `SITE_PASSWORD`.
 
 The full list is under **Help ▸ Keyboard shortcuts**. The main ones:
 
-| Key | Action |
-| --- | --- |
-| `1` `2` `3` `4` | Split / Overlay / Tap / Side by side |
-| `I` | Open Figma exports from disk |
-| `L` / `⇧L` | Local site capture: current viewport / all |
-| `M` / `⇧M` | Figma export: current viewport / all |
-| `+` `-` `f` `0` | Zoom in / out / fit / 100% |
-| `G` / `⇧G` | Vertical / horizontal guide |
-| `D` / `Z` | Pen / undo last stroke |
-| `S` | Save snapshot |
-| `E` | Download diff map |
-| `N` / `P` | New project / pages |
-| `B` | Show/hide the inspector |
+| Key             | Action                                     |
+| --------------- | ------------------------------------------ |
+| `1` `2` `3` `4` | Split / Overlay / Tap / Side by side       |
+| `I`             | Open Figma exports from disk               |
+| `L` / `⇧L`      | Local site capture: current viewport / all |
+| `M` / `⇧M`      | Figma export: current viewport / all       |
+| `+` `-` `f` `0` | Zoom in / out / fit / 100%                 |
+| `G` / `⇧G`      | Vertical / horizontal guide                |
+| `D` / `Z`       | Pen / undo last stroke                     |
+| `S`             | Save snapshot                              |
+| `E`             | Download diff map                          |
+| `N` / `P`       | New project / pages                        |
+| `B`             | Show/hide the inspector                    |
 
 ---
 
@@ -288,11 +301,28 @@ app/
   api/            Server routes: screenshot, figma, auth, login-session
   components/     React components (Workspace is the smart container; the rest are reusable UI)
 lib/              Pure logic: capture, Figma, IndexedDB storage, ZIP, diff, viewports, feature flags
-scripts/          postinstall (Playwright browser) and git hooks
+scripts/          git hooks (gitleaks pre-commit)
 ```
 
 Stack: **Next.js 16**, **React 19**, **Tailwind CSS 4**, **Playwright**, **Vitest**.
 
 ## Contributing
 
-The project is on its way to becoming open source. Issues and pull requests are welcome. Run `npm run lint` and `npm test` before opening a PR.
+Contributions are welcome: bug reports, ideas, docs and code. Read the [contributing guide](CONTRIBUTING.md) for the setup, code style and pull request process, and run `npm run check` before opening a PR.
+
+Looking for a place to start? Browse the issues labelled [`good first issue`](https://github.com/bitforcesrl/pixel-perfect/labels/good%20first%20issue).
+
+## Community
+
+- 🐛 **Bugs and feature requests**: [GitHub Issues](https://github.com/bitforcesrl/pixel-perfect/issues)
+- 💬 **Questions and ideas**: [GitHub Discussions](https://github.com/bitforcesrl/pixel-perfect/discussions)
+- 🔒 **Security vulnerabilities**: report them privately as described in [SECURITY.md](SECURITY.md)
+- 📝 **What's new**: [CHANGELOG.md](CHANGELOG.md)
+
+Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+> Pixel Perfect is maintained in spare time and comes with **no warranty and no guaranteed support**. Issues and pull requests are handled on a best-effort basis. Use it at your own risk.
+
+## License
+
+[MIT](LICENSE) © 2026 Tommaso Rossi. Provided "as is", without warranty of any kind.

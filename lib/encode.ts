@@ -1,6 +1,6 @@
-import {readAsDataUrl} from './image';
-import {createJpegWriter, MAX_JPEG_SIDE} from './jpeg';
-import {drawWhole, openRaster, type Raster} from './raster';
+import { readAsDataUrl } from './image';
+import { createJpegWriter, MAX_JPEG_SIDE } from './jpeg';
+import { drawWhole, openRaster, type Raster } from './raster';
 import {
   MAX_UNTILED_HEIGHT,
   TILE_HEIGHT,
@@ -81,11 +81,11 @@ function createCanvas(width: number, height: number) {
   canvas.height = height;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D context unavailable');
-  return {canvas, ctx};
+  return { canvas, ctx };
 }
 
 /** Whether the picture is small enough to stay one file. */
-function fitsOneFile({width, height}: Raster): boolean {
+function fitsOneFile({ width, height }: Raster): boolean {
   return height <= MAX_UNTILED_HEIGHT && width * height <= MAX_CANVAS_AREA;
 }
 
@@ -94,7 +94,7 @@ async function encodeSingle(
   raster: Raster,
   quality: number,
 ): Promise<Blob | null> {
-  const {canvas, ctx} = createCanvas(raster.width, raster.height);
+  const { canvas, ctx } = createCanvas(raster.width, raster.height);
   await drawWhole(ctx, raster, 0, 0, raster.width, raster.height);
   return encodeCanvas(canvas, ctx, quality);
 }
@@ -109,7 +109,7 @@ async function encodeTiled(
   raster: Raster,
   quality: number,
 ): Promise<Blob | null> {
-  const {width, height} = raster;
+  const { width, height } = raster;
   // Never past the canvas limit, however wide the picture
   const maxStrip = Math.max(
     8,
@@ -119,7 +119,7 @@ async function encodeTiled(
   const count = Math.ceil(height / maxStrip);
   const step = Math.ceil(height / count);
 
-  const {canvas, ctx} = createCanvas(width, step);
+  const { canvas, ctx } = createCanvas(width, step);
   const tiles: Tile[] = [];
   let mime: string | null = null;
   for (let top = 0; top < height; top += step) {
@@ -140,10 +140,10 @@ async function encodeTiled(
     const blob = await encodeCanvas(canvas, ctx, quality, mime);
     if (!blob) return null;
     mime = blob.type;
-    tiles.push({height: rows, blob});
+    tiles.push({ height: rows, blob });
     await yieldToPage();
   }
-  return packTiles({width, height, mime: mime ?? WEBP, tiles});
+  return packTiles({ width, height, mime: mime ?? WEBP, tiles });
 }
 
 /**
@@ -151,7 +151,7 @@ async function encodeTiled(
  * band by band by our own encoder, on a white ground.
  */
 async function streamJpeg(raster: Raster): Promise<Blob | null> {
-  const {width, height} = raster;
+  const { width, height } = raster;
   if (width > MAX_JPEG_SIDE || height > MAX_JPEG_SIDE) return null;
   const band = Math.max(
     8,
@@ -161,7 +161,7 @@ async function streamJpeg(raster: Raster): Promise<Blob | null> {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = band;
-  const ctx = canvas.getContext('2d', {willReadFrequently: true});
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return null;
 
   const jpeg = createJpegWriter(width, height, JPEG_QUALITY * 100);
@@ -250,7 +250,7 @@ export async function toThumbnailDataUrl(
     const raster = await openRaster(src);
     if (raster.width === 0 || raster.height === 0) return null;
 
-    const {canvas, ctx} = createCanvas(width, height);
+    const { canvas, ctx } = createCanvas(width, height);
     const scale = width / raster.width;
     // Never sample past the bottom of an image shorter than the card
     const sourceHeight = Math.min(raster.height, height / scale);

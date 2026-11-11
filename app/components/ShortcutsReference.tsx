@@ -1,4 +1,4 @@
-import type { ShortcutGroup } from "@/lib/shortcuts";
+import type { ShortcutGroup } from '@/lib/shortcuts';
 
 export interface ShortcutsReferenceProps {
   groups: ShortcutGroup[];
@@ -10,7 +10,9 @@ export interface ShortcutsReferenceProps {
  * Dumb component: it renders whatever groups it is given, so the catalog in
  * `lib/shortcuts.ts` stays the one place that says which keys exist.
  */
-export default function ShortcutsReference({ groups }: ShortcutsReferenceProps) {
+export default function ShortcutsReference({
+  groups,
+}: ShortcutsReferenceProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {groups.map((group) => (
@@ -47,7 +49,7 @@ export default function ShortcutsReference({ groups }: ShortcutsReferenceProps) 
 
 /** One key cap. Words like "drag" are gestures, not keys, so they render plain. */
 function Key({ label }: { label: string }) {
-  if (label === "drag") {
+  if (label === 'drag') {
     return <span className="text-[11px] text-ink-500">+ drag</span>;
   }
   return (

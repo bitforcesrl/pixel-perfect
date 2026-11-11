@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useRef, useState } from "react";
+import { useRef, useState } from 'react';
 import {
   annotationId,
   clampGuide,
   strokePath,
   type Guide,
   type Stroke,
-} from "@/lib/annotations";
+} from '@/lib/annotations';
 
-export type Tool = "none" | "pen";
+export type Tool = 'none' | 'pen';
 
 export interface AnnotationLayerProps {
   tool: Tool;
@@ -28,7 +28,7 @@ export interface AnnotationLayerProps {
 const MIN_STEP = 2;
 
 const HANDLE =
-  "pointer-events-auto flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] leading-none text-ink-950 shadow-md select-none";
+  'pointer-events-auto flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] leading-none text-ink-950 shadow-md select-none';
 
 /**
  * Guides and freehand marks, over both plates at once.
@@ -71,12 +71,12 @@ export default function AnnotationLayer({
   /** ── The pen ─────────────────────────────────────────────────────────── */
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (tool !== "pen" || e.button !== 0) return;
+    if (tool !== 'pen' || e.button !== 0) return;
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     const { x, y } = localPoint(e);
     const stroke: Stroke = {
-      id: annotationId("stroke"),
+      id: annotationId('stroke'),
       color: penColor,
       width: penWidth,
       points: [x, y],
@@ -91,7 +91,8 @@ export default function AnnotationLayer({
     const { x, y } = localPoint(e);
     const lastX = stroke.points[stroke.points.length - 2];
     const lastY = stroke.points[stroke.points.length - 1];
-    if (Math.abs(x - lastX) < MIN_STEP && Math.abs(y - lastY) < MIN_STEP) return;
+    if (Math.abs(x - lastX) < MIN_STEP && Math.abs(y - lastY) < MIN_STEP)
+      return;
     const next = { ...stroke, points: [...stroke.points, x, y] };
     drawingRef.current = next;
     setDrawing(next);
@@ -119,10 +120,10 @@ export default function AnnotationLayer({
     const rect = rootRef.current?.getBoundingClientRect();
     if (!rect) return;
     const pos =
-      guide.axis === "x" ? e.clientX - rect.left : e.clientY - rect.top;
+      guide.axis === 'x' ? e.clientX - rect.left : e.clientY - rect.top;
     onMoveGuide(
       guide.id,
-      clampGuide(pos, guide.axis === "x" ? rect.width : rect.height),
+      clampGuide(pos, guide.axis === 'x' ? rect.width : rect.height),
     );
   };
 
@@ -138,7 +139,7 @@ export default function AnnotationLayer({
       // Out of the way until the pen is up: pan, the split divider and the
       // Figma drag all live underneath and must keep receiving pointers
       className={`absolute inset-0 z-10 ${
-        tool === "pen" ? "cursor-crosshair touch-none" : "pointer-events-none"
+        tool === 'pen' ? 'cursor-crosshair touch-none' : 'pointer-events-none'
       }`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -166,16 +167,18 @@ export default function AnnotationLayer({
 
       {guides.map((guide) => {
         const selected = guide.id === selectedGuideId;
-        const vertical = guide.axis === "x";
+        const vertical = guide.axis === 'x';
         return (
           <div
             key={guide.id}
-            className={`absolute ${vertical ? "inset-y-0" : "inset-x-0"}`}
+            className={`absolute ${vertical ? 'inset-y-0' : 'inset-x-0'}`}
             style={vertical ? { left: guide.pos } : { top: guide.pos }}
           >
             <div
               className={`absolute ${
-                vertical ? "inset-y-0 -left-px w-0.5" : "inset-x-0 -top-px h-0.5"
+                vertical
+                  ? 'inset-y-0 -left-px w-0.5'
+                  : 'inset-x-0 -top-px h-0.5'
               }`}
               style={{ backgroundColor: guide.color }}
             />
@@ -184,8 +187,8 @@ export default function AnnotationLayer({
             <div
               className={
                 vertical
-                  ? "sticky top-2 w-fit -translate-x-1/2"
-                  : "sticky left-2 w-fit -translate-y-1/2"
+                  ? 'sticky top-2 w-fit -translate-x-1/2'
+                  : 'sticky left-2 w-fit -translate-y-1/2'
               }
             >
               {/* A button rather than a slider: a slider would advertise a
@@ -193,7 +196,7 @@ export default function AnnotationLayer({
               <div
                 role="button"
                 tabIndex={0}
-                aria-label={`${vertical ? "Vertical" : "Horizontal"} guide at ${Math.round(
+                aria-label={`${vertical ? 'Vertical' : 'Horizontal'} guide at ${Math.round(
                   guide.pos,
                 )}px — arrow keys move it, Delete removes it`}
                 onPointerDown={(e) => startGuideDrag(e, guide)}
@@ -203,26 +206,26 @@ export default function AnnotationLayer({
                 onDoubleClick={() => onDeleteGuide(guide.id)}
                 onKeyDown={(e) => {
                   const step = e.shiftKey ? 10 : 1;
-                  if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+                  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
                     e.preventDefault();
                     onMoveGuide(guide.id, guide.pos - step);
                   }
-                  if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+                  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                     e.preventDefault();
                     onMoveGuide(guide.id, guide.pos + step);
                   }
-                  if (e.key === "Backspace" || e.key === "Delete") {
+                  if (e.key === 'Backspace' || e.key === 'Delete') {
                     e.preventDefault();
                     onDeleteGuide(guide.id);
                   }
                 }}
                 title="Drag to move · double-click to remove"
                 className={`${HANDLE} ${
-                  vertical ? "cursor-ew-resize" : "cursor-ns-resize"
-                } ${selected ? "ring-2 ring-ink-100" : ""}`}
+                  vertical ? 'cursor-ew-resize' : 'cursor-ns-resize'
+                } ${selected ? 'ring-2 ring-ink-100' : ''}`}
                 style={{ backgroundColor: guide.color }}
               >
-                <span aria-hidden="true">{vertical ? "↔" : "↕"}</span>
+                <span aria-hidden="true">{vertical ? '↔' : '↕'}</span>
                 {Math.round(guide.pos)}
                 <button
                   type="button"

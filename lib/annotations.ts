@@ -84,7 +84,7 @@ export function freeGuidePos(
 
 /** An SVG path for one stroke. A single point still draws, as a dot. */
 export function strokePath(stroke: Stroke): string {
-  const {points} = stroke;
+  const { points } = stroke;
   if (points.length < 2) return '';
   let path = `M ${points[0]} ${points[1]}`;
   for (let i = 2; i < points.length; i += 2) {

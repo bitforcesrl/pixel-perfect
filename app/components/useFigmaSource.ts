@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { authHeaders } from "@/lib/gate";
+import { useEffect, useState } from 'react';
+import { authHeaders } from '@/lib/gate';
 
 /** Where the token a Figma export runs with comes from. */
-export type FigmaSource = "env" | "key";
+export type FigmaSource = 'env' | 'key';
 
 /**
  * Ask the server, once, whether it carries a Figma token of its own. Null until
@@ -18,13 +18,13 @@ export function useFigmaSource(): FigmaSource | null {
     let cancelled = false;
     void (async () => {
       try {
-        const res = await fetch("/api/figma", {
-          cache: "no-store",
+        const res = await fetch('/api/figma', {
+          cache: 'no-store',
           headers: await authHeaders(),
         });
         if (!res.ok) return;
         const data = (await res.json()) as { source?: unknown };
-        if (!cancelled) setSource(data.source === "env" ? "env" : "key");
+        if (!cancelled) setSource(data.source === 'env' ? 'env' : 'key');
       } catch {
         // Offline or blocked: the POST reports the same thing later
       }

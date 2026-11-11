@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Modal from "./Modal";
-import { MAX_NAME_LENGTH } from "@/lib/projects";
+import { useState } from 'react';
+import Modal from './Modal';
+import { MAX_NAME_LENGTH } from '@/lib/projects';
 
 export interface FirstPageDialogProps {
   open: boolean;
@@ -15,9 +15,9 @@ export interface FirstPageDialogProps {
 }
 
 const FIELD =
-  "w-full rounded border border-ink-700 bg-ink-850 px-2.5 py-2 text-[12px] text-ink-100 outline-none placeholder:text-ink-600 focus:border-press-violet";
+  'w-full rounded border border-ink-700 bg-ink-850 px-2.5 py-2 text-[12px] text-ink-100 outline-none placeholder:text-ink-600 focus:border-press-violet';
 const LABEL =
-  "text-[10px] font-medium tracking-[0.12em] text-press-cyan uppercase";
+  'text-[10px] font-medium tracking-[0.12em] text-press-cyan uppercase';
 
 /**
  * The page a new project opens on, asked for the moment the project exists.
@@ -49,9 +49,9 @@ function Form({
   defaultName,
   onSubmit,
   onClose,
-}: Omit<FirstPageDialogProps, "open">) {
+}: Omit<FirstPageDialogProps, 'open'>) {
   const [name, setName] = useState(defaultName);
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState('');
 
   const trimmedName = name.trim();
 
@@ -80,7 +80,7 @@ function Form({
             placeholder="Home"
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") submit();
+              if (e.key === 'Enter') submit();
             }}
             className={FIELD}
           />
@@ -94,7 +94,7 @@ function Form({
             placeholder="https://example.com"
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") submit();
+              if (e.key === 'Enter') submit();
             }}
             className={`${FIELD} font-mono text-[11px]`}
           />

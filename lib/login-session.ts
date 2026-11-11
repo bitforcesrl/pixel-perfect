@@ -78,7 +78,8 @@ function sessionsDir(): string {
 export function sessionKey(url: string): string | null {
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')
+      return null;
     return parsed.host.toLowerCase();
   } catch {
     return null;
@@ -154,7 +155,7 @@ async function finish(key: string): Promise<void> {
     const state = await snapshot(win.context).catch(() => win.latest);
     await writeState(key, state);
     windows.delete(key);
-    await win.browser.close().catch(() => { });
+    await win.browser.close().catch(() => {});
   })();
   return win.finishing;
 }
@@ -170,7 +171,7 @@ export async function openLoginWindow(url: string): Promise<void> {
   if (!canOpenLoginWindow()) {
     throw new Error(
       'A login window can only be opened when the app runs directly on this ' +
-      'machine (not in Docker or on a server).',
+        'machine (not in Docker or on a server).',
     );
   }
 
@@ -178,7 +179,7 @@ export async function openLoginWindow(url: string): Promise<void> {
   if (existing && !existing.finishing) {
     // Already open: bring it forward instead of opening a second one
     const page = existing.context.pages()[0];
-    await page?.bringToFront().catch(() => { });
+    await page?.bringToFront().catch(() => {});
     return;
   }
 
@@ -193,7 +194,7 @@ export async function openLoginWindow(url: string): Promise<void> {
       ...(saved ? { storageState: saved } : {}),
     });
   } catch (err) {
-    await browser.close().catch(() => { });
+    await browser.close().catch(() => {});
     throw err;
   }
 
@@ -207,7 +208,7 @@ export async function openLoginWindow(url: string): Promise<void> {
         (state) => {
           win.latest = state;
         },
-        () => { },
+        () => {},
       );
     }, SNAPSHOT_MS),
   };
@@ -239,7 +240,7 @@ export async function forgetLoginSession(url: string): Promise<void> {
   if (win) {
     clearInterval(win.timer);
     windows.delete(key);
-    await win.browser.close().catch(() => { });
+    await win.browser.close().catch(() => {});
   }
   await rm(sessionFile(key), { force: true });
 }

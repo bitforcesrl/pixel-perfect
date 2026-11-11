@@ -1,16 +1,16 @@
-import {describe, it, expect, beforeAll, afterAll} from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import http from 'node:http';
-import type {AddressInfo} from 'node:net';
-import {takeScreenshot, closeBrowser} from './screenshot';
-import {renderScaleFor} from './render-scale';
+import type { AddressInfo } from 'node:net';
+import { takeScreenshot, closeBrowser } from './screenshot';
+import { renderScaleFor } from './render-scale';
 
-const VIEWPORT = {width: 800, height: 600};
+const VIEWPORT = { width: 800, height: 600 };
 const BLOCK_COUNT = 10;
 const BLOCK_HEIGHT = 1000;
 const CONTENT_HEIGHT = BLOCK_COUNT * BLOCK_HEIGHT;
 
 const blocks = Array.from(
-  {length: BLOCK_COUNT},
+  { length: BLOCK_COUNT },
   (_, i) =>
     `<div class="block" style="background:hsl(${i * 20} 70% 60%)">BLOCK ${i}</div>`,
 ).join('');
@@ -38,7 +38,7 @@ const PAGES: Record<string, string> = {
   // page starts one screen tall and only reaches full height if the scroll
   // pass keeps following the growing document all the way to the footer.
   'lazy-growth': `<style>${BASE_CSS}.pending{height:200px}footer{height:${BLOCK_HEIGHT}px;background:#0b1f6b;color:#fff;font:48px sans-serif;display:flex;align-items:center;justify-content:center}</style>
-    <div id="stage-0">${Array.from({length: 2}, (_, i) => `<div class="block" style="background:hsl(${i * 20} 70% 60%)">BLOCK ${i}</div>`).join('')}</div>
+    <div id="stage-0">${Array.from({ length: 2 }, (_, i) => `<div class="block" style="background:hsl(${i * 20} 70% 60%)">BLOCK ${i}</div>`).join('')}</div>
     <div class="pending" id="sentinel-0"></div>
     <script>
       var STAGES = ${BLOCK_COUNT / 2};
@@ -85,12 +85,12 @@ beforeAll(async () => {
     // Stands in for a host that turns the capture away — Shopify answers a
     // throttled request with exactly this.
     if (shape === 'rate-limited') {
-      res.writeHead(429, {'content-type': 'text/plain'});
+      res.writeHead(429, { 'content-type': 'text/plain' });
       res.end('local_rate_limited');
       return;
     }
     const body = PAGES[shape] ?? '';
-    res.writeHead(200, {'content-type': 'text/html'});
+    res.writeHead(200, { 'content-type': 'text/html' });
     res.end(`<!doctype html><html><head></head><body>${body}</body></html>`);
   });
   await new Promise<void>((resolve) => server.listen(0, resolve));
@@ -105,7 +105,7 @@ afterAll(async () => {
 /** Reads width/height out of a PNG's IHDR chunk. */
 function pngSize(dataUrl: string) {
   const buffer = Buffer.from(dataUrl.split(',')[1], 'base64');
-  return {width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20)};
+  return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
 }
 
 /** Full rendered height each shape must reach — the lazy one adds a footer. */

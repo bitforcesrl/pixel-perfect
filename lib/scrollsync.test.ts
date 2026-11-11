@@ -1,5 +1,5 @@
-import {describe, expect, it} from 'vitest';
-import {figmaScrollTop, siteScrollTop} from './scrollsync';
+import { describe, expect, it } from 'vitest';
+import { figmaScrollTop, siteScrollTop } from './scrollsync';
 
 describe('scrollsync', () => {
   it('maps 1:1 when there is no offset', () => {

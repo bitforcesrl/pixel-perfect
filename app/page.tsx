@@ -1,5 +1,5 @@
-import PasswordGate from "./components/PasswordGate";
-import PixelPerfectApp from "./components/PixelPerfectApp";
+import PasswordGate from './components/PasswordGate';
+import PixelPerfectApp from './components/PixelPerfectApp';
 
 export default function Home() {
   return (

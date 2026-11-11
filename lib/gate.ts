@@ -1,5 +1,5 @@
-import {PASSWORD_HEADER} from './auth';
-import {clearPassword, loadPassword, savePassword} from './storage';
+import { PASSWORD_HEADER } from './auth';
+import { clearPassword, loadPassword, savePassword } from './storage';
 
 /**
  * Site password — client side.
@@ -12,9 +12,9 @@ let cached: string | null = null;
 
 /** Does this deployment want a password? Unset on the server means no. */
 export async function isGateRequired(): Promise<boolean> {
-  const res = await fetch('/api/auth', {cache: 'no-store'});
+  const res = await fetch('/api/auth', { cache: 'no-store' });
   if (!res.ok) return true;
-  const data = (await res.json()) as {required?: unknown};
+  const data = (await res.json()) as { required?: unknown };
   return data.required === true;
 }
 
@@ -22,8 +22,8 @@ export async function isGateRequired(): Promise<boolean> {
 export async function checkPassword(password: string): Promise<boolean> {
   const res = await fetch('/api/auth', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({password}),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
   });
   return res.ok;
 }
@@ -48,5 +48,5 @@ export async function forgetPassword(): Promise<void> {
 /** The header every gated API call carries. Empty when there is no password. */
 export async function authHeaders(): Promise<Record<string, string>> {
   const password = await readPassword();
-  return password ? {[PASSWORD_HEADER]: password} : {};
+  return password ? { [PASSWORD_HEADER]: password } : {};
 }

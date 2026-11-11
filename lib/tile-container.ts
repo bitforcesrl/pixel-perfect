@@ -120,8 +120,11 @@ export async function unpackTiles(blob: Blob): Promise<TileSet | null> {
     const tileHeight = table.getUint32(i * PER_TILE);
     const size = table.getUint32(i * PER_TILE + 4);
     if (start + size > blob.size) throw new Error('Truncated tiled image');
-    tiles.push({height: tileHeight, blob: blob.slice(start, start + size, mime)});
+    tiles.push({
+      height: tileHeight,
+      blob: blob.slice(start, start + size, mime),
+    });
     start += size;
   }
-  return {width, height, mime, tiles};
+  return { width, height, mime, tiles };
 }

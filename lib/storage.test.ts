@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
-import {IDBFactory} from 'fake-indexeddb';
-import {afterEach, describe, expect, it, vi} from 'vitest';
+import { IDBFactory } from 'fake-indexeddb';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   clearAll,
   clearFigma,
@@ -15,8 +15,8 @@ import {
   saveNotes,
   saveScreenshot,
 } from './storage';
-import type {ScreenshotResult} from './validation';
-import {LEGACY_PROJECT_ID} from './projects';
+import type { ScreenshotResult } from './validation';
+import { LEGACY_PROJECT_ID } from './projects';
 
 /** The page everything below is stored under. */
 const P = 'page-a';
@@ -27,12 +27,14 @@ const SHOT: ScreenshotResult = {
   height: 1200,
 };
 
-function entry(overrides: Partial<Parameters<typeof saveHistoryEntry>[0]> = {}) {
+function entry(
+  overrides: Partial<Parameters<typeof saveHistoryEntry>[0]> = {},
+) {
   return {
     projectId: 'proj-a',
     pageId: P,
     viewport: 'mobile' as const,
-    blob: new Blob(['figma-bytes'], {type: 'image/webp'}),
+    blob: new Blob(['figma-bytes'], { type: 'image/webp' }),
     fileName: 'home.webp',
     offsetY: 0,
     savedAt: 1_700_000_000_000,
@@ -64,7 +66,7 @@ describe('slots', () => {
     await saveFigma(
       P,
       'desktop',
-      new Blob(['bytes'], {type: 'image/webp'}),
+      new Blob(['bytes'], { type: 'image/webp' }),
       'home.webp',
     );
 
@@ -119,17 +121,17 @@ describe('history', () => {
   });
 
   it('returns entries newest first, whatever order they were written in', async () => {
-    await saveHistoryEntry(entry({fileName: 'middle.webp', savedAt: 2000}));
-    await saveHistoryEntry(entry({fileName: 'oldest.webp', savedAt: 1000}));
-    await saveHistoryEntry(entry({fileName: 'newest.webp', savedAt: 3000}));
+    await saveHistoryEntry(entry({ fileName: 'middle.webp', savedAt: 2000 }));
+    await saveHistoryEntry(entry({ fileName: 'oldest.webp', savedAt: 1000 }));
+    await saveHistoryEntry(entry({ fileName: 'newest.webp', savedAt: 3000 }));
 
     const names = (await loadHistory(P)).map((e) => e.fileName);
     expect(names).toEqual(['newest.webp', 'middle.webp', 'oldest.webp']);
   });
 
   it('keeps entries for different viewports side by side', async () => {
-    await saveHistoryEntry(entry({viewport: 'mobile', savedAt: 2000}));
-    await saveHistoryEntry(entry({viewport: 'desktop', savedAt: 1000}));
+    await saveHistoryEntry(entry({ viewport: 'mobile', savedAt: 2000 }));
+    await saveHistoryEntry(entry({ viewport: 'desktop', savedAt: 1000 }));
 
     expect((await loadHistory(P)).map((e) => e.viewport)).toEqual([
       'mobile',
@@ -139,14 +141,16 @@ describe('history', () => {
 
   it('leaves another page out of the list', async () => {
     await saveHistoryEntry(entry());
-    await saveHistoryEntry(entry({pageId: 'page-b', fileName: 'other.webp'}));
+    await saveHistoryEntry(entry({ pageId: 'page-b', fileName: 'other.webp' }));
 
-    expect((await loadHistory(P)).map((e) => e.fileName)).toEqual(['home.webp']);
+    expect((await loadHistory(P)).map((e) => e.fileName)).toEqual([
+      'home.webp',
+    ]);
   });
 
   it('deletes one entry and leaves the rest', async () => {
-    await saveHistoryEntry(entry({fileName: 'a.webp', savedAt: 2000}));
-    await saveHistoryEntry(entry({fileName: 'b.webp', savedAt: 1000}));
+    await saveHistoryEntry(entry({ fileName: 'a.webp', savedAt: 2000 }));
+    await saveHistoryEntry(entry({ fileName: 'b.webp', savedAt: 1000 }));
 
     const doomed = (await loadHistory(P)).find((e) => e.fileName === 'a.webp');
     await deleteHistoryEntry(doomed!.id);
@@ -211,7 +215,7 @@ describe('upgrades', () => {
         const db = request.result;
         const tx = db.transaction('slots', 'readwrite');
         tx.objectStore('slots').put(
-          {screenshot: SHOT, figmaBlob: null, figmaFileName: null},
+          { screenshot: SHOT, figmaBlob: null, figmaFileName: null },
           'mobile',
         );
         tx.onerror = () => reject(tx.error);
@@ -225,7 +229,7 @@ describe('upgrades', () => {
     // Opening at version 2 runs the upgrade; the project list migrates the
     // pre-project records under the default project's one page, which carries
     // the project's own id
-    const {projects} = await loadProjects();
+    const { projects } = await loadProjects();
     expect(projects.map((p) => p.id)).toEqual([LEGACY_PROJECT_ID]);
     expect(projects[0].pages.map((p) => p.id)).toEqual([LEGACY_PROJECT_ID]);
 

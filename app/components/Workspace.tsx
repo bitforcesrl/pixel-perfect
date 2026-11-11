@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   useEffect,
@@ -7,28 +7,28 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
-} from "react";
-import AnnotationLayer, { type Tool } from "./AnnotationLayer";
-import BrowserlessKeyDialog from "./BrowserlessKeyDialog";
-import { CLOUD_CAPTURE_ENABLED } from "@/lib/features";
-import FigmaTokenDialog from "./FigmaTokenDialog";
-import ExportProjectDialog from "./ExportProjectDialog";
-import HelpDialog from "./HelpDialog";
-import ControlPanel from "./ControlPanel";
-import ComparisonViewer from "./ComparisonViewer";
-import ConfirmDialog from "./ConfirmDialog";
-import MenuBar, { type Menu } from "./MenuBar";
-import Modal from "./Modal";
-import NewProjectDialog from "./NewProjectDialog";
-import PagesGallery from "./PagesGallery";
-import PageSwitcher from "./PageSwitcher";
-import ProjectsPanel from "./ProjectsPanel";
-import RegistrationMark from "./RegistrationMark";
-import SettingsPanel from "./SettingsPanel";
-import SideBySideViewer from "./SideBySideViewer";
-import ViewportCards from "./ViewportCards";
-import { useCaptureSource } from "./useCaptureSource";
-import { useFigmaSource } from "./useFigmaSource";
+} from 'react';
+import AnnotationLayer, { type Tool } from './AnnotationLayer';
+import BrowserlessKeyDialog from './BrowserlessKeyDialog';
+import { CLOUD_CAPTURE_ENABLED } from '@/lib/features';
+import FigmaTokenDialog from './FigmaTokenDialog';
+import ExportProjectDialog from './ExportProjectDialog';
+import HelpDialog from './HelpDialog';
+import ControlPanel from './ControlPanel';
+import ComparisonViewer from './ComparisonViewer';
+import ConfirmDialog from './ConfirmDialog';
+import MenuBar, { type Menu } from './MenuBar';
+import Modal from './Modal';
+import NewProjectDialog from './NewProjectDialog';
+import PagesGallery from './PagesGallery';
+import PageSwitcher from './PageSwitcher';
+import ProjectsPanel from './ProjectsPanel';
+import RegistrationMark from './RegistrationMark';
+import SettingsPanel from './SettingsPanel';
+import SideBySideViewer from './SideBySideViewer';
+import ViewportCards from './ViewportCards';
+import { useCaptureSource } from './useCaptureSource';
+import { useFigmaSource } from './useFigmaSource';
 import {
   annotationId,
   clampGuide,
@@ -38,36 +38,40 @@ import {
   type Guide,
   type GuideAxis,
   type Stroke,
-} from "@/lib/annotations";
-import { captureHeaders, loadKey, subscribeKey } from "@/lib/browserless-key";
-import { generateDiffImage } from "@/lib/diff";
-import { parseFigmaUrl, type FigmaRender } from "@/lib/figma";
-import { composeFigmaRender, wasShrunk } from "@/lib/figma-compose";
+} from '@/lib/annotations';
+import { captureHeaders, loadKey, subscribeKey } from '@/lib/browserless-key';
+import { generateDiffImage } from '@/lib/diff';
+import { parseFigmaUrl, type FigmaRender } from '@/lib/figma';
+import { composeFigmaRender, wasShrunk } from '@/lib/figma-compose';
 import {
   figmaHeaders,
   loadFigmaToken,
   subscribeFigmaToken,
-} from "@/lib/figma-token";
-import { forgetPassword } from "@/lib/gate";
-import type { ScrollPos } from "@/lib/scrollsync";
-import { toCompactBlob, toCompactDataUrl, toThumbnailDataUrl } from "@/lib/encode";
-import { readAsDataUrl, readImageSize } from "@/lib/image";
-import { bottomAlignOffset, clampOffset } from "@/lib/offset";
-import { prewarmTiles, releaseTiles } from "@/lib/tiles";
-import { inferDeviceScale } from "@/lib/device-scale";
+} from '@/lib/figma-token';
+import { forgetPassword } from '@/lib/gate';
+import type { ScrollPos } from '@/lib/scrollsync';
+import {
+  toCompactBlob,
+  toCompactDataUrl,
+  toThumbnailDataUrl,
+} from '@/lib/encode';
+import { readAsDataUrl, readImageSize } from '@/lib/image';
+import { bottomAlignOffset, clampOffset } from '@/lib/offset';
+import { prewarmTiles, releaseTiles } from '@/lib/tiles';
+import { inferDeviceScale } from '@/lib/device-scale';
 import {
   dropSide,
   hasFiles,
   IMAGE_ACCEPT,
   imageFiles,
   type DropSide,
-} from "@/lib/drop";
+} from '@/lib/drop';
 import {
   exportFileName,
   exportProject,
   importProject,
   type ExportOptions,
-} from "@/lib/transfer";
+} from '@/lib/transfer';
 import {
   clearAll,
   clearFigma,
@@ -87,25 +91,25 @@ import {
   saveScreenshot,
   renameHistoryEntry,
   type HistoryEntry,
-} from "@/lib/storage";
+} from '@/lib/storage';
 import {
   allPresets,
   DEFAULT_SETTINGS,
   enabledPresets,
   viewportLabels,
   type ViewportSettings,
-} from "@/lib/settings";
-import type { ScreenshotResult } from "@/lib/validation";
-import { renderScaleFor } from "@/lib/render-scale";
-import type { Page, Project } from "@/lib/projects";
-import type { BlendMode, ViewMode } from "@/lib/types";
+} from '@/lib/settings';
+import type { ScreenshotResult } from '@/lib/validation';
+import { renderScaleFor } from '@/lib/render-scale';
+import type { Page, Project } from '@/lib/projects';
+import type { BlendMode, ViewMode } from '@/lib/types';
 import {
   clampZoom,
   defaultZoom,
   MAX_ZOOM,
   MIN_ZOOM,
   stepZoom,
-} from "@/lib/zoom";
+} from '@/lib/zoom';
 import {
   assignViewport,
   createSlots,
@@ -116,7 +120,7 @@ import {
   type ViewportPreset,
   type ViewportSlot,
   type ViewportSlots,
-} from "@/lib/viewports";
+} from '@/lib/viewports';
 
 const CANVAS_PADDING = 48; // the p-6 gutter either side of the viewer
 const CAPTURE_INSET = 25; // the p-6 gutter plus the viewer's 1px border
@@ -127,7 +131,7 @@ const CAPTURE_INSET = 25; // the p-6 gutter plus the viewer's 1px border
  * a speed bump: something you cannot hit by pressing Return twice, and cannot
  * type by accident while meaning to reset one page.
  */
-const RESET_PASSKEY = "RESET ALL";
+const RESET_PASSKEY = 'RESET ALL';
 
 /**
  * Let go of a layer's object URL and the strips cut from it. A layer that is
@@ -160,7 +164,7 @@ function notAnImageError(transfer: DataTransfer | null): string {
   const name = transfer?.files?.[0]?.name;
   return name
     ? `${name} is not an image — drop a PNG, JPEG or WebP`
-    : "Drop a PNG, JPEG or WebP image";
+    : 'Drop a PNG, JPEG or WebP image';
 }
 /**
  * The view modes, in the order the View menu and the inspector list them.
@@ -170,10 +174,10 @@ function notAnImageError(transfer: DataTransfer | null): string {
  * way round.
  */
 const VIEW_MODES: { value: ViewMode; label: string; shortcut: string }[] = [
-  { value: "split", label: "Split", shortcut: "1" },
-  { value: "overlay", label: "Overlay", shortcut: "2" },
-  { value: "tap", label: "Tap", shortcut: "3" },
-  { value: "sideBySide", label: "Side by side", shortcut: "4" },
+  { value: 'split', label: 'Split', shortcut: '1' },
+  { value: 'overlay', label: 'Overlay', shortcut: '2' },
+  { value: 'tap', label: 'Tap', shortcut: '3' },
+  { value: 'sideBySide', label: 'Side by side', shortcut: '4' },
 ];
 
 export interface WorkspaceProps {
@@ -225,12 +229,11 @@ export default function Workspace({
   const pageId = page.id;
   const url = page.url;
   const [storedSlots, setSlots] = useState<ViewportSlots>(createSlots);
-  const [preferredViewport, setPreferredViewport] = useState<ViewportKey | null>(
-    null,
-  );
+  const [preferredViewport, setPreferredViewport] =
+    useState<ViewportKey | null>(null);
   const [opacity, setOpacity] = useState(100);
-  const [blendMode, setBlendMode] = useState<BlendMode>("normal");
-  const [viewMode, setViewMode] = useState<ViewMode>("split");
+  const [blendMode, setBlendMode] = useState<BlendMode>('normal');
+  const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [zoom, setZoom] = useState(1);
   // Which viewport the current zoom was defaulted for
   const [zoomedFor, setZoomedFor] = useState<string | null>(null);
@@ -238,7 +241,7 @@ export default function Workspace({
   const [syncScroll, setSyncScroll] = useState(true);
   // Off by default: dragging pans the canvas until you opt into moving Figma
   const [figmaDragEnabled, setFigmaDragEnabled] = useState(false);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState('');
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -288,12 +291,12 @@ export default function Workspace({
   // The viewports whose Figma frame is being rendered right now
   const [figmaBusy, setFigmaBusy] = useState<Record<ViewportKey, boolean>>({});
   // Which browser took the last capture — printed in the status bar
-  const [lastBrowser, setLastBrowser] = useState<"local" | "browserless" | null>(
-    null,
-  );
+  const [lastBrowser, setLastBrowser] = useState<
+    'local' | 'browserless' | null
+  >(null);
   // ── The annotation tools. Deliberately not persisted: guides and marks are
   //    what you are saying about this screen right now, not part of the page.
-  const [tool, setTool] = useState<Tool>("none");
+  const [tool, setTool] = useState<Tool>('none');
   const [guides, setGuides] = useState<Guide[]>([]);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [guideColor, setGuideColor] = useState(DEFAULT_GUIDE_COLOR);
@@ -301,7 +304,7 @@ export default function Workspace({
   const [penWidth, setPenWidth] = useState(2);
   const [selectedGuideId, setSelectedGuideId] = useState<string | null>(null);
   // Which destructive command is waiting to be confirmed, if any
-  const [confirming, setConfirming] = useState<"page" | "everything" | null>(
+  const [confirming, setConfirming] = useState<'page' | 'everything' | null>(
     null,
   );
   const canvasRef = useRef<HTMLElement>(null);
@@ -328,7 +331,10 @@ export default function Workspace({
   const modalRef = useRef(false);
 
   const patchSlot = (key: ViewportKey, patch: Partial<ViewportSlot>) => {
-    setSlots((prev) => ({ ...prev, [key]: { ...slotOf(prev, key), ...patch } }));
+    setSlots((prev) => ({
+      ...prev,
+      [key]: { ...slotOf(prev, key), ...patch },
+    }));
   };
 
   /**
@@ -497,7 +503,8 @@ export default function Workspace({
    * so there is always a viewport to capture into.
    */
   const activeViewport: ViewportKey | null =
-    preferredViewport && presets.some((preset) => preset.key === preferredViewport)
+    preferredViewport &&
+    presets.some((preset) => preset.key === preferredViewport)
       ? preferredViewport
       : (firstReadyViewport(slots, null, presets) ?? presets[0]?.key ?? null);
   const activeSlot = activeViewport ? slots[activeViewport] : null;
@@ -517,15 +524,15 @@ export default function Workspace({
   useEffect(() => {
     if (activeViewport === null || screenshotHeight === null) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
       // Already answered — the open menu walking its items, a focused guide
       // moving itself — or a dialog has the keyboard
       if (e.defaultPrevented || modalRef.current) return;
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName;
-      if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
       e.preventDefault();
-      const step = (e.shiftKey ? 10 : 1) * (e.key === "ArrowUp" ? -1 : 1);
+      const step = (e.shiftKey ? 10 : 1) * (e.key === 'ArrowUp' ? -1 : 1);
       setSlots((prev) => {
         const slot = slotOf(prev, activeViewport);
         return {
@@ -541,8 +548,8 @@ export default function Workspace({
         };
       });
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [activeViewport, screenshotHeight]);
 
   const setOffsetY = (value: number) => {
@@ -584,7 +591,9 @@ export default function Workspace({
     if (!width || !canvas) return;
     // Side by side only splits the canvas when both layers are on screen
     const panes =
-      viewMode === "sideBySide" && activeSlot?.screenshot && activeSlot.figmaSrc ? 2 : 1;
+      viewMode === 'sideBySide' && activeSlot?.screenshot && activeSlot.figmaSrc
+        ? 2
+        : 1;
     const fit = (canvas.clientWidth / panes - CANVAS_PADDING) / width;
     setZoom(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, fit)));
   };
@@ -666,9 +675,7 @@ export default function Workspace({
     }
 
     setUploadError(
-      unreadable.length > 0
-        ? `Could not read ${unreadable.join(", ")}`
-        : null,
+      unreadable.length > 0 ? `Could not read ${unreadable.join(', ')}` : null,
     );
   };
 
@@ -765,7 +772,7 @@ export default function Workspace({
           ...current,
           screenshot,
           figmaHeight,
-          status: "ready" as const,
+          status: 'ready' as const,
           error: null,
           ...(resetOffset ? { offsetY: 0 } : {}),
         },
@@ -824,12 +831,12 @@ export default function Workspace({
 
   /** Drop a viewport's site capture, leaving its Figma export in place. */
   const handleRemoveScreenshot = (key: ViewportKey) => {
-    if (slots[key].status === "capturing") return;
+    if (slots[key].status === 'capturing') return;
     const image = slots[key].screenshot?.image;
     if (image && !screenshotUsedElsewhere(slots, key, image)) {
       releaseTiles(image);
     }
-    patchSlot(key, { screenshot: null, status: "idle", error: null });
+    patchSlot(key, { screenshot: null, status: 'idle', error: null });
     void clearScreenshot(pageId, key);
   };
 
@@ -853,7 +860,7 @@ export default function Workspace({
       setHistory(await loadHistory(pageId));
       setUploadError(null);
     } catch {
-      setUploadError("Could not save that export");
+      setUploadError('Could not save that export');
     }
   };
 
@@ -905,10 +912,10 @@ export default function Workspace({
     targets: ViewportPreset[],
     opts: { local?: boolean } = {},
   ) => {
-    if (targets.length === 0 || url.trim() === "") return;
+    if (targets.length === 0 || url.trim() === '') return;
     // Nothing to capture with. Asking for the key beats three cards failing
     // with the same message on them.
-    if (!opts.local && source === "key" && loadKey() === null) {
+    if (!opts.local && source === 'key' && loadKey() === null) {
       setKeyError(null);
       setKeyDialogOpen(true);
       return;
@@ -926,7 +933,7 @@ export default function Workspace({
       for (const preset of targets) {
         next[preset.key] = {
           ...slotOf(prev, preset.key),
-          status: "capturing",
+          status: 'capturing',
           error: null,
         };
       }
@@ -938,8 +945,8 @@ export default function Workspace({
         // Already replaced by a drop: no point shooting it
         if (!isLatestFor(preset.key)) continue;
         try {
-          const res = await fetch("/api/screenshot", {
-            method: "POST",
+          const res = await fetch('/api/screenshot', {
+            method: 'POST',
             headers: await captureHeaders({ local: opts.local }),
             body: JSON.stringify({
               url,
@@ -959,14 +966,14 @@ export default function Workspace({
           // The key was removed or refused. That is a thing to fix in a dialog,
           // not an error to leave sitting on every card of the run.
           if (!res.ok && data?.needsKey) {
-            setKeyError(data.error ?? "Add a Browserless key to capture");
+            setKeyError(data.error ?? 'Add a Browserless key to capture');
             setKeyDialogOpen(true);
             setSlots((prev) => {
               const next = { ...prev };
               for (const entry of targets) {
                 const slot = slotOf(prev, entry.key);
-                if (slot.status !== "capturing") continue;
-                next[entry.key] = { ...slot, status: "idle" };
+                if (slot.status !== 'capturing') continue;
+                next[entry.key] = { ...slot, status: 'idle' };
               }
               return next;
             });
@@ -975,8 +982,8 @@ export default function Workspace({
           if (!isLatestFor(preset.key)) continue;
           if (!res.ok) {
             patchSlot(preset.key, {
-              status: "error",
-              error: data.error ?? "Screenshot failed",
+              status: 'error',
+              error: data.error ?? 'Screenshot failed',
             });
             continue;
           }
@@ -992,7 +999,7 @@ export default function Workspace({
           // A recapture of the same page keeps its alignment
           landScreenshot(preset.key, screenshot, { resetOffset: false });
           void saveScreenshot(pageId, preset.key, screenshot);
-          setLastBrowser(opts.local ? "local" : "browserless");
+          setLastBrowser(opts.local ? 'local' : 'browserless');
           // Presets run narrowest first, so the gallery ends up showing the
           // widest capture this run produced
           void refreshPreview(screenshot.image);
@@ -1000,8 +1007,8 @@ export default function Workspace({
           // A drop that replaced this capture is not an error on its card
           if (!isLatestFor(preset.key)) continue;
           patchSlot(preset.key, {
-            status: "error",
-            error: err instanceof Error ? err.message : "Network error",
+            status: 'error',
+            error: err instanceof Error ? err.message : 'Network error',
           });
         }
       }
@@ -1035,7 +1042,7 @@ export default function Workspace({
 
   /** The frame a viewport is exported from, when its link can be read. */
   const figmaTargetOf = (key: ViewportKey) =>
-    parseFigmaUrl(page.figmaUrls[key] ?? "");
+    parseFigmaUrl(page.figmaUrls[key] ?? '');
 
   /**
    * The bytes of a Figma render: straight from Figma's storage when it allows
@@ -1047,11 +1054,14 @@ export default function Workspace({
       image = await fetch(renderUrl);
       if (!image.ok) throw new Error(String(image.status));
     } catch {
-      image = await fetch(`/api/figma?render=${encodeURIComponent(renderUrl)}`, {
-        headers: await figmaHeaders(),
-      });
+      image = await fetch(
+        `/api/figma?render=${encodeURIComponent(renderUrl)}`,
+        {
+          headers: await figmaHeaders(),
+        },
+      );
     }
-    if (!image.ok) throw new Error("could not download the render");
+    if (!image.ok) throw new Error('could not download the render');
     return image.blob();
   };
 
@@ -1072,11 +1082,11 @@ export default function Workspace({
     });
     if (jobs.length === 0) {
       setUploadError(
-        `No Figma frame link for ${targets.map((preset) => preset.label).join(", ")} — set one under File ▸ Pages`,
+        `No Figma frame link for ${targets.map((preset) => preset.label).join(', ')} — set one under File ▸ Pages`,
       );
       return;
     }
-    if (figmaSource === "key" && loadFigmaToken() === null) {
+    if (figmaSource === 'key' && loadFigmaToken() === null) {
       setFigmaTokenError(null);
       setFigmaDialogOpen(true);
       return;
@@ -1091,7 +1101,7 @@ export default function Workspace({
       setFigmaBusy((prev) => ({ ...prev, [key]: false }));
 
     // The run has had to stop — sign-in gone, or a token to ask for
-    const stopped = new Error("stopped");
+    const stopped = new Error('stopped');
     // Figma's real render limit, once a shrunk render has given it away: the
     // route slices by it for the rest of the run
     let learnedArea: number | null = null;
@@ -1111,8 +1121,8 @@ export default function Workspace({
           let frameScale: number | null = null;
           /** The route's answer for this frame, or for one part of it. */
           const ask = async (nodeId: string, slice: boolean) => {
-            const res = await fetch("/api/figma", {
-              method: "POST",
+            const res = await fetch('/api/figma', {
+              method: 'POST',
               headers: await figmaHeaders(),
               body: JSON.stringify({
                 fileKey: target.fileKey,
@@ -1129,12 +1139,14 @@ export default function Workspace({
             }
             const data = await res.json();
             if (!res.ok && data?.needsToken) {
-              setFigmaTokenError(data.error ?? "Add a Figma token to export frames");
+              setFigmaTokenError(
+                data.error ?? 'Add a Figma token to export frames',
+              );
               setFigmaDialogOpen(true);
               for (const job of jobs.slice(index)) done(job.preset.key);
               throw stopped;
             }
-            if (!res.ok) throw new Error(data.error ?? "Figma export failed");
+            if (!res.ok) throw new Error(data.error ?? 'Figma export failed');
             return data as FigmaRender;
           };
 
@@ -1176,13 +1188,13 @@ export default function Workspace({
             });
             blob = composed.blob;
             if (composed.shrunk > 0) {
-              const parts = `${composed.shrunk} part${composed.shrunk === 1 ? "" : "s"}`;
-              warning = `${parts} could not be sliced small enough for Figma to render at ${render.scale}x and ${composed.shrunk === 1 ? "was" : "were"} stretched into place`;
+              const parts = `${composed.shrunk} part${composed.shrunk === 1 ? '' : 's'}`;
+              warning = `${parts} could not be sliced small enough for Figma to render at ${render.scale}x and ${composed.shrunk === 1 ? 'was' : 'were'} stretched into place`;
             }
           }
 
           const file = new File([blob], `${render.name}@${render.scale}x.png`, {
-            type: "image/png",
+            type: 'image/png',
           });
           await handleFigmaDropOn(preset.key, file);
           // After the drop, which clears the message line on success
@@ -1190,7 +1202,7 @@ export default function Workspace({
         } catch (err) {
           if (err === stopped) return;
           setUploadError(
-            `${preset.label}: ${err instanceof Error ? err.message : "Network error"}`,
+            `${preset.label}: ${err instanceof Error ? err.message : 'Network error'}`,
           );
         }
         done(preset.key);
@@ -1219,14 +1231,14 @@ export default function Workspace({
         activeSlot.offsetY,
       );
       const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = objectUrl;
       a.download = `diff-${activeViewport}.png`;
       a.click();
       URL.revokeObjectURL(objectUrl);
     } catch (err) {
       setUploadError(
-        err instanceof Error ? err.message : "Diff generation failed",
+        err instanceof Error ? err.message : 'Diff generation failed',
       );
     } finally {
       setIsDownloading(false);
@@ -1243,13 +1255,13 @@ export default function Workspace({
       await saveSettings(projectId, settings);
       const blob = await exportProject(project, options);
       const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = objectUrl;
       a.download = exportFileName(project);
       a.click();
       URL.revokeObjectURL(objectUrl);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Export failed");
+      setUploadError(err instanceof Error ? err.message : 'Export failed');
     } finally {
       setIsTransferring(false);
     }
@@ -1260,7 +1272,7 @@ export default function Workspace({
     try {
       onImportProject(await importProject(file));
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Import failed");
+      setUploadError(err instanceof Error ? err.message : 'Import failed');
     } finally {
       setIsTransferring(false);
     }
@@ -1285,18 +1297,18 @@ export default function Workspace({
     const view = canvas.getBoundingClientRect();
     const rect = box.getBoundingClientRect();
     const viewLo =
-      axis === "x"
+      axis === 'x'
         ? view.left + canvas.clientLeft
         : view.top + canvas.clientTop;
     const viewHi =
-      viewLo + (axis === "x" ? canvas.clientWidth : canvas.clientHeight);
-    const boxLo = axis === "x" ? rect.left : rect.top;
-    const boxHi = axis === "x" ? rect.right : rect.bottom;
+      viewLo + (axis === 'x' ? canvas.clientWidth : canvas.clientHeight);
+    const boxLo = axis === 'x' ? rect.left : rect.top;
+    const boxHi = axis === 'x' ? rect.right : rect.bottom;
     const lo = Math.max(viewLo, boxLo);
     const start = lo - boxLo;
     const size = Math.max(Math.min(viewHi, boxHi) - lo, 0);
     const guide: Guide = {
-      id: annotationId("guide"),
+      id: annotationId('guide'),
       axis,
       pos: freeGuidePos(
         guides.filter((g) => g.axis === axis).map((g) => g.pos),
@@ -1383,7 +1395,7 @@ export default function Workspace({
   };
 
   const isCapturing = presets.some(
-    (preset) => slots[preset.key].status === "capturing",
+    (preset) => slots[preset.key].status === 'capturing',
   );
   const captureErrors = presets.filter(
     (preset) => slots[preset.key].error !== null,
@@ -1402,7 +1414,7 @@ export default function Workspace({
           error: null,
           // The card's ✗ came from the same failure — clear both or it keeps
           // flagging an error whose message is gone
-          status: slot.status === "error" ? "idle" : slot.status,
+          status: slot.status === 'error' ? 'idle' : slot.status,
         };
       }
       return next;
@@ -1411,7 +1423,7 @@ export default function Workspace({
   // A run can be one viewport or the whole set, so progress names what is in
   // flight rather than counting against a total the run never had
   const capturingLabels = presets
-    .filter((preset) => slots[preset.key].status === "capturing")
+    .filter((preset) => slots[preset.key].status === 'capturing')
     .map((preset) => preset.label);
   // Either layer alone drives the canvas and the zoom controls; comparing needs
   // both of them stacked
@@ -1424,7 +1436,7 @@ export default function Workspace({
   const canFit = activeSlot?.screenshot != null || activeSlot?.figmaSrc != null;
   // The canvas stops scrolling and starts filling, but only once there is
   // something to fill it with — the empty state keeps its padded layout
-  const sideBySideActive = viewMode === "sideBySide" && isComparing;
+  const sideBySideActive = viewMode === 'sideBySide' && isComparing;
 
   // Overlay, split and tap all scroll the canvas itself, with the capture
   // sitting CAPTURE_INSET in from its corner
@@ -1449,13 +1461,13 @@ export default function Workspace({
   }, [sideBySideActive, zoom]);
   const activePreset =
     presets.find((preset) => preset.key === activeViewport) ?? null;
-  const canCapture = url.trim() !== "" && !isCapturing && activePreset !== null;
-  const canCaptureAllSites = url.trim() !== "" && !isCapturing;
+  const canCapture = url.trim() !== '' && !isCapturing && activePreset !== null;
+  const canCaptureAllSites = url.trim() !== '' && !isCapturing;
   const captureBlockedReason =
-    url.trim() === ""
-      ? "This page has no URL yet — set one under File ▸ Pages"
+    url.trim() === ''
+      ? 'This page has no URL yet — set one under File ▸ Pages'
       : isCapturing
-        ? "A capture is already running"
+        ? 'A capture is already running'
         : null;
   const canExportAllFigma =
     !isExportingFigma &&
@@ -1475,14 +1487,14 @@ export default function Workspace({
       if (CLOUD_CAPTURE_ENABLED && canCapture) handleCaptureCurrent();
     },
     captureAll: () => {
-      if (CLOUD_CAPTURE_ENABLED && url.trim() !== "" && !isCapturing)
+      if (CLOUD_CAPTURE_ENABLED && url.trim() !== '' && !isCapturing)
         handleCaptureAll();
     },
     captureCurrentLocal: () => {
       if (canCapture && localAvailable) handleCaptureCurrent({ local: true });
     },
     captureAllLocal: () => {
-      if (url.trim() !== "" && !isCapturing && localAvailable)
+      if (url.trim() !== '' && !isCapturing && localAvailable)
         handleCaptureAll({ local: true });
     },
     browserlessKey: () => {
@@ -1500,9 +1512,9 @@ export default function Workspace({
       setFigmaTokenError(null);
       setFigmaDialogOpen(true);
     },
-    addGuideV: () => addGuide("x"),
-    addGuideH: () => addGuide("y"),
-    togglePen: () => setTool((current) => (current === "pen" ? "none" : "pen")),
+    addGuideV: () => addGuide('x'),
+    addGuideH: () => addGuide('y'),
+    togglePen: () => setTool((current) => (current === 'pen' ? 'none' : 'pen')),
     undoStroke: () => setStrokes((prev) => prev.slice(0, -1)),
     clearAnnotations: () => {
       setGuides([]);
@@ -1560,11 +1572,11 @@ export default function Workspace({
   useEffect(() => {
     if (!canvasDrop) return;
     const clear = () => setCanvasDrop(null);
-    window.addEventListener("dragend", clear);
-    window.addEventListener("drop", clear);
+    window.addEventListener('dragend', clear);
+    window.addEventListener('drop', clear);
     return () => {
-      window.removeEventListener("dragend", clear);
-      window.removeEventListener("drop", clear);
+      window.removeEventListener('dragend', clear);
+      window.removeEventListener('drop', clear);
     };
   }, [canvasDrop]);
 
@@ -1575,13 +1587,13 @@ export default function Workspace({
     const swallow = (e: DragEvent) => {
       if (!hasFiles(e.dataTransfer) || e.defaultPrevented) return;
       e.preventDefault();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = "none";
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'none';
     };
-    window.addEventListener("dragover", swallow);
-    window.addEventListener("drop", swallow);
+    window.addEventListener('dragover', swallow);
+    window.addEventListener('drop', swallow);
     return () => {
-      window.removeEventListener("dragover", swallow);
-      window.removeEventListener("drop", swallow);
+      window.removeEventListener('dragover', swallow);
+      window.removeEventListener('drop', swallow);
     };
   }, []);
 
@@ -1610,9 +1622,9 @@ export default function Workspace({
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName;
       if (
-        tag === "INPUT" ||
-        tag === "SELECT" ||
-        tag === "TEXTAREA" ||
+        tag === 'INPUT' ||
+        tag === 'SELECT' ||
+        tag === 'TEXTAREA' ||
         target?.isContentEditable
       ) {
         return;
@@ -1624,75 +1636,75 @@ export default function Workspace({
       const c = commandsRef.current;
       switch (e.key) {
         // Capture — lower case this viewport, upper case the whole set
-        case "c":
+        case 'c':
           return run(c.captureCurrent);
-        case "C":
+        case 'C':
           return run(c.captureAll);
         // The digits are whatever VIEW_MODES advertises, so the menu's
         // accelerators and the keyboard can never drift apart
-        case "1":
-        case "2":
-        case "3":
-        case "4": {
+        case '1':
+        case '2':
+        case '3':
+        case '4': {
           const mode = VIEW_MODES.find((m) => m.shortcut === e.key);
           if (!mode) return;
           return run(() => setViewMode(mode.value));
         }
-        case "+":
-        case "=":
+        case '+':
+        case '=':
           return run(c.zoomIn);
-        case "-":
-        case "_":
+        case '-':
+        case '_':
           return run(c.zoomOut);
-        case "f":
+        case 'f':
           return run(c.zoomFit);
-        case "0":
+        case '0':
           return run(c.zoomActual);
-        case "v":
+        case 'v':
           return run(c.toggleDrag);
-        case "b":
+        case 'b':
           return run(c.toggleInspector);
-        case "p":
+        case 'p':
           return run(c.pages);
-        case "P":
+        case 'P':
           return run(c.projects);
-        case "n":
+        case 'n':
           return run(c.newProject);
-        case ",":
+        case ',':
           return run(c.settingsPanel);
-        case "i":
+        case 'i':
           return run(c.importFigma);
-        case "e":
+        case 'e':
           return run(c.downloadDiff);
-        case "s":
+        case 's':
           return run(c.saveSnapshot);
         // Capture with the browser on this machine — lower case this viewport,
         // upper case the whole set, matching c/⇧C
-        case "l":
+        case 'l':
           return run(c.captureCurrentLocal);
-        case "L":
+        case 'L':
           return run(c.captureAllLocal);
         // Export the Figma frame — this viewport, or every one with a link
-        case "m":
+        case 'm':
           return run(c.figmaCurrent);
-        case "M":
+        case 'M':
           return run(c.figmaAll);
         // The annotation tools
-        case "g":
+        case 'g':
           return run(c.addGuideV);
-        case "G":
+        case 'G':
           return run(c.addGuideH);
-        case "d":
+        case 'd':
           return run(c.togglePen);
-        case "z":
+        case 'z':
           return run(c.undoStroke);
         // Shift-/ on most layouts; e.key reports the character, not the chord
-        case "?":
+        case '?':
           return run(c.help);
       }
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   /**
@@ -1701,101 +1713,101 @@ export default function Workspace({
    */
   const menus: Menu[] = [
     {
-      id: "file",
-      label: "File",
+      id: 'file',
+      label: 'File',
       entries: [
-        { label: "New project…", shortcut: "N", onSelect: commands.newProject },
-        { kind: "separator" },
-        { label: "Pages…", shortcut: "P", onSelect: commands.pages },
+        { label: 'New project…', shortcut: 'N', onSelect: commands.newProject },
+        { kind: 'separator' },
+        { label: 'Pages…', shortcut: 'P', onSelect: commands.pages },
         {
-          label: "Projects…",
-          shortcut: "⇧P",
+          label: 'Projects…',
+          shortcut: '⇧P',
           onSelect: commands.projects,
           checked: projectsModalOpen,
         },
         {
-          label: isTransferring ? "Packing project…" : "Export project as ZIP…",
+          label: isTransferring ? 'Packing project…' : 'Export project as ZIP…',
           title:
-            "Every page, capture, Figma export, snapshot and note of this project, in one file to hand over",
+            'Every page, capture, Figma export, snapshot and note of this project, in one file to hand over',
           disabled: isTransferring,
           onSelect: commands.exportProject,
         },
         {
-          label: "Import project from ZIP…",
-          title: "Open a ZIP made by Export project as a new project",
+          label: 'Import project from ZIP…',
+          title: 'Open a ZIP made by Export project as a new project',
           disabled: isTransferring,
           onSelect: commands.importProject,
         },
-        { kind: "separator" },
+        { kind: 'separator' },
         {
-          label: isDownloading ? "Preparing diff map…" : "Download diff map",
-          shortcut: "E",
+          label: isDownloading ? 'Preparing diff map…' : 'Download diff map',
+          shortcut: 'E',
           disabled: !isComparing || isDownloading,
           onSelect: commands.downloadDiff,
         },
-        { kind: "separator" },
+        { kind: 'separator' },
         {
-          label: "Reset this page…",
-          title: "Drop every capture and export on this page",
+          label: 'Reset this page…',
+          title: 'Drop every capture and export on this page',
           danger: true,
-          onSelect: () => setConfirming("page"),
+          onSelect: () => setConfirming('page'),
         },
         {
-          label: "Reset everything…",
+          label: 'Reset everything…',
           title:
-            "Delete every project, page, capture, export, snapshot and note in this browser",
+            'Delete every project, page, capture, export, snapshot and note in this browser',
           danger: true,
-          onSelect: () => setConfirming("everything"),
+          onSelect: () => setConfirming('everything'),
         },
       ],
     },
     {
-      id: "align",
-      label: "Align",
+      id: 'align',
+      label: 'Align',
       entries: [
         {
-          label: "Move Figma up 1px",
-          shortcut: "↑",
+          label: 'Move Figma up 1px',
+          shortcut: '↑',
           disabled: !isComparing,
           onSelect: () => nudgeFigma(-1),
         },
         {
-          label: "Move Figma down 1px",
-          shortcut: "↓",
+          label: 'Move Figma down 1px',
+          shortcut: '↓',
           disabled: !isComparing,
           onSelect: () => nudgeFigma(1),
         },
         {
-          label: "Move Figma up 10px",
-          shortcut: "⇧↑",
+          label: 'Move Figma up 10px',
+          shortcut: '⇧↑',
           disabled: !isComparing,
           onSelect: () => nudgeFigma(-10),
         },
         {
-          label: "Move Figma down 10px",
-          shortcut: "⇧↓",
+          label: 'Move Figma down 10px',
+          shortcut: '⇧↓',
           disabled: !isComparing,
           onSelect: () => nudgeFigma(10),
         },
-        { kind: "separator" },
+        { kind: 'separator' },
         {
-          label: "Align to top",
+          label: 'Align to top',
           disabled: !isComparing,
           checked: isComparing && aligned,
           onSelect: () => alignFigma(0),
         },
         {
-          label: "Align to bottom",
+          label: 'Align to bottom',
           disabled: !isComparing || screenshotHeight === null,
           onSelect: () =>
             screenshotHeight !== null &&
             alignFigma(bottomAlignOffset(screenshotHeight, figmaHeight)),
         },
-        { kind: "separator" },
+        { kind: 'separator' },
         {
-          label: "Drag moves the Figma layer",
-          shortcut: "V",
-          marker: "check",
+          label: 'Drag moves the Figma layer',
+          shortcut: 'V',
+          marker: 'check',
           checked: figmaDragEnabled,
           disabled: !isComparing,
           onSelect: commands.toggleDrag,
@@ -1803,158 +1815,158 @@ export default function Workspace({
       ],
     },
     {
-      id: "view",
-      label: "View",
+      id: 'view',
+      label: 'View',
       entries: [
         ...VIEW_MODES.map((mode) => ({
           label: mode.label,
           shortcut: mode.shortcut,
-          marker: "radio" as const,
+          marker: 'radio' as const,
           checked: viewMode === mode.value,
           onSelect: () => setViewMode(mode.value),
         })),
-        { kind: "separator" },
+        { kind: 'separator' },
         {
-          label: "Zoom in",
-          shortcut: "+",
+          label: 'Zoom in',
+          shortcut: '+',
           disabled: !isViewing || zoom >= MAX_ZOOM,
           onSelect: commands.zoomIn,
         },
         {
-          label: "Zoom out",
-          shortcut: "−",
+          label: 'Zoom out',
+          shortcut: '−',
           disabled: !isViewing || zoom <= MIN_ZOOM,
           onSelect: commands.zoomOut,
         },
         {
-          label: "Zoom to fit",
-          shortcut: "F",
+          label: 'Zoom to fit',
+          shortcut: 'F',
           disabled: !canFit,
           onSelect: commands.zoomFit,
         },
         {
-          label: "Actual size",
-          shortcut: "0",
+          label: 'Actual size',
+          shortcut: '0',
           disabled: !isViewing || zoom === 1,
           onSelect: commands.zoomActual,
         },
-        { kind: "separator" },
+        { kind: 'separator' },
         {
-          label: "Sync scroll side by side",
-          marker: "check",
+          label: 'Sync scroll side by side',
+          marker: 'check',
           checked: syncScroll,
-          disabled: viewMode !== "sideBySide",
+          disabled: viewMode !== 'sideBySide',
           onSelect: commands.toggleSyncScroll,
         },
         {
-          label: "Show inspector",
-          shortcut: "B",
-          marker: "check",
+          label: 'Show inspector',
+          shortcut: 'B',
+          marker: 'check',
           checked: showInspector,
           onSelect: commands.toggleInspector,
         },
       ],
     },
     {
-      id: "tools",
-      label: "Tools",
+      id: 'tools',
+      label: 'Tools',
       entries: [
         {
-          label: "Add vertical guide",
-          shortcut: "G",
+          label: 'Add vertical guide',
+          shortcut: 'G',
           onSelect: commands.addGuideV,
         },
         {
-          label: "Add horizontal guide",
-          shortcut: "⇧G",
+          label: 'Add horizontal guide',
+          shortcut: '⇧G',
           onSelect: commands.addGuideH,
         },
         {
-          label: "Remove selected guide",
+          label: 'Remove selected guide',
           disabled: selectedGuideId === null,
           onSelect: () => selectedGuideId && deleteGuide(selectedGuideId),
         },
-        { kind: "separator" },
+        { kind: 'separator' },
         {
-          label: "Pen",
-          shortcut: "D",
-          marker: "check",
-          checked: tool === "pen",
+          label: 'Pen',
+          shortcut: 'D',
+          marker: 'check',
+          checked: tool === 'pen',
           onSelect: commands.togglePen,
         },
         {
-          label: "Undo last stroke",
-          shortcut: "Z",
+          label: 'Undo last stroke',
+          shortcut: 'Z',
           disabled: strokes.length === 0,
           onSelect: commands.undoStroke,
         },
-        { kind: "separator" },
+        { kind: 'separator' },
         {
-          label: "Clear guides and drawings",
+          label: 'Clear guides and drawings',
           disabled: guides.length === 0 && strokes.length === 0,
           onSelect: commands.clearAnnotations,
         },
       ],
     },
     {
-      id: "capture",
-      label: "Capture",
+      id: 'capture',
+      label: 'Capture',
       entries: [
         // Browserless captures, only while the cloud capture is switched on
         ...(CLOUD_CAPTURE_ENABLED
           ? ([
-            {
-              label: activePreset
-                ? `Capture ${activePreset.label}`
-                : "Capture this viewport",
-              shortcut: "C",
-              disabled: !canCapture,
-              onSelect: commands.captureCurrent,
-            },
-            {
-              label: `Capture all ${presets.length} enabled viewports`,
-              shortcut: "⇧C",
-              disabled: url.trim() === "" || isCapturing,
-              onSelect: commands.captureAll,
-            },
-            { kind: "separator" },
-          ] as Menu["entries"])
+              {
+                label: activePreset
+                  ? `Capture ${activePreset.label}`
+                  : 'Capture this viewport',
+                shortcut: 'C',
+                disabled: !canCapture,
+                onSelect: commands.captureCurrent,
+              },
+              {
+                label: `Capture all ${presets.length} enabled viewports`,
+                shortcut: '⇧C',
+                disabled: url.trim() === '' || isCapturing,
+                onSelect: commands.captureAll,
+              },
+              { kind: 'separator' },
+            ] as Menu['entries'])
           : []),
         // Only this machine can offer its own browser, and only it needs no key
         ...(localAvailable
           ? ([
-            {
-              label: activePreset
-                ? `Capture ${activePreset.label} on this machine`
-                : "Capture this viewport on this machine",
-              shortcut: "L",
-              disabled: !canCapture,
-              onSelect: commands.captureCurrentLocal,
-            },
-            {
-              label: "Capture all on this machine",
-              shortcut: "⇧L",
-              disabled: url.trim() === "" || isCapturing,
-              onSelect: commands.captureAllLocal,
-            },
-            { kind: "separator" },
-          ] as Menu["entries"])
+              {
+                label: activePreset
+                  ? `Capture ${activePreset.label} on this machine`
+                  : 'Capture this viewport on this machine',
+                shortcut: 'L',
+                disabled: !canCapture,
+                onSelect: commands.captureCurrentLocal,
+              },
+              {
+                label: 'Capture all on this machine',
+                shortcut: '⇧L',
+                disabled: url.trim() === '' || isCapturing,
+                onSelect: commands.captureAllLocal,
+              },
+              { kind: 'separator' },
+            ] as Menu['entries'])
           : []),
-        ...(CLOUD_CAPTURE_ENABLED && source === "key"
+        ...(CLOUD_CAPTURE_ENABLED && source === 'key'
           ? ([
-            {
-              label: "Browserless key…",
-              checked: hasKey,
-              onSelect: commands.browserlessKey,
-            },
-            { kind: "separator" },
-          ] as Menu["entries"])
+              {
+                label: 'Browserless key…',
+                checked: hasKey,
+                onSelect: commands.browserlessKey,
+              },
+              { kind: 'separator' },
+            ] as Menu['entries'])
           : []),
         {
           label: activePreset
             ? `Export ${activePreset.label} Figma frame at ${renderScaleFor(activePreset.width)}x`
             : "Export this viewport's Figma frame",
-          shortcut: "M",
+          shortcut: 'M',
           disabled:
             activeViewport === null ||
             figmaTargetOf(activeViewport) === null ||
@@ -1962,46 +1974,46 @@ export default function Workspace({
           onSelect: commands.figmaCurrent,
         },
         {
-          label: "Export every Figma frame",
-          shortcut: "⇧M",
+          label: 'Export every Figma frame',
+          shortcut: '⇧M',
           disabled:
             isExportingFigma ||
             !presets.some((preset) => figmaTargetOf(preset.key) !== null),
           onSelect: commands.figmaAll,
         },
-        ...(figmaSource === "key"
+        ...(figmaSource === 'key'
           ? ([
-            {
-              label: "Figma token…",
-              checked: hasFigmaToken,
-              onSelect: commands.figmaToken,
-            },
-          ] as Menu["entries"])
+              {
+                label: 'Figma token…',
+                checked: hasFigmaToken,
+                onSelect: commands.figmaToken,
+              },
+            ] as Menu['entries'])
           : []),
-        { kind: "separator" },
-        { kind: "heading", label: "Go to viewport" },
+        { kind: 'separator' },
+        { kind: 'heading', label: 'Go to viewport' },
         ...presets.map((preset) => ({
           label: `${preset.label} — ${preset.width}×${preset.height}`,
-          marker: "radio" as const,
+          marker: 'radio' as const,
           checked: activeViewport === preset.key,
           onSelect: () => setPreferredViewport(preset.key),
         })),
-        { kind: "separator" },
+        { kind: 'separator' },
         {
-          label: "Viewport settings…",
-          shortcut: ",",
+          label: 'Viewport settings…',
+          shortcut: ',',
           checked: settingsModalOpen,
           onSelect: commands.settingsPanel,
         },
       ],
     },
     {
-      id: "help",
-      label: "Help",
+      id: 'help',
+      label: 'Help',
       entries: [
         {
-          label: "Keyboard shortcuts",
-          shortcut: "?",
+          label: 'Keyboard shortcuts',
+          shortcut: '?',
           checked: helpOpen,
           onSelect: commands.help,
         },
@@ -2045,7 +2057,7 @@ export default function Workspace({
         actions={
           isCapturing ? (
             <span className="text-[11px] text-press-cyan">
-              capturing {capturingLabels.join(", ")}…
+              capturing {capturingLabels.join(', ')}…
             </span>
           ) : null
         }
@@ -2060,7 +2072,7 @@ export default function Workspace({
         onChange={(e) => {
           const files = Array.from(e.target.files ?? []);
           if (files.length > 0) void handleFigmaFilesChange(files);
-          e.target.value = "";
+          e.target.value = '';
         }}
         className="hidden"
       />
@@ -2073,7 +2085,7 @@ export default function Workspace({
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) void handleImportProject(file);
-          e.target.value = "";
+          e.target.value = '';
         }}
         className="hidden"
       />
@@ -2169,13 +2181,13 @@ export default function Workspace({
       />
 
       <ConfirmDialog
-        open={confirming === "page"}
+        open={confirming === 'page'}
         title="Reset this page"
         danger
         confirmLabel="Reset page"
         message={
           <>
-            Every capture and Figma export on{" "}
+            Every capture and Figma export on{' '}
             <span className="font-medium text-ink-100">{page.name}</span> is
             dropped. Its notes, its saved snapshots and every other page stay as
             they are.
@@ -2189,17 +2201,17 @@ export default function Workspace({
           phrase in full: there is no undo behind it and nothing on a server to
           restore from. */}
       <ConfirmDialog
-        open={confirming === "everything"}
+        open={confirming === 'everything'}
         title="Reset everything"
         danger
         confirmLabel="Delete everything"
         passkey={RESET_PASSKEY}
         message={
           <>
-            This deletes the whole local database:{" "}
+            This deletes the whole local database:{' '}
             <span className="font-medium text-ink-100">
               every project, page, capture, Figma export, snapshot and note
-            </span>{" "}
+            </span>{' '}
             this browser holds, and the saved site password with them. It cannot
             be undone — none of it exists anywhere else. The app reloads empty.
           </>
@@ -2217,24 +2229,26 @@ export default function Workspace({
             layers={
               activePreset && activeSlot
                 ? {
-                  preset: activePreset,
-                  slot: activeSlot,
-                  figmaLinked: figmaTargetOf(activePreset.key) !== null,
-                  figmaBusy: figmaBusy[activePreset.key] === true,
-                  showLocalCapture: localAvailable,
-                  showCloudCapture: CLOUD_CAPTURE_ENABLED,
-                  captureBlockedReason,
-                  figmaAllBlockedReason: canExportAllFigma
-                    ? null
-                    : isExportingFigma
-                      ? "Figma is already rendering"
-                      : "No viewport has a Figma frame link — set them under File ▸ Pages",
-                  siteAllBlockedReason: captureBlockedReason,
-                }
+                    preset: activePreset,
+                    slot: activeSlot,
+                    figmaLinked: figmaTargetOf(activePreset.key) !== null,
+                    figmaBusy: figmaBusy[activePreset.key] === true,
+                    showLocalCapture: localAvailable,
+                    showCloudCapture: CLOUD_CAPTURE_ENABLED,
+                    captureBlockedReason,
+                    figmaAllBlockedReason: canExportAllFigma
+                      ? null
+                      : isExportingFigma
+                        ? 'Figma is already rendering'
+                        : 'No viewport has a Figma frame link — set them under File ▸ Pages',
+                    siteAllBlockedReason: captureBlockedReason,
+                  }
                 : null
             }
             onCapture={commands.captureCurrent}
-            onExportAllFigma={() => canExportAllFigma && runFigmaExports(presets)}
+            onExportAllFigma={() =>
+              canExportAllFigma && runFigmaExports(presets)
+            }
             onCaptureAllSites={() =>
               canCaptureAllSites &&
               (localAvailable || CLOUD_CAPTURE_ENABLED) &&
@@ -2299,7 +2313,7 @@ export default function Workspace({
             saveSnapshotHint={
               activeSlot?.figmaSrc
                 ? null
-                : "Nothing to archive — this viewport has no Figma export."
+                : 'Nothing to archive — this viewport has no Figma export.'
             }
           />
         )}
@@ -2330,14 +2344,15 @@ export default function Workspace({
               onDragOver={(e) => {
                 if (!activeViewport || !hasFiles(e.dataTransfer)) return;
                 e.preventDefault();
-                e.dataTransfer.dropEffect = "copy";
+                e.dataTransfer.dropEffect = 'copy';
                 const side = dropSide(e.currentTarget, e.clientX);
                 // dragover fires every few ms: only re-render on a change
                 if (side !== canvasDrop) setCanvasDrop(side);
               }}
               onDragLeave={(e) => {
                 // Crossing onto a child fires leave on the parent; ignore those
-                if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+                if (e.currentTarget.contains(e.relatedTarget as Node | null))
+                  return;
                 setCanvasDrop(null);
               }}
               onDrop={(e) => {
@@ -2353,14 +2368,16 @@ export default function Workspace({
                   setUploadError(notAnImageError(e.dataTransfer));
                   return;
                 }
-                if (side === "site") {
+                if (side === 'site') {
                   void handleScreenshotDrop(activeViewport, file);
                 } else {
                   void handleFigmaDropOn(activeViewport, file);
                 }
               }}
               className={`relative flex-1 ${
-                sideBySideActive ? "flex flex-col overflow-hidden" : "overflow-auto"
+                sideBySideActive
+                  ? 'flex flex-col overflow-hidden'
+                  : 'overflow-auto'
               }`}
             >
               {(uploadError || captureErrors.length > 0) && (
@@ -2407,11 +2424,13 @@ export default function Workspace({
               <div
                 ref={annotationBoxRef}
                 className={`relative ${
-                  sideBySideActive ? "min-h-0 flex-1" : "w-fit min-w-full p-6"
+                  sideBySideActive ? 'min-h-0 flex-1' : 'w-fit min-w-full p-6'
                 }`}
               >
                 {isViewing && activeSlot ? (
-                  sideBySideActive && activeSlot.screenshot && activeSlot.figmaSrc ? (
+                  sideBySideActive &&
+                  activeSlot.screenshot &&
+                  activeSlot.figmaSrc ? (
                     <SideBySideViewer
                       screenshotSrc={activeSlot.screenshot.image}
                       figmaSrc={activeSlot.figmaSrc}
@@ -2455,8 +2474,8 @@ export default function Workspace({
                       />
                       <p className="mb-6 text-sm leading-6 text-ink-400">
                         {isCapturing
-                          ? `Capturing ${capturingLabels.join(", ")}…`
-                          : url.trim() === ""
+                          ? `Capturing ${capturingLabels.join(', ')}…`
+                          : url.trim() === ''
                             ? `Give “${page.name}” a URL from the page menu in the title bar, then press Capture on a viewport card. Drop a Figma export here and it becomes this viewport's layer.`
                             : `Press Capture on a viewport card above, or shoot the whole set from the Capture menu. Drop a Figma export here and it becomes this viewport's layer.`}
                       </p>
@@ -2475,30 +2494,30 @@ export default function Workspace({
                                 <span
                                   className={
                                     slot.figmaSrc
-                                      ? "text-press-magenta"
-                                      : "text-ink-500"
+                                      ? 'text-press-magenta'
+                                      : 'text-ink-500'
                                   }
                                 >
-                                  {slot.figmaSrc ? "figma ✓" : "no figma"}
+                                  {slot.figmaSrc ? 'figma ✓' : 'no figma'}
                                 </span>
                                 <span
                                   className={
-                                    slot.status === "capturing"
-                                      ? "text-press-cyan"
-                                      : slot.status === "error"
-                                        ? "text-press-red"
+                                    slot.status === 'capturing'
+                                      ? 'text-press-cyan'
+                                      : slot.status === 'error'
+                                        ? 'text-press-red'
                                         : slot.screenshot
-                                          ? "text-press-cyan"
-                                          : "text-ink-500"
+                                          ? 'text-press-cyan'
+                                          : 'text-ink-500'
                                   }
                                 >
-                                  {slot.status === "capturing"
-                                    ? "capturing…"
-                                    : slot.status === "error"
-                                      ? "capture failed"
+                                  {slot.status === 'capturing'
+                                    ? 'capturing…'
+                                    : slot.status === 'error'
+                                      ? 'capture failed'
                                       : slot.screenshot
-                                        ? "site ✓"
-                                        : "no site"}
+                                        ? 'site ✓'
+                                        : 'no site'}
                                 </span>
                               </span>
                             </li>
@@ -2527,83 +2546,87 @@ export default function Workspace({
                 />
               </div>
             </main>
-              {canvasDrop && activePreset && (
-                <div className="pointer-events-none absolute inset-2 z-30 flex gap-2 bg-ink-950/60 backdrop-blur-[2px]">
-                  {/* Left half takes the Figma export, right half the site
+            {canvasDrop && activePreset && (
+              <div className="pointer-events-none absolute inset-2 z-30 flex gap-2 bg-ink-950/60 backdrop-blur-[2px]">
+                {/* Left half takes the Figma export, right half the site
                       screenshot — the same sides the split view puts them on */}
-                  {([
+                {(
+                  [
                     {
-                      side: "figma",
-                      title: "Figma",
-                      hint: "Drop the design export",
-                      border: "border-press-magenta",
-                      idle: "border-press-magenta/30 bg-press-magenta/5",
-                      hover: "bg-press-magenta/15",
-                      text: "text-press-magenta",
+                      side: 'figma',
+                      title: 'Figma',
+                      hint: 'Drop the design export',
+                      border: 'border-press-magenta',
+                      idle: 'border-press-magenta/30 bg-press-magenta/5',
+                      hover: 'bg-press-magenta/15',
+                      text: 'text-press-magenta',
                     },
                     {
-                      side: "site",
-                      title: "Site",
-                      hint: "Drop the site screenshot",
-                      border: "border-press-cyan",
-                      idle: "border-press-cyan/30 bg-press-cyan/5",
-                      hover: "bg-press-cyan/15",
-                      text: "text-press-cyan",
+                      side: 'site',
+                      title: 'Site',
+                      hint: 'Drop the site screenshot',
+                      border: 'border-press-cyan',
+                      idle: 'border-press-cyan/30 bg-press-cyan/5',
+                      hover: 'bg-press-cyan/15',
+                      text: 'text-press-cyan',
                     },
-                  ] as const).map((zone) => {
-                    const on = canvasDrop === zone.side;
-                    return (
-                      <div
-                        key={zone.side}
-                        className={`flex flex-1 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed text-center transition-all duration-150 ${
-                          on ? `${zone.border} ${zone.hover}` : zone.idle
+                  ] as const
+                ).map((zone) => {
+                  const on = canvasDrop === zone.side;
+                  return (
+                    <div
+                      key={zone.side}
+                      className={`flex flex-1 flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed text-center transition-all duration-150 ${
+                        on ? `${zone.border} ${zone.hover}` : zone.idle
+                      }`}
+                    >
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`h-10 w-10 transition-transform duration-150 ${zone.text} ${
+                          on ? 'translate-y-1 opacity-100' : 'opacity-40'
                         }`}
                       >
-                        <svg
-                          aria-hidden="true"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={1.5}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className={`h-10 w-10 transition-transform duration-150 ${zone.text} ${
-                            on ? "translate-y-1 opacity-100" : "opacity-40"
-                          }`}
-                        >
-                          <path d="M12 4v11" />
-                          <path d="m7 10 5 5 5-5" />
-                          <path d="M5 19h14" />
-                        </svg>
-                        <span
-                          className={`text-3xl font-semibold tracking-tight transition-opacity duration-150 ${zone.text} ${
-                            on ? "opacity-100" : "opacity-40"
-                          }`}
-                        >
-                          {zone.title}
-                        </span>
-                        <span
-                          className={`text-xs transition-opacity duration-150 ${
-                            on ? "text-ink-200 opacity-100" : "text-ink-400 opacity-60"
-                          }`}
-                        >
-                          {zone.hint}
-                        </span>
-                        <span
-                          className={`rounded-full border px-2.5 py-0.5 font-mono text-[11px] transition-opacity duration-150 ${
-                            on
-                              ? `${zone.border} ${zone.text} opacity-100`
-                              : "border-ink-700 text-ink-500 opacity-60"
-                          }`}
-                        >
-                          {activePreset.label} · {activePreset.width}×
-                          {activePreset.height}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                        <path d="M12 4v11" />
+                        <path d="m7 10 5 5 5-5" />
+                        <path d="M5 19h14" />
+                      </svg>
+                      <span
+                        className={`text-3xl font-semibold tracking-tight transition-opacity duration-150 ${zone.text} ${
+                          on ? 'opacity-100' : 'opacity-40'
+                        }`}
+                      >
+                        {zone.title}
+                      </span>
+                      <span
+                        className={`text-xs transition-opacity duration-150 ${
+                          on
+                            ? 'text-ink-200 opacity-100'
+                            : 'text-ink-400 opacity-60'
+                        }`}
+                      >
+                        {zone.hint}
+                      </span>
+                      <span
+                        className={`rounded-full border px-2.5 py-0.5 font-mono text-[11px] transition-opacity duration-150 ${
+                          on
+                            ? `${zone.border} ${zone.text} opacity-100`
+                            : 'border-ink-700 text-ink-500 opacity-60'
+                        }`}
+                      >
+                        {activePreset.label} · {activePreset.width}×
+                        {activePreset.height}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Status bar — reads out, never acts. Everything it reports is set
@@ -2633,11 +2656,11 @@ export default function Workspace({
             {isComparing && (
               <span
                 className={`font-mono tabular-nums ${
-                  aligned ? "text-press-violet" : "text-ink-300"
+                  aligned ? 'text-press-violet' : 'text-ink-300'
                 }`}
                 title="How far the Figma layer sits from the capture, vertically"
               >
-                offset {offsetY > 0 ? "+" : ""}
+                offset {offsetY > 0 ? '+' : ''}
                 {Math.round(offsetY)}px
               </span>
             )}
@@ -2645,10 +2668,10 @@ export default function Workspace({
             <span className="ml-auto flex items-center gap-4">
               {isCapturing && (
                 <span className="text-press-cyan">
-                  capturing {capturingLabels.join(", ")}…
+                  capturing {capturingLabels.join(', ')}…
                 </span>
               )}
-              {tool === "pen" && (
+              {tool === 'pen' && (
                 <span className="text-press-amber" title="Tools ▸ Pen (D)">
                   <span aria-hidden="true">✎ </span>pen
                 </span>
@@ -2658,22 +2681,22 @@ export default function Workspace({
                 className="text-ink-500"
                 title="Where the browser a capture runs in comes from"
               >
-                {lastBrowser === "local"
-                  ? "local browser"
-                  : source === "env"
-                    ? "browserless (env)"
+                {lastBrowser === 'local'
+                  ? 'local browser'
+                  : source === 'env'
+                    ? 'browserless (env)'
                     : hasKey
-                      ? "browserless (key)"
-                      : "no browserless key"}
+                      ? 'browserless (key)'
+                      : 'no browserless key'}
               </span>
               <span
                 className={
-                  figmaDragEnabled ? "text-press-magenta" : "text-ink-500"
+                  figmaDragEnabled ? 'text-press-magenta' : 'text-ink-500'
                 }
                 title="Align ▸ Drag moves the Figma layer (V)"
               >
-                <span aria-hidden="true">{figmaDragEnabled ? "↕ " : "✥ "}</span>
-                {figmaDragEnabled ? "drag moves Figma" : "drag pans canvas"}
+                <span aria-hidden="true">{figmaDragEnabled ? '↕ ' : '✥ '}</span>
+                {figmaDragEnabled ? 'drag moves Figma' : 'drag pans canvas'}
               </span>
             </span>
           </footer>

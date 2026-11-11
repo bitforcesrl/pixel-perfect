@@ -21,7 +21,8 @@ export async function register() {
   const imported = await import('node:async_hooks');
   // The CommonJS exports object — the one the runtime's `require` gets, and
   // unlike the ESM namespace, one whose properties can be replaced
-  const asyncHooks = (imported as unknown as {default?: typeof imported}).default ?? imported;
+  const asyncHooks =
+    (imported as unknown as { default?: typeof imported }).default ?? imported;
   const createHook = asyncHooks.createHook;
 
   asyncHooks.createHook = (callbacks) => {
@@ -33,8 +34,11 @@ export async function register() {
 }
 
 /** React's hook, told apart by its callbacks and by who is creating it. */
-function isReactDebugHook(callbacks: import('node:async_hooks').HookCallbacks): boolean {
-  if (!callbacks.init || !callbacks.promiseResolve || !callbacks.destroy) return false;
+function isReactDebugHook(
+  callbacks: import('node:async_hooks').HookCallbacks,
+): boolean {
+  if (!callbacks.init || !callbacks.promiseResolve || !callbacks.destroy)
+    return false;
   const stack = new Error().stack ?? '';
   return /next-server[\\/]app-(page|route)|react-server-dom/.test(stack);
 }

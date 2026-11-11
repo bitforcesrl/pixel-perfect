@@ -11,7 +11,7 @@ export function offsetBounds(
   screenshotHeight: number,
   figmaHeight: number | null,
 ): OffsetBounds {
-  return {min: -(figmaHeight ?? screenshotHeight), max: screenshotHeight};
+  return { min: -(figmaHeight ?? screenshotHeight), max: screenshotHeight };
 }
 
 export function clampOffset(
@@ -19,7 +19,7 @@ export function clampOffset(
   screenshotHeight: number,
   figmaHeight: number | null,
 ): number {
-  const {min, max} = offsetBounds(screenshotHeight, figmaHeight);
+  const { min, max } = offsetBounds(screenshotHeight, figmaHeight);
   return Math.round(Math.min(max, Math.max(min, offset)));
 }
 

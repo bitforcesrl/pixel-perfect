@@ -14,7 +14,7 @@
  * strips are shown as they are, with no decode and no re-encode at all.
  */
 
-import {MAX_UNTILED_HEIGHT, TILE_HEIGHT, unpackTiles} from './tile-container';
+import { MAX_UNTILED_HEIGHT, TILE_HEIGHT, unpackTiles } from './tile-container';
 
 /** Images kept cut. Four viewports with two layers each fit with room to spare. */
 const CACHE_SIZE = 24;
@@ -50,17 +50,17 @@ interface Job {
 const queue: Job[] = [];
 let running = false;
 
-function loadSize(src: string): Promise<{width: number; height: number}> {
+function loadSize(src: string): Promise<{ width: number; height: number }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () =>
-      resolve({width: img.naturalWidth, height: img.naturalHeight});
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
     img.onerror = () => reject(new Error('Could not decode the image'));
     img.src = src;
   });
 }
 
-async function cut(src: string): Promise<{tiles: Tiles; owned: boolean}> {
+async function cut(src: string): Promise<{ tiles: Tiles; owned: boolean }> {
   const blob = await (await fetch(src)).blob();
   const stored = await unpackTiles(blob);
   if (stored) {
@@ -69,7 +69,7 @@ async function cut(src: string): Promise<{tiles: Tiles; owned: boolean}> {
       height: tile.height,
     }));
     return {
-      tiles: {width: stored.width, height: stored.height, strips},
+      tiles: { width: stored.width, height: stored.height, strips },
       owned: true,
     };
   }
@@ -79,13 +79,19 @@ async function cut(src: string): Promise<{tiles: Tiles; owned: boolean}> {
     bitmap = await createImageBitmap(blob);
   } catch {
     // Past what this browser will hold as a bitmap: draw it whole, as before
-    const {width, height} = await loadSize(src);
-    return {tiles: {width, height, strips: [{src, height}]}, owned: false};
+    const { width, height } = await loadSize(src);
+    return {
+      tiles: { width, height, strips: [{ src, height }] },
+      owned: false,
+    };
   }
   try {
-    const {width, height} = bitmap;
+    const { width, height } = bitmap;
     if (height <= MAX_UNTILED_HEIGHT) {
-      return {tiles: {width, height, strips: [{src, height}]}, owned: false};
+      return {
+        tiles: { width, height, strips: [{ src, height }] },
+        owned: false,
+      };
     }
     // Even strips, so the last one is never a sliver
     const count = Math.ceil(height / TILE_HEIGHT);
@@ -98,10 +104,10 @@ async function cut(src: string): Promise<{tiles: Tiles; owned: boolean}> {
       if (!ctx) throw new Error('Canvas 2D context unavailable');
       ctx.drawImage(bitmap, 0, y, width, h, 0, 0, width, h);
       // PNG: the strips are what gets aligned against, so no second lossy pass
-      const blob = await canvas.convertToBlob({type: 'image/png'});
-      strips.push({src: URL.createObjectURL(blob), height: h});
+      const blob = await canvas.convertToBlob({ type: 'image/png' });
+      strips.push({ src: URL.createObjectURL(blob), height: h });
     }
-    return {tiles: {width, height, strips}, owned: true};
+    return { tiles: { width, height, strips }, owned: true };
   } finally {
     bitmap.close();
   }
@@ -114,7 +120,7 @@ async function drain(): Promise<void> {
     const job = queue.shift()!;
     const entry = cache.get(job.src);
     try {
-      const {tiles, owned} = await cut(job.src);
+      const { tiles, owned } = await cut(job.src);
       if (entry && cache.get(job.src) === entry) {
         entry.tiles = tiles;
         entry.owned = owned;
@@ -161,9 +167,9 @@ function request(src: string, urgent: boolean): Promise<Tiles> {
   }
   let job!: Job;
   const promise = new Promise<Tiles>((resolve, reject) => {
-    job = {src, resolve, reject};
+    job = { src, resolve, reject };
   });
-  cache.set(src, {promise, tiles: null, owned: false});
+  cache.set(src, { promise, tiles: null, owned: false });
   if (urgent) queue.unshift(job);
   else queue.push(job);
   trim();

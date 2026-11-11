@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import FirstPageDialog from "./FirstPageDialog";
-import RegistrationMark from "./RegistrationMark";
-import Workspace from "./Workspace";
+import { useEffect, useRef, useState } from 'react';
+import FirstPageDialog from './FirstPageDialog';
+import RegistrationMark from './RegistrationMark';
+import Workspace from './Workspace';
 import {
   createPage,
   createProject,
@@ -12,7 +12,7 @@ import {
   sanitizeName,
   type Page,
   type Project,
-} from "@/lib/projects";
+} from '@/lib/projects';
 import {
   deletePageData,
   deleteProjectData,
@@ -21,8 +21,8 @@ import {
   saveActivePage,
   saveActiveProject,
   saveProjects,
-} from "@/lib/storage";
-import type { ViewportKey } from "@/lib/viewports";
+} from '@/lib/storage';
+import type { ViewportKey } from '@/lib/viewports';
 
 /**
  * The project and page layer.
@@ -293,8 +293,8 @@ export default function PixelPerfectApp() {
           project's page, which would take the dialog down with it */}
       <FirstPageDialog
         open={pendingFirstPage !== null}
-        projectName={pendingFirstPage?.projectName ?? ""}
-        defaultName={pendingFirstPage?.pageName ?? ""}
+        projectName={pendingFirstPage?.projectName ?? ''}
+        defaultName={pendingFirstPage?.pageName ?? ''}
         onSubmit={completeFirstPage}
         onClose={() => setPendingFirstPage(null)}
       />

@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { useState, type ReactNode } from "react";
-import SnapshotHistory from "./SnapshotHistory";
-import type { Tool } from "./AnnotationLayer";
-import { PEN_WIDTHS, type Guide, type GuideAxis } from "@/lib/annotations";
-import { bottomAlignOffset, clampOffset } from "@/lib/offset";
-import type { HistoryEntry } from "@/lib/storage";
-import { BLEND_MODES, type BlendMode, type ViewMode } from "@/lib/types";
-import { clampZoom, MAX_ZOOM, MIN_ZOOM, ZOOM_STEPS } from "@/lib/zoom";
+import { useState, type ReactNode } from 'react';
+import SnapshotHistory from './SnapshotHistory';
+import type { Tool } from './AnnotationLayer';
+import { PEN_WIDTHS, type Guide, type GuideAxis } from '@/lib/annotations';
+import { bottomAlignOffset, clampOffset } from '@/lib/offset';
+import type { HistoryEntry } from '@/lib/storage';
+import { BLEND_MODES, type BlendMode, type ViewMode } from '@/lib/types';
+import { clampZoom, MAX_ZOOM, MIN_ZOOM, ZOOM_STEPS } from '@/lib/zoom';
 import {
   type ViewportKey,
   type ViewportPreset,
   type ViewportSlot,
-} from "@/lib/viewports";
-import { APP_VERSION } from "@/lib/version";
+} from '@/lib/viewports';
+import { APP_VERSION } from '@/lib/version';
 
 /** The selected viewport's two layers, and what can be done to each. */
 export interface LayersState {
@@ -110,10 +110,10 @@ export interface ControlPanelProps {
 
 /** Same order as the View menu: the default mode, Split, comes first. */
 const VIEW_MODES: { value: ViewMode; label: string }[] = [
-  { value: "split", label: "Split" },
-  { value: "overlay", label: "Overlay" },
-  { value: "tap", label: "Tap" },
-  { value: "sideBySide", label: "Side by side" },
+  { value: 'split', label: 'Split' },
+  { value: 'overlay', label: 'Overlay' },
+  { value: 'tap', label: 'Tap' },
+  { value: 'sideBySide', label: 'Side by side' },
 ];
 
 const OPACITY_PRESETS = [0, 50, 100];
@@ -121,11 +121,11 @@ const NUDGE_STEPS = [-10, -1, 1, 10];
 /** The stops the palette prints as buttons — the extremes stay on ±/Fit */
 const ZOOM_PRESETS = ZOOM_STEPS.filter((step) => step >= 0.25 && step <= 2);
 
-const BTN = "ps-btn text-[11px] transition-none";
-const FIELD = "ps-input px-2 text-[11px] placeholder:text-ps-500";
+const BTN = 'ps-btn text-[11px] transition-none';
+const FIELD = 'ps-input px-2 text-[11px] placeholder:text-ps-500';
 /** A colour well, sized like the buttons beside it rather than like a form. */
 const SWATCH =
-  "h-6 w-8 shrink-0 cursor-pointer rounded border border-ps-700 bg-transparent p-0";
+  'h-6 w-8 shrink-0 cursor-pointer rounded border border-ps-700 bg-transparent p-0';
 
 /**
  * A docked panel, Photoshop style: a title bar you collapse it by, and a body
@@ -154,7 +154,7 @@ function Panel({
         className="ps-titlebar flex w-full items-center gap-1.5 px-2 py-1.5 text-left"
       >
         <svg
-          className={`h-2.5 w-2.5 shrink-0 text-ps-400 ${open ? "" : "-rotate-90"}`}
+          className={`h-2.5 w-2.5 shrink-0 text-ps-400 ${open ? '' : '-rotate-90'}`}
           viewBox="0 0 12 12"
           fill="currentColor"
           aria-hidden="true"
@@ -171,7 +171,7 @@ function Panel({
       {open && (
         <div
           className={`flex flex-col gap-3 px-2.5 py-3 ${
-            dimmed ? "pointer-events-none opacity-60" : ""
+            dimmed ? 'pointer-events-none opacity-60' : ''
           }`}
           inert={dimmed}
         >
@@ -233,27 +233,27 @@ function LayerMark({
   ink,
   title,
 }: {
-  state: "pending" | "busy" | "done" | "failed";
-  ink: "cyan" | "magenta";
+  state: 'pending' | 'busy' | 'done' | 'failed';
+  ink: 'cyan' | 'magenta';
   title?: string;
 }) {
-  if (state === "busy") {
+  if (state === 'busy') {
     return <Spinner className="h-3 w-3 shrink-0 text-press-cyan" />;
   }
   const tone =
-    state === "done"
-      ? ink === "cyan"
-        ? "text-press-cyan"
-        : "text-press-magenta"
-      : state === "failed"
-        ? "text-press-red"
-        : "text-ps-500";
+    state === 'done'
+      ? ink === 'cyan'
+        ? 'text-press-cyan'
+        : 'text-press-magenta'
+      : state === 'failed'
+        ? 'text-press-red'
+        : 'text-ps-500';
   return (
     <span
       className={`w-3 shrink-0 text-center font-mono text-[11px] leading-none ${tone}`}
       title={title}
     >
-      {state === "done" ? "✓" : state === "failed" ? "✗" : "–"}
+      {state === 'done' ? '✓' : state === 'failed' ? '✗' : '–'}
     </span>
   );
 }
@@ -344,12 +344,15 @@ export default function ControlPanel(props: ControlPanelProps) {
     if (zoomText === null) return;
     const parsed = Number(zoomText.match(/\d+(\.\d+)?/)?.[0] ?? NaN);
     setZoomText(null);
-    if (Number.isFinite(parsed) && parsed > 0) onZoomChange(clampZoom(parsed / 100));
+    if (Number.isFinite(parsed) && parsed > 0)
+      onZoomChange(clampZoom(parsed / 100));
   };
 
   const nudge = (delta: number) => {
     if (screenshotHeight === null) return;
-    onOffsetYChange(clampOffset(offsetY + delta, screenshotHeight, figmaHeight));
+    onOffsetYChange(
+      clampOffset(offsetY + delta, screenshotHeight, figmaHeight),
+    );
   };
 
   const setOffset = (value: number) => {
@@ -365,15 +368,15 @@ export default function ControlPanel(props: ControlPanelProps) {
         <Panel title="Layers" accent="bg-press-cyan/50">
           {(() => {
             const { preset, slot, figmaLinked, figmaBusy } = layers;
-            const capturing = slot.status === "capturing";
+            const capturing = slot.status === 'capturing';
             const shot = slot.screenshot !== null;
             const siteState = capturing
-              ? ("busy" as const)
-              : slot.status === "error"
-                ? ("failed" as const)
+              ? ('busy' as const)
+              : slot.status === 'error'
+                ? ('failed' as const)
                 : shot
-                  ? ("done" as const)
-                  : ("pending" as const);
+                  ? ('done' as const)
+                  : ('pending' as const);
             const blocked = layers.captureBlockedReason;
             return (
               <>
@@ -389,7 +392,7 @@ export default function ControlPanel(props: ControlPanelProps) {
                 <Row label="Figma">
                   <LayerMark
                     state={
-                      figmaBusy ? "busy" : slot.figmaSrc ? "done" : "pending"
+                      figmaBusy ? 'busy' : slot.figmaSrc ? 'done' : 'pending'
                     }
                     ink="magenta"
                     title={slot.figmaFileName ?? undefined}
@@ -402,7 +405,7 @@ export default function ControlPanel(props: ControlPanelProps) {
                       !figmaLinked
                         ? `No Figma frame link for ${preset.label} — set one under File ▸ Pages`
                         : figmaBusy
-                          ? "Figma is rendering this frame"
+                          ? 'Figma is rendering this frame'
                           : `Capture the ${preset.label} Figma frame at 2x (M)`
                     }
                     className={`${BTN} flex-1 py-1`}
@@ -415,7 +418,7 @@ export default function ControlPanel(props: ControlPanelProps) {
                     disabled={layers.figmaAllBlockedReason !== null}
                     title={
                       layers.figmaAllBlockedReason ??
-                      "Capture the Figma frame of every viewport at 2x (⇧M)"
+                      'Capture the Figma frame of every viewport at 2x (⇧M)'
                     }
                     className={`${BTN} flex-1 py-1`}
                   >
@@ -483,8 +486,8 @@ export default function ControlPanel(props: ControlPanelProps) {
                         layers.siteAllBlockedReason ??
                         `Capture the site at every viewport ${
                           layers.showLocalCapture
-                            ? "with the browser on this machine"
-                            : "with Browserless"
+                            ? 'with the browser on this machine'
+                            : 'with Browserless'
                         }`
                       }
                       className={`${BTN} flex-1 py-1`}
@@ -504,7 +507,7 @@ export default function ControlPanel(props: ControlPanelProps) {
                   </button>
                 </Row>
 
-                {slot.status === "error" && slot.error && (
+                {slot.status === 'error' && slot.error && (
                   <p className="text-[10px] leading-4 break-words text-press-red">
                     {slot.error}
                   </p>
@@ -531,12 +534,12 @@ export default function ControlPanel(props: ControlPanelProps) {
               other — the ink that says so */}
           <span
             className={`ml-auto px-1 font-mono text-[11px] ${
-              aligned ? "text-press-violet" : "text-ps-400"
+              aligned ? 'text-press-violet' : 'text-ps-400'
             }`}
             title={
               aligned
-                ? "The Figma layer sits exactly on the capture"
-                : "The Figma layer is offset from the capture"
+                ? 'The Figma layer sits exactly on the capture'
+                : 'The Figma layer is offset from the capture'
             }
           >
             px
@@ -549,10 +552,10 @@ export default function ControlPanel(props: ControlPanelProps) {
               key={step}
               type="button"
               onClick={() => nudge(step)}
-              title={`Move Figma ${step < 0 ? "up" : "down"} ${Math.abs(step)}px`}
+              title={`Move Figma ${step < 0 ? 'up' : 'down'} ${Math.abs(step)}px`}
               className={`${BTN} py-1 font-mono`}
             >
-              {step < 0 ? "↑" : "↓"}
+              {step < 0 ? '↑' : '↓'}
               {Math.abs(step)}
             </button>
           ))}
@@ -602,8 +605,8 @@ export default function ControlPanel(props: ControlPanelProps) {
             onFocus={(e) => e.currentTarget.select()}
             onBlur={commitZoom}
             onKeyDown={(e) => {
-              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-              if (e.key === "Escape") setZoomText(null);
+              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+              if (e.key === 'Escape') setZoomText(null);
             }}
             aria-label="Zoom level, percent"
             className={`${FIELD} w-14 py-1 text-center font-mono tabular-nums`}
@@ -626,7 +629,9 @@ export default function ControlPanel(props: ControlPanelProps) {
           step={1}
           value={zoomPercent}
           disabled={!isViewing}
-          onChange={(e) => onZoomChange(clampZoom(Number(e.target.value) / 100))}
+          onChange={(e) =>
+            onZoomChange(clampZoom(Number(e.target.value) / 100))
+          }
           aria-label="Zoom"
           className="ps-range w-full disabled:opacity-40"
         />
@@ -689,8 +694,8 @@ export default function ControlPanel(props: ControlPanelProps) {
               data-on={figmaDragEnabled}
               title={
                 canDragFigma
-                  ? "Dragging moves the Figma layer (V)"
-                  : "Needs a capture and an export on this viewport"
+                  ? 'Dragging moves the Figma layer (V)'
+                  : 'Needs a capture and an export on this viewport'
               }
               className={`${BTN} flex flex-1 items-center justify-center gap-1 py-1`}
             >
@@ -720,7 +725,7 @@ export default function ControlPanel(props: ControlPanelProps) {
         </div>
 
         {/* Opacity and blend mode composite the two layers — overlay only */}
-        {viewMode === "overlay" && (
+        {viewMode === 'overlay' && (
           <>
             <div className="ps-groove my-0.5" />
             <Row label="Opacity">
@@ -767,7 +772,7 @@ export default function ControlPanel(props: ControlPanelProps) {
           </>
         )}
 
-        {viewMode === "sideBySide" && (
+        {viewMode === 'sideBySide' && (
           <label className="flex items-center gap-2 text-[11px] text-ps-300">
             <input
               type="checkbox"
@@ -788,7 +793,7 @@ export default function ControlPanel(props: ControlPanelProps) {
         <Row label="Guides">
           <button
             type="button"
-            onClick={() => onAddGuide("x")}
+            onClick={() => onAddGuide('x')}
             title="Drop a vertical guide across the canvas (G)"
             className={`${BTN} flex-1 py-1`}
           >
@@ -796,7 +801,7 @@ export default function ControlPanel(props: ControlPanelProps) {
           </button>
           <button
             type="button"
-            onClick={() => onAddGuide("y")}
+            onClick={() => onAddGuide('y')}
             title="Drop a horizontal guide across the canvas (⇧G)"
             className={`${BTN} flex-1 py-1`}
           >
@@ -812,15 +817,15 @@ export default function ControlPanel(props: ControlPanelProps) {
             aria-label="Guide colour"
             title={
               selectedGuideId
-                ? "Recolours the selected guide"
-                : "The colour new guides are dropped in"
+                ? 'Recolours the selected guide'
+                : 'The colour new guides are dropped in'
             }
             className={SWATCH}
           />
           <span className="text-[10px] text-ps-500">
             {guides.length === 0
-              ? "none yet"
-              : `${guides.length} guide${guides.length === 1 ? "" : "s"}`}
+              ? 'none yet'
+              : `${guides.length} guide${guides.length === 1 ? '' : 's'}`}
           </span>
           <button
             type="button"
@@ -839,8 +844,8 @@ export default function ControlPanel(props: ControlPanelProps) {
           <div className="ps-segment flex flex-1 gap-px p-px">
             <button
               type="button"
-              onClick={() => onToolChange("none")}
-              data-on={tool === "none"}
+              onClick={() => onToolChange('none')}
+              data-on={tool === 'none'}
               title="Pointer — pan, split and drag work as usual"
               className={`${BTN} flex flex-1 items-center justify-center gap-1 py-1`}
             >
@@ -848,8 +853,8 @@ export default function ControlPanel(props: ControlPanelProps) {
             </button>
             <button
               type="button"
-              onClick={() => onToolChange("pen")}
-              data-on={tool === "pen"}
+              onClick={() => onToolChange('pen')}
+              data-on={tool === 'pen'}
               title="Draw over both layers (D)"
               className={`${BTN} flex flex-1 items-center justify-center gap-1 py-1`}
             >
@@ -904,8 +909,8 @@ export default function ControlPanel(props: ControlPanelProps) {
         </div>
 
         <p className="text-[10px] leading-4 text-ps-500">
-          G and ⇧G drop guides, D picks up the pen, Z undoes a stroke. Guides and
-          drawings sit over both layers and are not saved with the page.
+          G and ⇧G drop guides, D picks up the pen, Z undoes a stroke. Guides
+          and drawings sit over both layers and are not saved with the page.
         </p>
       </Panel>
 

@@ -8,7 +8,7 @@
 export default function RegistrationMark({
   size = 72,
   registered = false,
-  className = "",
+  className = '',
 }: {
   size?: number;
   registered?: boolean;
@@ -18,9 +18,9 @@ export default function RegistrationMark({
   // animatable CSS properties, so the snap into register comes for free.
   const drift = registered ? 0 : 3.4;
   const inks = [
-    { color: "var(--color-press-cyan)", dx: -drift, dy: -drift * 0.55 },
-    { color: "var(--color-press-magenta)", dx: drift, dy: -drift * 0.55 },
-    { color: "var(--color-press-amber)", dx: 0, dy: drift },
+    { color: 'var(--color-press-cyan)', dx: -drift, dy: -drift * 0.55 },
+    { color: 'var(--color-press-magenta)', dx: drift, dy: -drift * 0.55 },
+    { color: 'var(--color-press-amber)', dx: 0, dy: drift },
   ];
 
   return (

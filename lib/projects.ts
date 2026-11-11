@@ -1,4 +1,4 @@
-import type {ViewportKey} from './viewports';
+import type { ViewportKey } from './viewports';
 
 /**
  * A project: one site, its viewport settings, and the pages compared against it.
@@ -78,7 +78,7 @@ export function createProject(name: string): Project {
 
 function sanitizePage(raw: unknown): Page | null {
   if (typeof raw !== 'object' || raw === null) return null;
-  const {id, name, url, sitePassword, figmaUrls, createdAt} =
+  const { id, name, url, sitePassword, figmaUrls, createdAt } =
     raw as Partial<Page>;
   if (typeof id !== 'string' || id.length === 0) return null;
   return {
@@ -121,7 +121,7 @@ export function sanitizePages(raw: unknown): Page[] {
  */
 function sanitizeProject(raw: unknown): Project | null {
   if (typeof raw !== 'object' || raw === null) return null;
-  const {id, name, pages, createdAt, url} = raw as Partial<Project> & {
+  const { id, name, pages, createdAt, url } = raw as Partial<Project> & {
     url?: unknown;
   };
   if (typeof id !== 'string' || id.length === 0) return null;
@@ -177,7 +177,10 @@ export function resolveActive(
 }
 
 /** The page to open within a project, on the same terms. */
-export function resolveActivePage(pages: Page[], storedId: unknown): Page | null {
+export function resolveActivePage(
+  pages: Page[],
+  storedId: unknown,
+): Page | null {
   if (pages.length === 0) return null;
   const stored =
     typeof storedId === 'string'

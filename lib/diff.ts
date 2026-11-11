@@ -1,4 +1,4 @@
-import {drawWhole, openRaster} from './raster';
+import { drawWhole, openRaster } from './raster';
 
 export async function generateDiffImage(
   screenshotSrc: string,
@@ -26,9 +26,7 @@ export async function generateDiffImage(
   const figmaCtx = figmaCanvas.getContext('2d');
   if (!figmaCtx) throw new Error('Canvas 2D context unavailable');
   // Figma scaled to screenshot width; height follows its aspect ratio
-  const scaledFigmaHeight = Math.round(
-    figma.height * (width / figma.width),
-  );
+  const scaledFigmaHeight = Math.round(figma.height * (width / figma.width));
   // Same vertical offset the viewer applies to the Figma layer
   await drawWhole(figmaCtx, figma, 0, figmaOffsetY, width, scaledFigmaHeight);
 

@@ -36,7 +36,8 @@ export function renderScaleFor(cssWidth: number): number {
   }
   if (cssWidth >= LOW_DENSITY_FROM) return MIN_RENDER_SCALE;
   // 0 at the mobile end, 1 at the desktop end
-  const t = (cssWidth - HIGH_DENSITY_UP_TO) / (LOW_DENSITY_FROM - HIGH_DENSITY_UP_TO);
+  const t =
+    (cssWidth - HIGH_DENSITY_UP_TO) / (LOW_DENSITY_FROM - HIGH_DENSITY_UP_TO);
   const raw = MAX_RENDER_SCALE - t * (MAX_RENDER_SCALE - MIN_RENDER_SCALE);
   return Math.round(raw / SCALE_STEP) * SCALE_STEP;
 }

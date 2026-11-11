@@ -1,5 +1,5 @@
-import type {FigmaLayer, FigmaRect, FigmaRender} from './figma';
-import {createPngWriter} from './png';
+import type { FigmaLayer, FigmaRect, FigmaRender } from './figma';
+import { createPngWriter } from './png';
 
 /**
  * A sliced Figma render, put back together at full scale. Browser only.
@@ -40,7 +40,7 @@ const ROUNDING_SLACK = 2;
  * however much was cut from each side, which is never that even.
  */
 export function wasShrunk(
-  size: {width: number; height: number},
+  size: { width: number; height: number },
   w: number,
   h: number,
 ): boolean {
@@ -52,7 +52,9 @@ export function wasShrunk(
   // ...and by one factor, to within what rounding each side can add
   const byWidth = size.width / w;
   const byHeight = size.height / h;
-  return Math.abs(byWidth - byHeight) <= ROUNDING_SLACK / w + ROUNDING_SLACK / h;
+  return (
+    Math.abs(byWidth - byHeight) <= ROUNDING_SLACK / w + ROUNDING_SLACK / h
+  );
 }
 
 /** Figma's blend modes, where the canvas has the same one. */
@@ -90,16 +92,16 @@ export interface ComposeIO {
   slice: (nodeId: string, maxArea: number | null) => Promise<FigmaRender>;
 }
 
-type ImageLayer = Extract<FigmaLayer, {kind: 'image'}>;
+type ImageLayer = Extract<FigmaLayer, { kind: 'image' }>;
 
 /** Width and height from a PNG's header, without decoding it. */
-async function pngSize(blob: Blob): Promise<{width: number; height: number}> {
+async function pngSize(blob: Blob): Promise<{ width: number; height: number }> {
   const head = new DataView(await blob.slice(0, 24).arrayBuffer());
   if (head.byteLength === 24 && head.getUint32(12) === 0x49484452 /* IHDR */) {
-    return {width: head.getUint32(16), height: head.getUint32(20)};
+    return { width: head.getUint32(16), height: head.getUint32(20) };
   }
   const bitmap = await createImageBitmap(blob);
-  const size = {width: bitmap.width, height: bitmap.height};
+  const size = { width: bitmap.width, height: bitmap.height };
   bitmap.close();
   return size;
 }
@@ -117,7 +119,7 @@ function intersect(a: FigmaRect | null, b: FigmaRect | null): FigmaRect | null {
 }
 
 function shift(rect: FigmaRect, dx: number, dy: number): FigmaRect {
-  return {...rect, x: rect.x + dx, y: rect.y + dy};
+  return { ...rect, x: rect.x + dx, y: rect.y + dy };
 }
 
 /** Run `task` over `items`, a few at a time, keeping their order. */
@@ -125,7 +127,7 @@ async function pooled<T, R>(items: T[], task: (item: T) => Promise<R>) {
   const results: R[] = new Array(items.length);
   let next = 0;
   await Promise.all(
-    Array.from({length: Math.min(DOWNLOADS, items.length)}, async () => {
+    Array.from({ length: Math.min(DOWNLOADS, items.length) }, async () => {
       while (next < items.length) {
         const index = next++;
         results[index] = await task(items[index]);
@@ -139,7 +141,7 @@ export async function composeFigmaRender(
   render: FigmaRender,
   io: ComposeIO,
 ): Promise<ComposedRender> {
-  const {scale} = render;
+  const { scale } = render;
   if (!render.layers || !render.width || !render.height) {
     throw new Error('Figma sent back no render');
   }
@@ -151,7 +153,7 @@ export async function composeFigmaRender(
   let maxArea: number | null = null;
   const blobs = new Map<FigmaLayer, Blob>();
   // Each part's render as Figma cut it, in device px
-  const sizes = new Map<FigmaLayer, {width: number; height: number}>();
+  const sizes = new Map<FigmaLayer, { width: number; height: number }>();
   const shrunk = new Set<FigmaLayer>();
 
   /**
@@ -178,7 +180,9 @@ export async function composeFigmaRender(
         out.push(layer);
         continue;
       }
-      if (!wasShrunk(size, layer.rect.width * scale, layer.rect.height * scale)) {
+      if (
+        !wasShrunk(size, layer.rect.width * scale, layer.rect.height * scale)
+      ) {
         out.push(layer);
         continue;
       }
@@ -209,10 +213,7 @@ export async function composeFigmaRender(
     const placed = sub.layers.map((layer): FigmaLayer => ({
       ...layer,
       rect: shift(layer.rect, dx, dy),
-      clip: intersect(
-        layer.clip ? shift(layer.clip, dx, dy) : null,
-        part.clip,
-      ),
+      clip: intersect(layer.clip ? shift(layer.clip, dx, dy) : null, part.clip),
       alpha: layer.alpha * part.alpha,
     }));
     return resolve(placed, depth + 1);
@@ -225,7 +226,7 @@ export async function composeFigmaRender(
 
   const canvas = document.createElement('canvas');
   canvas.width = outWidth;
-  const ctx = canvas.getContext('2d', {willReadFrequently: true});
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) throw new Error('This browser has no 2D canvas');
 
   const png = createPngWriter(outWidth, outHeight);
@@ -268,7 +269,12 @@ export async function composeFigmaRender(
 
       if (layer.kind === 'fill') {
         ctx.fillStyle = layer.color;
-        ctx.fillRect(layer.rect.x * scale, y - top, layer.rect.width * scale, h);
+        ctx.fillRect(
+          layer.rect.x * scale,
+          y - top,
+          layer.rect.width * scale,
+          h,
+        );
       } else {
         let bitmap = decoded.get(layer);
         if (!bitmap) {
@@ -300,5 +306,5 @@ export async function composeFigmaRender(
   }
 
   for (const bitmap of decoded.values()) bitmap.close();
-  return {blob: await png.finish(), shrunk: shrunk.size};
+  return { blob: await png.finish(), shrunk: shrunk.size };
 }

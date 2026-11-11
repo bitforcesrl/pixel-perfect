@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useCallback } from "react";
+import { useState, useCallback } from 'react';
 import {
   addViewport,
   DEFAULT_SETTINGS,
   isLastEnabled,
   removeViewport,
   type ViewportSettings,
-} from "@/lib/settings";
-import { slotOf, type ViewportKey, type ViewportSlots } from "@/lib/viewports";
-import { MIN_DIM, MAX_DIM } from "@/lib/validation";
+} from '@/lib/settings';
+import { slotOf, type ViewportKey, type ViewportSlots } from '@/lib/viewports';
+import { MIN_DIM, MAX_DIM } from '@/lib/validation';
 
 export interface SettingsPanelProps {
   settings: ViewportSettings;
@@ -63,7 +63,7 @@ function DimensionInput({
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
         onKeyDown={(e) => {
-          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
         }}
         min={MIN_DIM}
         max={MAX_DIM}
@@ -88,7 +88,7 @@ function LabelInput({
     if (text === null) return;
     const trimmed = text.trim();
     setText(null);
-    if (trimmed !== "" && trimmed !== value) commit(trimmed);
+    if (trimmed !== '' && trimmed !== value) commit(trimmed);
   };
 
   return (
@@ -99,8 +99,8 @@ function LabelInput({
       onChange={(e) => setText(e.target.value)}
       onBlur={onBlur}
       onKeyDown={(e) => {
-        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-        if (e.key === "Escape") setText(null);
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        if (e.key === 'Escape') setText(null);
       }}
       maxLength={24}
       className="w-24 min-w-0 shrink rounded border border-transparent bg-transparent px-1 py-0.5 text-[11px] font-medium text-ink-200 outline-none hover:border-ink-600 focus:border-press-violet focus:bg-ink-850"
@@ -172,8 +172,7 @@ export default function SettingsPanel({
           const slot = slotOf(slots, key);
           const last = setting.enabled && isLastEnabled(settings, key);
           const stale =
-            slot.screenshot !== null &&
-            slot.screenshot.width !== setting.width;
+            slot.screenshot !== null && slot.screenshot.width !== setting.width;
 
           return (
             <div key={key} className="flex flex-col gap-1">
@@ -184,7 +183,11 @@ export default function SettingsPanel({
                   checked={setting.enabled}
                   onChange={() => toggle(key)}
                   disabled={last}
-                  title={last ? "Cannot disable the last enabled viewport" : undefined}
+                  title={
+                    last
+                      ? 'Cannot disable the last enabled viewport'
+                      : undefined
+                  }
                   className="accent-press-violet"
                 />
                 <LabelInput
@@ -209,7 +212,7 @@ export default function SettingsPanel({
                   aria-label={`Remove ${setting.label}`}
                   title={
                     last
-                      ? "Cannot remove the last enabled viewport"
+                      ? 'Cannot remove the last enabled viewport'
                       : `Remove ${setting.label}`
                   }
                   className="ml-auto shrink-0 rounded px-1.5 py-0.5 text-[13px] leading-none text-ink-500 transition-colors hover:bg-ink-800 hover:text-press-red disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-ink-500"
@@ -219,8 +222,8 @@ export default function SettingsPanel({
               </div>
               {stale && (
                 <p className="pl-2 text-[11px] text-press-amber">
-                  Captured at {slot.screenshot!.width}×
-                  {slot.screenshot!.height} — re-capture to apply
+                  Captured at {slot.screenshot!.width}×{slot.screenshot!.height}{' '}
+                  — re-capture to apply
                 </p>
               )}
             </div>

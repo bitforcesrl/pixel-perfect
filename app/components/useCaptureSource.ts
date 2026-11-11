@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { authHeaders } from "@/lib/gate";
+import { useEffect, useState } from 'react';
+import { authHeaders } from '@/lib/gate';
 
 /** Where the browser a capture runs in comes from. */
-export type CaptureSource = "env" | "key";
+export type CaptureSource = 'env' | 'key';
 
 export interface CaptureSourceState {
   /** null until the server has answered — nothing is asked of the user yet. */
@@ -30,8 +30,8 @@ export function useCaptureSource(): CaptureSourceState {
     let cancelled = false;
     void (async () => {
       try {
-        const res = await fetch("/api/screenshot", {
-          cache: "no-store",
+        const res = await fetch('/api/screenshot', {
+          cache: 'no-store',
           headers: await authHeaders(),
         });
         if (!res.ok) return;
@@ -41,7 +41,7 @@ export function useCaptureSource(): CaptureSourceState {
         };
         if (cancelled) return;
         setState({
-          source: data.source === "env" ? "env" : "key",
+          source: data.source === 'env' ? 'env' : 'key',
           localAvailable: data.localAvailable === true,
         });
       } catch {

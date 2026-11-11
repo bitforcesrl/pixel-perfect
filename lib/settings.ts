@@ -1,4 +1,4 @@
-import {MAX_DIM, MIN_DIM} from './validation';
+import { MAX_DIM, MIN_DIM } from './validation';
 import {
   VIEWPORT_LABELS,
   VIEWPORT_PRESETS,
@@ -23,8 +23,8 @@ export interface ViewportSetting {
 export type ViewportSettings = Record<ViewportKey, ViewportSetting>;
 
 function defaultsFor(key: DefaultViewportKey, enabled = true): ViewportSetting {
-  const {label, width, height} = VIEWPORT_PRESETS[key];
-  return {label, enabled, width, height};
+  const { label, width, height } = VIEWPORT_PRESETS[key];
+  return { label, enabled, width, height };
 }
 
 /**
@@ -77,7 +77,8 @@ export function sanitizeSettings(raw: unknown): ViewportSettings {
   for (const [key, stored] of Object.entries(raw)) {
     if (typeof stored !== 'object' || stored === null) continue;
     const fallback = fallbackFor(key);
-    const {label, enabled, width, height} = stored as Partial<ViewportSetting>;
+    const { label, enabled, width, height } =
+      stored as Partial<ViewportSetting>;
     settings[key] = {
       label:
         typeof label === 'string' && label.trim() !== ''
@@ -145,7 +146,7 @@ export function removeViewport(
   key: ViewportKey,
 ): ViewportSettings {
   if (!(key in settings) || isLastEnabled(settings, key)) return settings;
-  const next = {...settings};
+  const next = { ...settings };
   delete next[key];
   return next;
 }
@@ -190,7 +191,7 @@ export function allPresets(settings: ViewportSettings): ViewportPreset[] {
 export function viewportLabels(
   settings: ViewportSettings,
 ): Record<ViewportKey, string> {
-  const labels: Record<ViewportKey, string> = {...VIEWPORT_LABELS};
+  const labels: Record<ViewportKey, string> = { ...VIEWPORT_LABELS };
   for (const [key, setting] of Object.entries(settings)) {
     labels[key] = setting.label;
   }

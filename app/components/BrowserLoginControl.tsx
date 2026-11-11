@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { authHeaders } from "@/lib/gate";
+import { useEffect, useState } from 'react';
+import { authHeaders } from '@/lib/gate';
 
 type Status = {
   available: boolean;
@@ -11,17 +11,17 @@ type Status = {
 };
 
 const ACTION =
-  "rounded border border-ink-700 px-2 py-1 text-[10px] text-ink-100 transition-colors hover:border-press-violet hover:text-press-violet disabled:cursor-default disabled:opacity-40";
+  'rounded border border-ink-700 px-2 py-1 text-[10px] text-ink-100 transition-colors hover:border-press-violet hover:text-press-violet disabled:cursor-default disabled:opacity-40';
 
 /** How often an open window is checked on, to notice it being closed. */
 const POLL_MS = 2_000;
 
 function formatSavedAt(ms: number): string {
   return new Date(ms).toLocaleString(undefined, {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
 
@@ -29,7 +29,7 @@ async function fetchStatus(target: string): Promise<Status | null> {
   try {
     const res = await fetch(
       `/api/login-session?url=${encodeURIComponent(target)}`,
-      { cache: "no-store", headers: await authHeaders() },
+      { cache: 'no-store', headers: await authHeaders() },
     );
     return res.ok ? ((await res.json()) as Status) : null;
   } catch {
@@ -73,29 +73,29 @@ export default function BrowserLoginControl({ url }: { url: string }) {
 
   if (!status?.available) return null;
 
-  const send = async (init: RequestInit, query = "") => {
+  const send = async (init: RequestInit, query = '') => {
     setBusy(true);
     setError(null);
     try {
       const res = await fetch(`/api/login-session${query}`, {
         ...init,
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           ...(await authHeaders()),
         },
       });
       const data = (await res.json()) as Partial<Status> & { error?: string };
-      if (!res.ok) setError(data.error ?? "Something went wrong");
+      if (!res.ok) setError(data.error ?? 'Something went wrong');
       else setStatus((prev) => ({ ...(prev as Status), ...data }));
     } catch {
-      setError("Could not reach the app server");
+      setError('Could not reach the app server');
     } finally {
       setBusy(false);
     }
   };
 
-  const post = (action: "open" | "done") =>
-    send({ method: "POST", body: JSON.stringify({ url: target, action }) });
+  const post = (action: 'open' | 'done') =>
+    send({ method: 'POST', body: JSON.stringify({ url: target, action }) });
 
   return (
     <div className="flex flex-col gap-1">
@@ -104,17 +104,17 @@ export default function BrowserLoginControl({ url }: { url: string }) {
       </span>
       <span className="text-[10px] text-ink-500">
         {status.open
-          ? "Log in in the Firefox window, then press Done."
+          ? 'Log in in the Firefox window, then press Done.'
           : status.saved && status.savedAt !== null
             ? `Session saved ${formatSavedAt(status.savedAt)} — local captures use it.`
-            : "For sites that need a login (e.g. a code by email)."}
+            : 'For sites that need a login (e.g. a code by email).'}
       </span>
       <div className="flex items-center gap-1">
         {status.open ? (
           <button
             type="button"
             disabled={busy}
-            onClick={() => void post("done")}
+            onClick={() => void post('done')}
             className={ACTION}
           >
             Done
@@ -122,11 +122,11 @@ export default function BrowserLoginControl({ url }: { url: string }) {
         ) : (
           <button
             type="button"
-            disabled={busy || target === ""}
-            onClick={() => void post("open")}
+            disabled={busy || target === ''}
+            onClick={() => void post('open')}
             className={ACTION}
           >
-            {status.saved ? "Log in again" : "Log in"}
+            {status.saved ? 'Log in again' : 'Log in'}
           </button>
         )}
         {(status.saved || status.open) && (
@@ -135,7 +135,7 @@ export default function BrowserLoginControl({ url }: { url: string }) {
             disabled={busy}
             onClick={() =>
               void send(
-                { method: "DELETE" },
+                { method: 'DELETE' },
                 `?url=${encodeURIComponent(target)}`,
               )
             }

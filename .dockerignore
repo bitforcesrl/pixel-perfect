@@ -43,4 +43,7 @@ next-env.d.ts
 # Docker
 Dockerfile
 docker-compose.yml
-.dockerignore.sessions
+.dockerignore
+
+# login sessions saved by the browser login window (auth cookies)
+.sessions

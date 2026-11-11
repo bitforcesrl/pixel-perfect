@@ -1,5 +1,5 @@
-import type {ScreenshotResult} from './validation';
-import {VIEWPORT_KEYS, type ViewportKey} from './viewports';
+import type { ScreenshotResult } from './validation';
+import { VIEWPORT_KEYS, type ViewportKey } from './viewports';
 import {
   DEFAULT_SETTINGS,
   sanitizeSettings,
@@ -161,7 +161,7 @@ async function patchSlot(
     const request = store.get(id);
     request.onsuccess = () => {
       const current = (request.result as StoredSlot | undefined) ?? EMPTY_SLOT;
-      store.put({...current, ...patch}, id);
+      store.put({ ...current, ...patch }, id);
     };
   });
 }
@@ -197,7 +197,7 @@ export function saveScreenshot(
   key: ViewportKey,
   screenshot: ScreenshotResult,
 ): Promise<void> {
-  return swallow(() => patchSlot(pageId, key, {screenshot}));
+  return swallow(() => patchSlot(pageId, key, { screenshot }));
 }
 
 export function saveFigma(
@@ -207,13 +207,13 @@ export function saveFigma(
   fileName: string,
 ): Promise<void> {
   return swallow(() =>
-    patchSlot(pageId, key, {figmaBlob: blob, figmaFileName: fileName}),
+    patchSlot(pageId, key, { figmaBlob: blob, figmaFileName: fileName }),
   );
 }
 
 export function clearFigma(pageId: string, key: ViewportKey): Promise<void> {
   return swallow(() =>
-    patchSlot(pageId, key, {figmaBlob: null, figmaFileName: null}),
+    patchSlot(pageId, key, { figmaBlob: null, figmaFileName: null }),
   );
 }
 
@@ -221,7 +221,7 @@ export function clearScreenshot(
   pageId: string,
   key: ViewportKey,
 ): Promise<void> {
-  return swallow(() => patchSlot(pageId, key, {screenshot: null}));
+  return swallow(() => patchSlot(pageId, key, { screenshot: null }));
 }
 
 /** Drop one page's captures and uploads, leaving every other page untouched. */
@@ -268,11 +268,11 @@ function entryPage(entry: HistoryEntry): string {
 
 /** Stamped with the time it is stored unless the entry already says when. */
 export function saveHistoryEntry(
-  entry: Omit<HistoryEntry, 'id' | 'savedAt'> & {savedAt?: number},
+  entry: Omit<HistoryEntry, 'id' | 'savedAt'> & { savedAt?: number },
 ): Promise<void> {
   return swallow(() =>
     withStore(HISTORY, 'readwrite', (store) => {
-      store.add({...entry, savedAt: entry.savedAt ?? Date.now()});
+      store.add({ ...entry, savedAt: entry.savedAt ?? Date.now() });
     }),
   );
 }
@@ -306,7 +306,7 @@ export function renameHistoryEntry(id: number, name: string): Promise<void> {
       const request = store.get(id);
       request.onsuccess = () => {
         const entry = request.result as HistoryEntry | undefined;
-        if (entry) store.put({...entry, fileName: name});
+        if (entry) store.put({ ...entry, fileName: name });
       };
     }),
   );
@@ -498,7 +498,7 @@ function migrateLegacy(tx: IDBTransaction): void {
   entries.onsuccess = () => {
     for (const entry of entries.result as HistoryEntry[]) {
       if (entry.projectId) continue;
-      history.put({...entry, projectId: LEGACY_PROJECT_ID});
+      history.put({ ...entry, projectId: LEGACY_PROJECT_ID });
     }
   };
 }
@@ -562,7 +562,7 @@ export async function loadProjects(): Promise<{
 
   // A failed transaction still needs to leave the app somewhere to work
   if (projects.length === 0) projects = [defaultProject()];
-  return {projects, active: active ?? projects[0]};
+  return { projects, active: active ?? projects[0] };
 }
 
 export function saveProjects(projects: Project[]): Promise<void> {

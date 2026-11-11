@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import { MAX_NAME_LENGTH, type Page } from "@/lib/projects";
+import { useEffect, useRef, useState } from 'react';
+import { MAX_NAME_LENGTH, type Page } from '@/lib/projects';
 
 export interface PageSwitcherProps {
   projectName: string;
@@ -32,7 +32,7 @@ export default function PageSwitcher({
 }: PageSwitcherProps) {
   const [open, setOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState('');
   const rootRef = useRef<HTMLDivElement>(null);
 
   const active = pages.find((page) => page.id === activeId) ?? pages[0];
@@ -43,8 +43,8 @@ export default function PageSwitcher({
     const onPointerDown = (e: PointerEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [open]);
 
   const startRename = () => {
@@ -79,8 +79,8 @@ export default function PageSwitcher({
           onBlur={commitRename}
           onKeyDown={(e) => {
             e.stopPropagation();
-            if (e.key === "Enter") commitRename();
-            if (e.key === "Escape") setRenaming(false);
+            if (e.key === 'Enter') commitRename();
+            if (e.key === 'Escape') setRenaming(false);
           }}
           className="w-44 rounded border border-press-violet bg-ink-900 px-1.5 py-0.5 text-[12px] font-semibold text-ink-100 outline-none"
         />
@@ -93,8 +93,8 @@ export default function PageSwitcher({
       ref={rootRef}
       className={`relative flex items-center gap-0.5 rounded-md border py-0.5 pr-0.5 pl-0.5 transition-colors ${
         open
-          ? "border-press-violet/50 bg-press-violet/10"
-          : "border-ink-800 bg-ink-850/70 hover:border-ink-700"
+          ? 'border-press-violet/50 bg-press-violet/10'
+          : 'border-ink-800 bg-ink-850/70 hover:border-ink-700'
       }`}
     >
       <button
@@ -118,7 +118,7 @@ export default function PageSwitcher({
         </span>
         <svg
           className={`h-2.5 w-2.5 shrink-0 transition-colors ${
-            open ? "text-press-violet" : "text-ink-500"
+            open ? 'text-press-violet' : 'text-ink-500'
           }`}
           viewBox="0 0 12 12"
           fill="currentColor"
@@ -173,15 +173,15 @@ export default function PageSwitcher({
                 <span
                   aria-hidden="true"
                   className={`w-2.5 shrink-0 text-center text-[11px] leading-none ${
-                    current ? "text-press-violet" : "text-ink-700"
+                    current ? 'text-press-violet' : 'text-ink-700'
                   }`}
                 >
-                  {current ? "●" : ""}
+                  {current ? '●' : ''}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span
                     className={`truncate text-[12px] ${
-                      current ? "text-press-violet" : "text-ink-200"
+                      current ? 'text-press-violet' : 'text-ink-200'
                     }`}
                   >
                     {page.name}
@@ -189,7 +189,7 @@ export default function PageSwitcher({
                   {/* The URL this page shoots — the thing you switch by when
                       two pages are named alike */}
                   <span className="truncate font-mono text-[10px] text-ink-500">
-                    {page.url.trim() === "" ? "no URL yet" : page.url}
+                    {page.url.trim() === '' ? 'no URL yet' : page.url}
                   </span>
                 </span>
               </button>
@@ -207,7 +207,9 @@ export default function PageSwitcher({
           >
             <span className="w-2.5 shrink-0" aria-hidden="true" />
             Manage pages…
-            <span className="ml-auto font-mono text-[10px] text-ink-500">P</span>
+            <span className="ml-auto font-mono text-[10px] text-ink-500">
+              P
+            </span>
           </button>
         </div>
       )}

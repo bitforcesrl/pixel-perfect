@@ -1,5 +1,5 @@
 import path from 'node:path';
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 /**
  * This folder, pinned. Left to infer it, Next walks up to the first lockfile it
@@ -11,7 +11,7 @@ const PROJECT_ROOT = path.resolve(__dirname);
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  turbopack: {root: PROJECT_ROOT},
+  turbopack: { root: PROJECT_ROOT },
   outputFileTracingRoot: PROJECT_ROOT,
   allowedDevOrigins: ['localhost'],
   serverExternalPackages: ['playwright', 'playwright-core'],

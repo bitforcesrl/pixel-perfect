@@ -1,14 +1,14 @@
-import {describe, it, expect} from 'vitest';
-import {browserlessEndpoint, acquireBrowser} from './browser';
+import { describe, it, expect } from 'vitest';
+import { browserlessEndpoint, acquireBrowser } from './browser';
 
 describe('browserlessEndpoint', () => {
   it('returns null with no token, so local runs launch a local browser', () => {
     expect(browserlessEndpoint({})).toBeNull();
-    expect(browserlessEndpoint({BROWSERLESS_TOKEN: '   '})).toBeNull();
+    expect(browserlessEndpoint({ BROWSERLESS_TOKEN: '   ' })).toBeNull();
   });
 
   it('builds the default endpoint from a token alone', () => {
-    const url = new URL(browserlessEndpoint({BROWSERLESS_TOKEN: 'abc123'})!);
+    const url = new URL(browserlessEndpoint({ BROWSERLESS_TOKEN: 'abc123' })!);
     expect(url.protocol).toBe('wss:');
     expect(url.host).toBe('production-sfo.browserless.io');
     // The CDP endpoint, not /chromium/playwright: the Playwright protocol only
@@ -20,14 +20,17 @@ describe('browserlessEndpoint', () => {
   it('asks for no more session time than the smallest plan allows', () => {
     // Browserless rejects the connection outright with a 400 when the
     // requested timeout is over the plan's cap; the free tier's is 60s.
-    const url = new URL(browserlessEndpoint({BROWSERLESS_TOKEN: 'abc123'})!);
+    const url = new URL(browserlessEndpoint({ BROWSERLESS_TOKEN: 'abc123' })!);
     expect(Number(url.searchParams.get('timeout'))).toBeLessThanOrEqual(60_000);
   });
 
   it('honours BROWSERLESS_TIMEOUT_MS and ignores junk values', () => {
     const withTimeout = (BROWSERLESS_TIMEOUT_MS?: string) =>
       new URL(
-        browserlessEndpoint({BROWSERLESS_TOKEN: 'abc123', BROWSERLESS_TIMEOUT_MS})!,
+        browserlessEndpoint({
+          BROWSERLESS_TOKEN: 'abc123',
+          BROWSERLESS_TIMEOUT_MS,
+        })!,
       ).searchParams.get('timeout');
 
     expect(withTimeout('90000')).toBe('90000');
@@ -60,7 +63,7 @@ describe('browserlessEndpoint', () => {
   });
 
   it('asks for no proxy unless one is configured', () => {
-    const url = new URL(browserlessEndpoint({BROWSERLESS_TOKEN: 'abc123'})!);
+    const url = new URL(browserlessEndpoint({ BROWSERLESS_TOKEN: 'abc123' })!);
     expect(url.searchParams.has('proxy')).toBe(false);
     expect(url.searchParams.has('proxyCountry')).toBe(false);
   });
@@ -78,7 +81,7 @@ describe('browserlessEndpoint', () => {
 
 describe('acquireBrowser', () => {
   it('refuses to launch locally on Vercel and names the missing variable', async () => {
-    await expect(acquireBrowser({VERCEL: '1'})).rejects.toThrow(
+    await expect(acquireBrowser({ VERCEL: '1' })).rejects.toThrow(
       /BROWSERLESS_TOKEN/,
     );
   });

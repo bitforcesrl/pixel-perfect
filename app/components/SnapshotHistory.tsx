@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { elapsedLabel, savedAtLabel } from "@/lib/elapsed";
-import { MAX_NAME_LENGTH } from "@/lib/projects";
-import type { HistoryEntry } from "@/lib/storage";
-import { type ViewportKey } from "@/lib/viewports";
+import { useState } from 'react';
+import { elapsedLabel, savedAtLabel } from '@/lib/elapsed';
+import { MAX_NAME_LENGTH } from '@/lib/projects';
+import type { HistoryEntry } from '@/lib/storage';
+import { type ViewportKey } from '@/lib/viewports';
 
 export interface SnapshotHistoryProps {
   /** Display name of each viewport an entry may have been archived from. */
@@ -20,8 +20,8 @@ export interface SnapshotHistoryProps {
   saveHint: string | null;
 }
 
-const BTN = "ps-btn text-[11px] transition-none";
-const FIELD = "ps-input px-2 text-[11px] placeholder:text-ps-500";
+const BTN = 'ps-btn text-[11px] transition-none';
+const FIELD = 'ps-input px-2 text-[11px] placeholder:text-ps-500';
 
 /**
  * The page's saved Figma exports, and the button that adds to them.
@@ -46,7 +46,7 @@ export default function SnapshotHistory({
   // not worth a ticking timer.
   const [now] = useState(() => Date.now());
   const [renamingId, setRenamingId] = useState<number | null>(null);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState('');
   // Delete asks once, in place — the blob is the only copy the app has
   const [confirmingId, setConfirmingId] = useState<number | null>(null);
 
@@ -71,7 +71,9 @@ export default function SnapshotHistory({
         </span>
         Save current export
       </button>
-      {saveHint && <p className="text-[10px] leading-4 text-ps-500">{saveHint}</p>}
+      {saveHint && (
+        <p className="text-[10px] leading-4 text-ps-500">{saveHint}</p>
+      )}
 
       {entries.length === 0 ? (
         <p className="text-[10px] leading-4 text-ps-500">
@@ -103,8 +105,8 @@ export default function SnapshotHistory({
                       onBlur={commitRename}
                       onKeyDown={(e) => {
                         e.stopPropagation();
-                        if (e.key === "Enter") commitRename();
-                        if (e.key === "Escape") setRenamingId(null);
+                        if (e.key === 'Enter') commitRename();
+                        if (e.key === 'Escape') setRenamingId(null);
                       }}
                       className={`${FIELD} min-w-0 flex-1 py-0.5`}
                     />
@@ -119,8 +121,9 @@ export default function SnapshotHistory({
                 </div>
 
                 <span className="font-mono text-[10px] text-ps-500 tabular-nums">
-                  {savedAtLabel(entry.savedAt)} · {elapsedLabel(entry.savedAt, now)}{" "}
-                  · offset {entry.offsetY > 0 ? "+" : ""}
+                  {savedAtLabel(entry.savedAt)} ·{' '}
+                  {elapsedLabel(entry.savedAt, now)} · offset{' '}
+                  {entry.offsetY > 0 ? '+' : ''}
                   {entry.offsetY}px
                 </span>
 
@@ -147,15 +150,17 @@ export default function SnapshotHistory({
                   <button
                     type="button"
                     onClick={() =>
-                      confirming ? onDelete(entry.id) : setConfirmingId(entry.id)
+                      confirming
+                        ? onDelete(entry.id)
+                        : setConfirmingId(entry.id)
                     }
                     onBlur={() => setConfirmingId(null)}
                     aria-label={`Delete the ${entry.fileName} snapshot`}
                     className={`${BTN} flex-1 py-1 ${
-                      confirming ? "text-press-red" : ""
+                      confirming ? 'text-press-red' : ''
                     }`}
                   >
-                    {confirming ? "Sure?" : "Delete"}
+                    {confirming ? 'Sure?' : 'Delete'}
                   </button>
                 </div>
               </li>

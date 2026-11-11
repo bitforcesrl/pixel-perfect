@@ -41,7 +41,7 @@ function crc32(data: Uint8Array): number {
 }
 
 /** MS-DOS time and date, the only clock the format knows. */
-function dosDateTime(date: Date): {time: number; date: number} {
+function dosDateTime(date: Date): { time: number; date: number } {
   return {
     time:
       (date.getHours() << 11) |
@@ -110,10 +110,12 @@ export function createZip(entries: ZipEntry[]): Blob {
   ev.setUint32(12, centralSize, true);
   ev.setUint32(16, offset, true);
 
-  return new Blob([...parts, ...central, end], {type: 'application/zip'});
+  return new Blob([...parts, ...central, end], { type: 'application/zip' });
 }
 
-async function inflate(data: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {
+async function inflate(
+  data: Uint8Array<ArrayBuffer>,
+): Promise<Uint8Array<ArrayBuffer>> {
   const stream = new Blob([data])
     .stream()
     .pipeThrough(new DecompressionStream('deflate-raw'));

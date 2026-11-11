@@ -13,10 +13,10 @@
 
 /** Natural position → zigzag position. */
 const ZIGZAG = [
-  0, 1, 5, 6, 14, 15, 27, 28, 2, 4, 7, 13, 16, 26, 29, 42, 3, 8, 12, 17, 25,
-  30, 41, 43, 9, 11, 18, 24, 31, 40, 44, 53, 10, 19, 23, 32, 39, 45, 52, 54, 20,
-  22, 33, 38, 46, 51, 55, 60, 21, 34, 37, 47, 50, 56, 59, 61, 35, 36, 48, 49,
-  57, 58, 62, 63,
+  0, 1, 5, 6, 14, 15, 27, 28, 2, 4, 7, 13, 16, 26, 29, 42, 3, 8, 12, 17, 25, 30,
+  41, 43, 9, 11, 18, 24, 31, 40, 44, 53, 10, 19, 23, 32, 39, 45, 52, 54, 20, 22,
+  33, 38, 46, 51, 55, 60, 21, 34, 37, 47, 50, 56, 59, 61, 35, 36, 48, 49, 57,
+  58, 62, 63,
 ];
 
 const LUMA_QUANT = [
@@ -27,8 +27,39 @@ const LUMA_QUANT = [
 ];
 
 const CHROMA_QUANT = [
-  17, 18, 24, 47, 99, 99, 99, 99, 18, 21, 26, 66, 99, 99, 99, 99, 24, 26, 56,
-  99, 99, 99, 99, 99, 47, 66, 99, 99, 99, 99, 99, 99, ...new Array(32).fill(99),
+  17,
+  18,
+  24,
+  47,
+  99,
+  99,
+  99,
+  99,
+  18,
+  21,
+  26,
+  66,
+  99,
+  99,
+  99,
+  99,
+  24,
+  26,
+  56,
+  99,
+  99,
+  99,
+  99,
+  99,
+  47,
+  66,
+  99,
+  99,
+  99,
+  99,
+  99,
+  99,
+  ...new Array(32).fill(99),
 ];
 
 /** AAN scale factors, folded into the quantisation step. */
@@ -123,7 +154,7 @@ function quantFor(base: number[], quality: number): Quant {
       divisors[k] = 1 / (table[ZIGZAG[k]] * AAN[row] * AAN[col] * 8);
     }
   }
-  return {table, divisors};
+  return { table, divisors };
 }
 
 /** Forward DCT in place (AAN), then quantised into `out` in zigzag order. */
@@ -228,7 +259,12 @@ export function createJpegWriter(
   height: number,
   quality: number,
 ): JpegWriter {
-  if (width < 1 || height < 1 || width > MAX_JPEG_SIDE || height > MAX_JPEG_SIDE) {
+  if (
+    width < 1 ||
+    height < 1 ||
+    width > MAX_JPEG_SIDE ||
+    height > MAX_JPEG_SIDE
+  ) {
     throw new Error(`A JPEG cannot be ${width}x${height}`);
   }
   const luma = quantFor(LUMA_QUANT, quality);
@@ -237,7 +273,9 @@ export function createJpegWriter(
 
   // Headers: SOI, JFIF, quantisation, frame, Huffman tables, scan
   out.bytes([0xff, 0xd8]);
-  out.bytes([0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0]);
+  out.bytes([
+    0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0,
+  ]);
   out.bytes([0xff, 0xdb]);
   out.u16(2 + 65 * 2);
   out.byte(0);
@@ -251,7 +289,13 @@ export function createJpegWriter(
   out.u16(width);
   out.bytes([3, 1, 0x11, 0, 2, 0x11, 1, 3, 0x11, 1]);
   out.bytes([0xff, 0xc4]);
-  out.u16(2 + 4 * 17 + 2 * DC_VALUES.length + AC_LUMA_VALUES.length + AC_CHROMA_VALUES.length);
+  out.u16(
+    2 +
+      4 * 17 +
+      2 * DC_VALUES.length +
+      AC_LUMA_VALUES.length +
+      AC_CHROMA_VALUES.length,
+  );
   for (const [id, counts, values] of [
     [0x00, DC_LUMA_COUNTS, DC_VALUES],
     [0x10, AC_LUMA_COUNTS, AC_LUMA_VALUES],
@@ -349,7 +393,9 @@ export function createJpegWriter(
         throw new Error('Only the last JPEG band may stop short of 8 rows');
       }
       if (written + rows > height) {
-        throw new Error(`JPEG has room for ${height} rows, got ${written + rows}`);
+        throw new Error(
+          `JPEG has room for ${height} rows, got ${written + rows}`,
+        );
       }
 
       for (let top = 0; top < rows; top += 8) {
@@ -384,7 +430,7 @@ export function createJpegWriter(
       if (accBits > 0) bits((1 << (8 - accBits)) - 1, 8 - accBits);
       out.bytes([0xff, 0xd9]);
       out.flush();
-      return new Blob(out.parts, {type: 'image/jpeg'});
+      return new Blob(out.parts, { type: 'image/jpeg' });
     },
   };
 }

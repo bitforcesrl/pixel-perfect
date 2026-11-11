@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { MAX_NAME_LENGTH } from "@/lib/projects";
+import { useEffect, useState } from 'react';
+import { MAX_NAME_LENGTH } from '@/lib/projects';
 
 export interface NewProjectDialogProps {
   open: boolean;
@@ -24,18 +24,15 @@ export default function NewProjectDialog({
   return <Dialog onClose={onClose} onCreate={onCreate} />;
 }
 
-function Dialog({
-  onClose,
-  onCreate,
-}: Omit<NewProjectDialogProps, "open">) {
-  const [name, setName] = useState("");
+function Dialog({ onClose, onCreate }: Omit<NewProjectDialogProps, 'open'>) {
+  const [name, setName] = useState('');
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === 'Escape') onClose();
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
   const trimmed = name.trim();
@@ -74,7 +71,7 @@ function Dialog({
           placeholder="Project name"
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") submit();
+            if (e.key === 'Enter') submit();
           }}
           className="mt-3 w-full rounded border border-ink-600 bg-ink-850 px-2.5 py-2 text-sm text-ink-100 outline-none placeholder:text-ink-600 focus:border-press-violet"
         />

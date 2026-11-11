@@ -5,12 +5,12 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json ./
-# postinstall runs during npm ci, before the rest of the source arrives
+# The prepare script (git hooks) runs during npm ci, before the rest of the
+# source arrives; it exits early here because there is no git repository.
 COPY scripts ./scripts
 
 # Install all dependencies (including devDependencies). No browser here: this
 # stage is Alpine, which Playwright has no Firefox for — the runner installs it.
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 RUN npm ci
 
 # Copy source code

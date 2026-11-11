@@ -1,4 +1,4 @@
-import type { ViewMode } from "./types";
+import type { ViewMode } from './types';
 
 /** The zoom stops, the ones the +/− keys and the palette's presets land on. */
 export const ZOOM_STEPS = [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4];
@@ -9,8 +9,9 @@ export const MAX_ZOOM = ZOOM_STEPS[ZOOM_STEPS.length - 1];
 export function stepZoom(zoom: number, dir: 1 | -1): number {
   const steps = dir === 1 ? ZOOM_STEPS : [...ZOOM_STEPS].reverse();
   return (
-    steps.find((step) => (dir === 1 ? step > zoom + 0.001 : step < zoom - 0.001)) ??
-    zoom
+    steps.find((step) =>
+      dir === 1 ? step > zoom + 0.001 : step < zoom - 0.001,
+    ) ?? zoom
   );
 }
 
@@ -26,7 +27,7 @@ export function clampZoom(zoom: number): number {
  * two panes cannot fit at 1:1, so it starts halved.
  */
 export function defaultZoom(mode: ViewMode, viewportWidth: number): number {
-  return mode === "sideBySide" && viewportWidth >= SIDE_BY_SIDE_HALVED_FROM
+  return mode === 'sideBySide' && viewportWidth >= SIDE_BY_SIDE_HALVED_FROM
     ? 0.5
     : 1;
 }

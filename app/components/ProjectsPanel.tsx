@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { MAX_NAME_LENGTH, type Project } from "@/lib/projects";
+import { useState } from 'react';
+import { MAX_NAME_LENGTH, type Project } from '@/lib/projects';
 
 export interface ProjectsPanelProps {
   projects: Project[];
@@ -13,7 +13,7 @@ export interface ProjectsPanelProps {
 }
 
 const NAME_INPUT =
-  "w-full rounded border border-ink-600 bg-ink-850 px-2 py-1.5 text-[12px] text-ink-100 outline-none placeholder:text-ink-600 focus:border-press-violet";
+  'w-full rounded border border-ink-600 bg-ink-850 px-2 py-1.5 text-[12px] text-ink-100 outline-none placeholder:text-ink-600 focus:border-press-violet';
 
 export default function ProjectsPanel({
   projects,
@@ -23,9 +23,9 @@ export default function ProjectsPanel({
   onRename,
   onDelete,
 }: ProjectsPanelProps) {
-  const [newName, setNewName] = useState("");
+  const [newName, setNewName] = useState('');
   const [renamingId, setRenamingId] = useState<string | null>(null);
-  const [renameText, setRenameText] = useState("");
+  const [renameText, setRenameText] = useState('');
   // Delete asks once, in place: the project's captures and notes go with it
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
@@ -33,7 +33,7 @@ export default function ProjectsPanel({
     const trimmed = newName.trim();
     if (trimmed.length === 0) return;
     onCreate(trimmed);
-    setNewName("");
+    setNewName('');
   };
 
   const commitRename = () => {
@@ -61,8 +61,8 @@ export default function ProjectsPanel({
               key={project.id}
               className={`rounded border px-2 py-1.5 ${
                 active
-                  ? "border-press-violet bg-press-violet/10"
-                  : "border-ink-800 bg-ink-850/50"
+                  ? 'border-press-violet bg-press-violet/10'
+                  : 'border-ink-800 bg-ink-850/50'
               }`}
             >
               {renaming ? (
@@ -74,8 +74,8 @@ export default function ProjectsPanel({
                   onChange={(e) => setRenameText(e.target.value)}
                   onBlur={commitRename}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") commitRename();
-                    if (e.key === "Escape") setRenamingId(null);
+                    if (e.key === 'Enter') commitRename();
+                    if (e.key === 'Escape') setRenamingId(null);
                   }}
                   className={NAME_INPUT}
                 />
@@ -85,19 +85,19 @@ export default function ProjectsPanel({
                     type="button"
                     onClick={() => onSelect(project.id)}
                     disabled={active}
-                    title={project.pages.map((page) => page.name).join(", ")}
+                    title={project.pages.map((page) => page.name).join(', ')}
                     className="min-w-0 flex-1 text-left disabled:cursor-default"
                   >
                     <span
                       className={`block truncate text-[12px] font-medium ${
-                        active ? "text-press-violet" : "text-ink-200"
+                        active ? 'text-press-violet' : 'text-ink-200'
                       }`}
                     >
                       {project.name}
                     </span>
                     <span className="block truncate text-[10px] text-ink-500">
                       {project.pages.length === 1
-                        ? "1 page"
+                        ? '1 page'
                         : `${project.pages.length} pages`}
                     </span>
                   </button>
@@ -116,22 +116,24 @@ export default function ProjectsPanel({
                   <button
                     type="button"
                     onClick={() =>
-                      confirming ? onDelete(project.id) : setConfirmingId(project.id)
+                      confirming
+                        ? onDelete(project.id)
+                        : setConfirmingId(project.id)
                     }
                     onBlur={() => setConfirmingId(null)}
                     disabled={projects.length === 1}
                     title={
                       projects.length === 1
-                        ? "The last project cannot be deleted"
-                        : "Delete this project and everything in it"
+                        ? 'The last project cannot be deleted'
+                        : 'Delete this project and everything in it'
                     }
                     className={`rounded px-1.5 py-1 text-[10px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                       confirming
-                        ? "bg-press-red/15 text-press-red"
-                        : "text-ink-500 hover:bg-ink-800 hover:text-press-red"
+                        ? 'bg-press-red/15 text-press-red'
+                        : 'text-ink-500 hover:bg-ink-800 hover:text-press-red'
                     }`}
                   >
-                    {confirming ? "Sure?" : "Delete"}
+                    {confirming ? 'Sure?' : 'Delete'}
                   </button>
                 </div>
               )}
@@ -148,7 +150,7 @@ export default function ProjectsPanel({
           placeholder="New project name"
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") create();
+            if (e.key === 'Enter') create();
           }}
           className={NAME_INPUT}
         />

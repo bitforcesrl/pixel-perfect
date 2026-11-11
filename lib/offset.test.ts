@@ -1,13 +1,13 @@
-import {describe, expect, it} from 'vitest';
-import {bottomAlignOffset, clampOffset, offsetBounds} from './offset';
+import { describe, expect, it } from 'vitest';
+import { bottomAlignOffset, clampOffset, offsetBounds } from './offset';
 
 describe('offsetBounds', () => {
   it('bounds the drag by the measured Figma height', () => {
-    expect(offsetBounds(900, 2400)).toEqual({min: -2400, max: 900});
+    expect(offsetBounds(900, 2400)).toEqual({ min: -2400, max: 900 });
   });
 
   it('falls back to the screenshot height when Figma is unmeasured', () => {
-    expect(offsetBounds(900, null)).toEqual({min: -900, max: 900});
+    expect(offsetBounds(900, null)).toEqual({ min: -900, max: 900 });
   });
 });
 

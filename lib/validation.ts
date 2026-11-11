@@ -16,8 +16,7 @@ export interface ScreenshotResult {
 }
 
 export type ValidationOutcome =
-  | {ok: true; data: ScreenshotRequest}
-  | {ok: false; error: string};
+  { ok: true; data: ScreenshotRequest } | { ok: false; error: string };
 
 export const MIN_DIM = 200;
 export const MAX_DIM = 4000;
@@ -34,24 +33,24 @@ function isValidDimension(value: unknown): value is number {
 
 export function validateScreenshotRequest(body: unknown): ValidationOutcome {
   if (typeof body !== 'object' || body === null) {
-    return {ok: false, error: 'Body must be a JSON object'};
+    return { ok: false, error: 'Body must be a JSON object' };
   }
-  const {url, viewportWidth, viewportHeight, sitePassword} = body as Record<
+  const { url, viewportWidth, viewportHeight, sitePassword } = body as Record<
     string,
     unknown
   >;
 
   if (typeof url !== 'string') {
-    return {ok: false, error: 'url must be a string'};
+    return { ok: false, error: 'url must be a string' };
   }
   let parsed: URL;
   try {
     parsed = new URL(url);
   } catch {
-    return {ok: false, error: 'url is not a valid URL'};
+    return { ok: false, error: 'url is not a valid URL' };
   }
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    return {ok: false, error: 'url must use http or https'};
+    return { ok: false, error: 'url must use http or https' };
   }
   if (!isValidDimension(viewportWidth) || !isValidDimension(viewportHeight)) {
     return {
@@ -76,7 +75,7 @@ export function validateScreenshotRequest(body: unknown): ValidationOutcome {
       viewportWidth,
       viewportHeight,
       // An empty field means a public page: nothing to type anywhere
-      ...(sitePassword ? {sitePassword} : {}),
+      ...(sitePassword ? { sitePassword } : {}),
     },
   };
 }

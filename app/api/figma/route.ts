@@ -1,11 +1,11 @@
-import {verifyRequest} from '@/lib/auth';
+import { verifyRequest } from '@/lib/auth';
 import {
   isFigmaTarget,
   type FigmaLayer,
   type FigmaRect,
   type FigmaRender,
 } from '@/lib/figma';
-import {parseRenderScale, renderScaleFor} from '@/lib/render-scale';
+import { parseRenderScale, renderScaleFor } from '@/lib/render-scale';
 
 export const runtime = 'nodejs';
 
@@ -43,7 +43,13 @@ const MAX_SPLIT_DEPTH = 4;
 const IDS_PER_RENDER = 100;
 
 /** Node types whose children can be rendered one by one in their place. */
-const CONTAINERS = new Set(['FRAME', 'GROUP', 'COMPONENT', 'INSTANCE', 'SECTION']);
+const CONTAINERS = new Set([
+  'FRAME',
+  'GROUP',
+  'COMPONENT',
+  'INSTANCE',
+  'SECTION',
+]);
 
 /** Where Figma puts its renders. The proxy below fetches from nowhere else. */
 const RENDER_HOST = /^figma-alpha-api\.s3(\.[a-z0-9-]+)*\.amazonaws\.com$/;
@@ -70,12 +76,12 @@ class FigmaError extends Error {
 
 async function figmaGet<T>(path: string, token: string): Promise<T> {
   const res = await fetch(`${API}${path}`, {
-    headers: {'X-Figma-Token': token},
+    headers: { 'X-Figma-Token': token },
     cache: 'no-store',
   });
   if (res.ok) return (await res.json()) as T;
 
-  const body = (await res.json().catch(() => null)) as {err?: unknown} | null;
+  const body = (await res.json().catch(() => null)) as { err?: unknown } | null;
   const detail = typeof body?.err === 'string' ? body.err : res.statusText;
   if (res.status === 403) {
     throw new FigmaError(`Figma refused the token: ${detail}`, 403, true);
@@ -107,7 +113,7 @@ interface Paint {
   visible?: boolean;
   opacity?: number;
   blendMode?: string;
-  color?: {r: number; g: number; b: number; a: number};
+  color?: { r: number; g: number; b: number; a: number };
 }
 
 interface Effect {
@@ -147,7 +153,7 @@ interface FigmaNode {
 }
 
 interface NodesResponse {
-  nodes?: Record<string, {document?: FigmaNode} | null>;
+  nodes?: Record<string, { document?: FigmaNode } | null>;
 }
 
 interface ImagesResponse {
@@ -161,14 +167,14 @@ interface ImagesResponse {
  */
 export async function GET(request: Request) {
   if (!(await verifyRequest(request))) {
-    return Response.json({error: 'Unauthorized'}, {status: 401});
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   // With `?render=`, the bytes of a render the browser could not fetch itself
   const render = new URL(request.url).searchParams.get('render');
   if (render !== null) return proxyRender(render);
 
-  return Response.json({source: envToken() ? 'env' : 'key'});
+  return Response.json({ source: envToken() ? 'env' : 'key' });
 }
 
 /**
@@ -185,14 +191,14 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   if (!(await verifyRequest(request))) {
-    return Response.json({error: 'Unauthorized'}, {status: 401});
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const token = envToken() ?? readClientToken(request);
   if (!token) {
     return Response.json(
-      {error: 'Add a Figma token to export frames', needsToken: true},
-      {status: 400},
+      { error: 'Add a Figma token to export frames', needsToken: true },
+      { status: 400 },
     );
   }
 
@@ -201,23 +207,23 @@ export async function POST(request: Request) {
     body = await request.json();
   } catch {
     return Response.json(
-      {error: 'Request body must be valid JSON'},
-      {status: 400},
+      { error: 'Request body must be valid JSON' },
+      { status: 400 },
     );
   }
   if (!isFigmaTarget(body)) {
     return Response.json(
-      {error: 'fileKey and nodeId must come from a Figma frame link'},
-      {status: 400},
+      { error: 'fileKey and nodeId must come from a Figma frame link' },
+      { status: 400 },
     );
   }
-  const {fileKey, nodeId} = body;
+  const { fileKey, nodeId } = body;
   // The browser asks again with this when a whole render came back shrunk
   const {
     slice,
     maxArea: reported,
     scale: askedScale,
-  } = body as {slice?: unknown; maxArea?: unknown; scale?: unknown};
+  } = body as { slice?: unknown; maxArea?: unknown; scale?: unknown };
   const forceSlice = slice === true;
   const maxArea =
     typeof reported === 'number' && Number.isFinite(reported)
@@ -234,8 +240,8 @@ export async function POST(request: Request) {
     const node = nodes.nodes?.[nodeId]?.document;
     if (!node) {
       return Response.json(
-        {error: `No node ${nodeId} in this Figma file`},
-        {status: 404},
+        { error: `No node ${nodeId} in this Figma file` },
+        { status: 404 },
       );
     }
 
@@ -262,11 +268,11 @@ export async function POST(request: Request) {
       const url = images.images?.[nodeId];
       if (!url) {
         return Response.json(
-          {error: images.err || 'Figma could not render this node'},
-          {status: 502},
+          { error: images.err || 'Figma could not render this node' },
+          { status: 502 },
         );
       }
-      return Response.json({...render, url});
+      return Response.json({ ...render, url });
     }
 
     return Response.json({
@@ -276,19 +282,21 @@ export async function POST(request: Request) {
   } catch (err) {
     if (err instanceof FigmaError) {
       return Response.json(
-        {error: err.message, ...(err.needsToken ? {needsToken: true} : {})},
-        {status: err.status},
+        { error: err.message, ...(err.needsToken ? { needsToken: true } : {}) },
+        { status: err.status },
       );
     }
     const message = err instanceof Error ? err.message : 'Figma export failed';
-    return Response.json({error: message}, {status: 500});
+    return Response.json({ error: message }, { status: 500 });
   }
 }
 
 function fitsOneRender(box: Box, maxArea: number, scale: number): boolean {
   const width = box.width * scale;
   const height = box.height * scale;
-  return width * height <= maxArea && Math.max(width, height) <= MAX_RENDER_SIDE;
+  return (
+    width * height <= maxArea && Math.max(width, height) <= MAX_RENDER_SIDE
+  );
 }
 
 function intersect(a: FigmaRect | null, b: FigmaRect): FigmaRect {
@@ -314,9 +322,9 @@ function solidFill(
   clip: FigmaRect | null,
   alpha: number,
   blend: string | null,
-): Extract<FigmaLayer, {kind: 'fill'}> | null {
+): Extract<FigmaLayer, { kind: 'fill' }> | null {
   if (paint.type !== 'SOLID' || !paint.color) return null;
-  const {r, g, b, a} = paint.color;
+  const { r, g, b, a } = paint.color;
   return {
     kind: 'fill',
     rect,
@@ -327,8 +335,9 @@ function solidFill(
   };
 }
 
-const visible = <T extends {visible?: boolean}>(items: T[] | undefined): T[] =>
-  (items ?? []).filter((item) => item.visible !== false);
+const visible = <T extends { visible?: boolean }>(
+  items: T[] | undefined,
+): T[] => (items ?? []).filter((item) => item.visible !== false);
 
 const isSolid = (paint: Paint) => paint.type === 'SOLID' && !!paint.color;
 
@@ -346,17 +355,26 @@ function strokeBands(box: FigmaRect, node: FigmaNode): FigmaRect[] {
   const left = side?.left ?? uniform;
   // How far past the box edge the stroke reaches, as a share of its width
   const outward =
-    node.strokeAlign === 'OUTSIDE' ? 1 : node.strokeAlign === 'CENTER' ? 0.5 : 0;
+    node.strokeAlign === 'OUTSIDE'
+      ? 1
+      : node.strokeAlign === 'CENTER'
+        ? 0.5
+        : 0;
 
   const x0 = box.x - left * outward;
   const y0 = box.y - top * outward;
   const x1 = box.x + box.width + right * outward;
   const y1 = box.y + box.height + bottom * outward;
   const bands: FigmaRect[] = [
-    {x: x0, y: y0, width: x1 - x0, height: top},
-    {x: x0, y: y1 - bottom, width: x1 - x0, height: bottom},
-    {x: x0, y: y0 + top, width: left, height: y1 - y0 - top - bottom},
-    {x: x1 - right, y: y0 + top, width: right, height: y1 - y0 - top - bottom},
+    { x: x0, y: y0, width: x1 - x0, height: top },
+    { x: x0, y: y1 - bottom, width: x1 - x0, height: bottom },
+    { x: x0, y: y0 + top, width: left, height: y1 - y0 - top - bottom },
+    {
+      x: x1 - right,
+      y: y0 + top,
+      width: right,
+      height: y1 - y0 - top - bottom,
+    },
   ];
   return bands.filter((band) => band.width > 0 && band.height > 0);
 }
@@ -405,8 +423,8 @@ function flatBoxLayers(
 }
 
 type PlannedLayer =
-  | Extract<FigmaLayer, {kind: 'fill'}>
-  | Omit<Extract<FigmaLayer, {kind: 'image'}>, 'url'>;
+  | Extract<FigmaLayer, { kind: 'fill' }>
+  | Omit<Extract<FigmaLayer, { kind: 'image' }>, 'url'>;
 
 /**
  * A frame too large for one render at `scale`, as parts that each fit.
@@ -424,7 +442,7 @@ async function sliceRender(
   token: string,
   maxArea: number,
   scale: number,
-): Promise<{layers: FigmaLayer[]; warning?: string}> {
+): Promise<{ layers: FigmaLayer[]; warning?: string }> {
   const planned: PlannedLayer[] = [];
   const warnings = new Set<string>();
   const local = (box: Box): FigmaRect => ({
@@ -471,7 +489,9 @@ async function sliceRender(
     // still be a flat box, redrawn from its fills
     const fetched = new Map<string, FigmaNode>();
     if (tooLarge.length > 0) {
-      const ids = encodeURIComponent(tooLarge.map((child) => child.id).join(','));
+      const ids = encodeURIComponent(
+        tooLarge.map((child) => child.id).join(','),
+      );
       const deeper = await figmaGet<NodesResponse>(
         `/files/${file}/nodes?ids=${ids}&depth=1`,
         token,
@@ -496,7 +516,9 @@ async function sliceRender(
           fetched.get(child.id) ?? (child.type === 'RECTANGLE' ? child : null);
         const box = node?.absoluteBoundingBox;
         const flat =
-          node && box ? flatBoxLayers(node, local(box), innerClip, innerAlpha) : null;
+          node && box
+            ? flatBoxLayers(node, local(box), innerClip, innerAlpha)
+            : null;
         if (flat) {
           planned.push(...flat);
           continue;
@@ -522,10 +544,14 @@ async function sliceRender(
   await open(root, null, 1, 0);
 
   // Every part rendered in as few requests as the query string allows
-  const ids = planned.flatMap((layer) => (layer.kind === 'image' ? [layer.id] : []));
+  const ids = planned.flatMap((layer) =>
+    layer.kind === 'image' ? [layer.id] : [],
+  );
   const urls: Record<string, string | null> = {};
   for (let i = 0; i < ids.length; i += IDS_PER_RENDER) {
-    const batch = encodeURIComponent(ids.slice(i, i + IDS_PER_RENDER).join(','));
+    const batch = encodeURIComponent(
+      ids.slice(i, i + IDS_PER_RENDER).join(','),
+    );
     const images = await figmaGet<ImagesResponse>(
       `/images/${file}?ids=${batch}&scale=${scale}&format=png`,
       token,
@@ -538,11 +564,11 @@ async function sliceRender(
     const url = urls[layer.id];
     // Figma renders nothing for an empty part, which leaves nothing to draw
     if (!url) return [];
-    return [{...layer, url}];
+    return [{ ...layer, url }];
   });
   return {
     layers,
-    ...(warnings.size > 0 ? {warning: [...warnings].join('; ')} : {}),
+    ...(warnings.size > 0 ? { warning: [...warnings].join('; ') } : {}),
   };
 }
 
@@ -552,16 +578,16 @@ async function proxyRender(raw: string): Promise<Response> {
   try {
     url = new URL(raw);
   } catch {
-    return Response.json({error: 'render is not a URL'}, {status: 400});
+    return Response.json({ error: 'render is not a URL' }, { status: 400 });
   }
   if (url.protocol !== 'https:' || !RENDER_HOST.test(url.hostname)) {
-    return Response.json({error: 'Not a Figma render'}, {status: 400});
+    return Response.json({ error: 'Not a Figma render' }, { status: 400 });
   }
-  const res = await fetch(url, {cache: 'no-store'});
+  const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok || !res.body) {
     return Response.json(
-      {error: `Could not download the render (${res.status})`},
-      {status: 502},
+      { error: `Could not download the render (${res.status})` },
+      { status: 502 },
     );
   }
   return new Response(res.body, {

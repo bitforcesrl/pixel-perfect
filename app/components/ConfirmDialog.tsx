@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, type ReactNode } from "react";
-import Modal from "./Modal";
+import { useState, type ReactNode } from 'react';
+import Modal from './Modal';
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -42,7 +42,7 @@ function Dialog({
   passkey,
 }: ConfirmDialogProps) {
   // Mounted only while open, so each opening starts from an empty field
-  const [typed, setTyped] = useState("");
+  const [typed, setTyped] = useState('');
   const unlocked = passkey === undefined || typed.trim() === passkey;
 
   const confirm = () => {
@@ -58,10 +58,10 @@ function Dialog({
         {passkey !== undefined && (
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] text-ink-400">
-              Type{" "}
+              Type{' '}
               <span className="font-mono font-semibold text-press-red">
                 {passkey}
-              </span>{" "}
+              </span>{' '}
               to confirm
             </span>
             <input
@@ -74,7 +74,7 @@ function Dialog({
               onChange={(e) => setTyped(e.target.value)}
               onKeyDown={(e) => {
                 e.stopPropagation();
-                if (e.key === "Enter") confirm();
+                if (e.key === 'Enter') confirm();
               }}
               className="rounded border border-ink-600 bg-ink-850 px-2.5 py-1.5 font-mono text-[12px] text-ink-100 outline-none focus:border-press-red"
             />
@@ -96,8 +96,8 @@ function Dialog({
             disabled={!unlocked}
             className={`rounded border px-3 py-1.5 text-[11px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
               danger
-                ? "border-press-red bg-press-red/15 text-press-red hover:bg-press-red/25"
-                : "border-press-violet bg-press-violet/15 text-press-violet hover:bg-press-violet/25"
+                ? 'border-press-red bg-press-red/15 text-press-red hover:bg-press-red/25'
+                : 'border-press-violet bg-press-violet/15 text-press-violet hover:bg-press-violet/25'
             }`}
           >
             {confirmLabel}

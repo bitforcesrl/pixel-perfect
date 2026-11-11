@@ -99,7 +99,7 @@ export function createPngWriter(width: number, height: number): PngWriter {
           ...chunk('IDAT', data),
           ...chunk('IEND', new Uint8Array(0)),
         ],
-        {type: 'image/png'},
+        { type: 'image/png' },
       );
     },
   };

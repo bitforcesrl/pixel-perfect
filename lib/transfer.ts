@@ -1,4 +1,4 @@
-import {readAsDataUrl} from './image';
+import { readAsDataUrl } from './image';
 import {
   createPage,
   createProject,
@@ -6,7 +6,7 @@ import {
   sanitizeFigmaUrls,
   type Project,
 } from './projects';
-import {sanitizeSettings} from './settings';
+import { sanitizeSettings } from './settings';
 import {
   loadHistory,
   loadNotes,
@@ -20,9 +20,9 @@ import {
   saveScreenshot,
   saveSettings,
 } from './storage';
-import {packTiles, TILES_MIME, unpackTiles} from './tile-container';
-import type {ViewportKey} from './viewports';
-import {createZip, readZip, type ZipEntry} from './zip';
+import { packTiles, TILES_MIME, unpackTiles } from './tile-container';
+import type { ViewportKey } from './viewports';
+import { createZip, readZip, type ZipEntry } from './zip';
 
 /**
  * A project packed into one ZIP, to hand to a colleague who opens it in their
@@ -73,8 +73,8 @@ interface TiledRef {
 type ImageRef = FileRef | TiledRef;
 
 interface ManifestSlot {
-  screenshot: (ImageRef & {width: number; height: number}) | null;
-  figma: (ImageRef & {fileName: string}) | null;
+  screenshot: (ImageRef & { width: number; height: number }) | null;
+  figma: (ImageRef & { fileName: string }) | null;
 }
 
 type ManifestSnapshot = ImageRef & {
@@ -102,7 +102,7 @@ interface Manifest {
   format: typeof FORMAT;
   version: number;
   exportedAt: number;
-  project: {name: string};
+  project: { name: string };
   settings: unknown;
   pages: ManifestPage[];
 }
@@ -147,7 +147,7 @@ export interface ExportOptions {
   includeHistory: boolean;
 }
 
-const DEFAULT_EXPORT_OPTIONS: ExportOptions = {includeHistory: true};
+const DEFAULT_EXPORT_OPTIONS: ExportOptions = { includeHistory: true };
 
 export async function exportProject(
   project: Project,
@@ -158,27 +158,35 @@ export async function exportProject(
    * Write one image under `path`: a single file, or — for a tiled image — a
    * folder of strips numbered top to bottom, each one a file anyone can open.
    */
-  const add = async (path: string, source: Blob | string): Promise<ImageRef> => {
+  const add = async (
+    path: string,
+    source: Blob | string,
+  ): Promise<ImageRef> => {
     const blob = await blobFrom(source);
     const tiled = await unpackTiles(blob);
     if (!tiled) {
       // A data URL whose MIME was lost still opens as the PNG it most likely is
       const type = blob.type || 'image/png';
       const file = `${path}.${extensionOf(type)}`;
-      files.push({name: file, data: await bytesOf(blob)});
-      return {file, type};
+      files.push({ name: file, data: await bytesOf(blob) });
+      return { file, type };
     }
     const digits = String(tiled.tiles.length).length;
     const strips: StripRef[] = [];
     for (const [i, tile] of tiled.tiles.entries()) {
       const number = String(i + 1).padStart(digits, '0');
       const file = `${path}/${number}.${extensionOf(tiled.mime)}`;
-      files.push({name: file, data: await bytesOf(tile.blob)});
-      strips.push({file, height: tile.height});
+      files.push({ name: file, data: await bytesOf(tile.blob) });
+      strips.push({ file, height: tile.height });
     }
     return {
       type: TILES_MIME,
-      tiles: {width: tiled.width, height: tiled.height, mime: tiled.mime, strips},
+      tiles: {
+        width: tiled.width,
+        height: tiled.height,
+        mime: tiled.mime,
+        strips,
+      },
     };
   };
 
@@ -197,7 +205,7 @@ export async function exportProject(
     const slots: Record<ViewportKey, ManifestSlot> = {};
     for (const [key, slot] of Object.entries(stored)) {
       const name = fileSafe(key);
-      const {screenshot, figmaBlob, figmaFileName} = slot;
+      const { screenshot, figmaBlob, figmaFileName } = slot;
       slots[key] = {
         screenshot: screenshot
           ? {
@@ -247,7 +255,7 @@ export async function exportProject(
     format: FORMAT,
     version: VERSION,
     exportedAt: Date.now(),
-    project: {name: project.name},
+    project: { name: project.name },
     settings: await loadSettings(project.id),
     pages,
   };
@@ -284,7 +292,11 @@ export async function importProject(file: Blob): Promise<Project> {
   } catch {
     // reported below, with the same message as a missing one
   }
-  if (!manifest || manifest.format !== FORMAT || !Array.isArray(manifest.pages)) {
+  if (
+    !manifest ||
+    manifest.format !== FORMAT ||
+    !Array.isArray(manifest.pages)
+  ) {
     throw new Error('This ZIP is not a Pixel Perfect project export');
   }
   if (num(manifest.version) > VERSION) {
@@ -294,17 +306,18 @@ export async function importProject(file: Blob): Promise<Project> {
   const fileOf = (file: unknown, type: string): Blob => {
     const data = typeof file === 'string' ? archive.get(file) : undefined;
     if (!data) throw new Error(`The export is missing ${str(file, 'a file')}`);
-    return new Blob([data], {type});
+    return new Blob([data], { type });
   };
 
   /** One image back as one Blob: a file as it is, a folder of strips repacked. */
   const blobOf = (ref: unknown): Blob => {
-    const {file, type, tiles} = (ref ?? {}) as Partial<FileRef> &
+    const { file, type, tiles } = (ref ?? {}) as Partial<FileRef> &
       Partial<Pick<TiledRef, 'tiles'>>;
     if (!tiles) return fileOf(file, str(type, 'image/png'));
     const mime = str(tiles.mime, 'image/webp');
     const strips = Array.isArray(tiles.strips) ? tiles.strips : [];
-    if (strips.length === 0) throw new Error('The export has an empty tiled image');
+    if (strips.length === 0)
+      throw new Error('The export has an empty tiled image');
     return packTiles({
       width: num(tiles.width),
       height: num(tiles.height),

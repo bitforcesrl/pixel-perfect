@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import { loadTiles, peekTiles, type Tiles } from "@/lib/tiles";
+import { useEffect, useRef, useState } from 'react';
+import { loadTiles, peekTiles, type Tiles } from '@/lib/tiles';
 
 export interface TiledImageProps {
   src: string;
@@ -22,7 +22,7 @@ export interface TiledImageProps {
 export default function TiledImage({
   src,
   alt,
-  className = "",
+  className = '',
   style,
   onSize,
 }: TiledImageProps) {

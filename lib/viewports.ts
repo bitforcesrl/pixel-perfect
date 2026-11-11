@@ -1,4 +1,4 @@
-import type {ScreenshotResult} from './validation';
+import type { ScreenshotResult } from './validation';
 
 /**
  * A viewport's id within its project. The three built-in ones keep the names
@@ -130,7 +130,7 @@ export function fillSlots(
   let filled: ViewportSlots | null = null;
   for (const key of keys) {
     if (slots[key]) continue;
-    filled ??= {...slots};
+    filled ??= { ...slots };
     filled[key] = EMPTY_SLOT;
   }
   return filled ?? slots;

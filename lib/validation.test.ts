@@ -1,5 +1,5 @@
-import {describe, it, expect} from 'vitest';
-import {validateScreenshotRequest} from './validation';
+import { describe, it, expect } from 'vitest';
+import { validateScreenshotRequest } from './validation';
 
 describe('validateScreenshotRequest', () => {
   it('accepts a valid request', () => {

@@ -1,0 +1,9 @@
+# Normalise line endings in the repository, whatever the contributor's OS.
+* text=auto eol=lf
+
+# Binary assets: never diffed or converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.zip binary

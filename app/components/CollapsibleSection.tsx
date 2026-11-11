@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
 export interface CollapsibleSectionProps {
   title: string;
@@ -45,7 +45,7 @@ export default function CollapsibleSection({
         </span>
         <svg
           className={`h-4 w-4 shrink-0 text-ink-500 transition-transform ${
-            isOpen ? "rotate-180" : ""
+            isOpen ? 'rotate-180' : ''
           }`}
           viewBox="0 0 24 24"
           fill="none"

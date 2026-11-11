@@ -1,7 +1,15 @@
-import {describe, it, expect, beforeAll, afterAll, beforeEach, vi} from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  vi,
+} from 'vitest';
 import http from 'node:http';
 import os from 'node:os';
-import type {AddressInfo} from 'node:net';
+import type { AddressInfo } from 'node:net';
 
 /**
  * Stands in for a Browserless session: a real local browser handed to the
@@ -19,10 +27,11 @@ vi.mock('./browser', async (importOriginal) => {
   };
 });
 
-const {takeScreenshot, closeBrowser} = await import('./screenshot');
+const { takeScreenshot, closeBrowser } = await import('./screenshot');
 
-const VIEWPORT = {width: 800, height: 600};
-const PAGE = '<!doctype html><html><body style="margin:0"><h1>SERVED</h1></body></html>';
+const VIEWPORT = { width: 800, height: 600 };
+const PAGE =
+  '<!doctype html><html><body style="margin:0"><h1>SERVED</h1></body></html>';
 
 /**
  * A remote browser has no route to a loopback address, and the capture says so
@@ -33,7 +42,8 @@ const PAGE = '<!doctype html><html><body style="margin:0"><h1>SERVED</h1></body>
 function lanAddress(): string | null {
   for (const addresses of Object.values(os.networkInterfaces())) {
     for (const address of addresses ?? []) {
-      if (address.family === 'IPv4' && !address.internal) return address.address;
+      if (address.family === 'IPv4' && !address.internal)
+        return address.address;
     }
   }
   return null;
@@ -54,18 +64,19 @@ beforeAll(async () => {
     // which is the shape of the real failure: the remote address is blocked,
     // this machine's own is not.
     const blocked =
-      path === '/blocked-always' || (path === '/blocked-once' && hits[path] === 1);
+      path === '/blocked-always' ||
+      (path === '/blocked-once' && hits[path] === 1);
     if (blocked) {
-      res.writeHead(429, {'content-type': 'text/plain'});
+      res.writeHead(429, { 'content-type': 'text/plain' });
       res.end('local_rate_limited');
       return;
     }
     if (path === '/server-error') {
-      res.writeHead(500, {'content-type': 'text/plain'});
+      res.writeHead(500, { 'content-type': 'text/plain' });
       res.end('boom');
       return;
     }
-    res.writeHead(200, {'content-type': 'text/html'});
+    res.writeHead(200, { 'content-type': 'text/html' });
     res.end(PAGE);
   });
   await new Promise<void>((resolve) => server.listen(0, '0.0.0.0', resolve));
@@ -91,30 +102,33 @@ const capture = (path: string) =>
 
 // Without a routable address there is no way to stand a target up where a
 // remote browser could reach it, so there is nothing to test here.
-describe.skipIf(!host)('takeScreenshot with a remote browser the target turned away', () => {
-  it('retries on this machine own connection and returns the capture', async () => {
-    const result = await capture('/blocked-once');
-    expect(result.image.startsWith('data:image/png;base64,')).toBe(true);
-    // Once turned away, once served: the retry actually happened.
-    expect(hits['/blocked-once']).toBe(2);
-  }, 120_000);
+describe.skipIf(!host)(
+  'takeScreenshot with a remote browser the target turned away',
+  () => {
+    it('retries on this machine own connection and returns the capture', async () => {
+      const result = await capture('/blocked-once');
+      expect(result.image.startsWith('data:image/png;base64,')).toBe(true);
+      // Once turned away, once served: the retry actually happened.
+      expect(hits['/blocked-once']).toBe(2);
+    }, 120_000);
 
-  it('gives up when the target turns the retry away too', async () => {
-    await expect(capture('/blocked-always')).rejects.toThrow(/answered 429/);
-    expect(hits['/blocked-always']).toBe(2);
-  }, 120_000);
+    it('gives up when the target turns the retry away too', async () => {
+      await expect(capture('/blocked-always')).rejects.toThrow(/answered 429/);
+      expect(hits['/blocked-always']).toBe(2);
+    }, 120_000);
 
-  it('does not retry a failure that is not about the address', async () => {
-    await expect(capture('/server-error')).rejects.toThrow(/answered 500/);
-    expect(hits['/server-error']).toBe(1);
-  }, 120_000);
+    it('does not retry a failure that is not about the address', async () => {
+      await expect(capture('/server-error')).rejects.toThrow(/answered 500/);
+      expect(hits['/server-error']).toBe(1);
+    }, 120_000);
 
-  it('names the proxy when there is no local browser to fall back to', async () => {
-    // Serverless: nothing to retry with, so the caller gets the way out.
-    process.env.VERCEL = '1';
-    await expect(capture('/blocked-once')).rejects.toThrow(
-      /BROWSERLESS_PROXY=residential/,
-    );
-    expect(hits['/blocked-once']).toBe(1);
-  }, 120_000);
-});
+    it('names the proxy when there is no local browser to fall back to', async () => {
+      // Serverless: nothing to retry with, so the caller gets the way out.
+      process.env.VERCEL = '1';
+      await expect(capture('/blocked-once')).rejects.toThrow(
+        /BROWSERLESS_PROXY=residential/,
+      );
+      expect(hits['/blocked-once']).toBe(1);
+    }, 120_000);
+  },
+);
