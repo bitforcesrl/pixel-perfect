@@ -95,7 +95,6 @@ You can mix them freely: a layer you drop and a layer the app fetched behave exa
 | **Sharing**          | Export/import a whole project as a ZIP: layers, guides, drawings, notes and settings.                                                                                                                                                            |
 | **Diff map**         | Download the difference image to attach to a ticket.                                                                                                                                                                                             |
 | **Persistence**      | Everything is kept in the browser (IndexedDB). Reload and pick up where you left off.                                                                                                                                                            |
-| **Access control**   | Optional password for a public deployment.                                                                                                                                                                                                       |
 
 ## Core concepts
 
@@ -112,9 +111,9 @@ You can mix them freely: a layer you drop and a layer the app fetched behave exa
 
 The hosted version (for example on Vercel) is for anyone without the repo: QA testers, designers, PMs. Everything happens in the browser.
 
-### 1. Sign in
+### 1. Open the app
 
-Open the deployment URL. If the instance is protected, enter the team password. The browser remembers it.
+Open the deployment URL and go to `/app`, or start from `/demo` to explore a ready-made project.
 
 ### 2. Create a project and its pages
 
@@ -267,10 +266,15 @@ Every variable is optional. See [`.env.example`](.env.example) for details.
 
 | Variable        | Purpose                                                                                                                    |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `SITE_PASSWORD` | Protects the instance with a password. Empty means no gate (the local default). Changing it makes every browser ask again. |
 | `FIGMA_TOKEN`   | A server-wide Figma token. When unset, each user enters their own.                                                         |
 
-For a public deployment, set at least `SITE_PASSWORD`.
+On a public deployment, leave `FIGMA_TOKEN` and `BROWSERLESS_TOKEN` unset: the instance is open to anyone, and server-wide tokens would be spent by every visitor. Each user then brings their own.
+
+### Routes and the demo project
+
+- `/` is the public landing page, `/app` the tool.
+- `/demo` imports `public/demo-project.zip` into the visitor's browser, exactly like **File ▸ Import project from ZIP**, then opens it under `/app`. Coming back to `/demo` replaces the previous demo copy rather than adding another.
+- To update the demo, export a project from the app and overwrite `public/demo-project.zip`.
 
 ---
 

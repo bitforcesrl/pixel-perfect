@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { authHeaders } from '@/lib/gate';
 
 type Status = {
   available: boolean;
@@ -29,7 +28,7 @@ async function fetchStatus(target: string): Promise<Status | null> {
   try {
     const res = await fetch(
       `/api/login-session?url=${encodeURIComponent(target)}`,
-      { cache: 'no-store', headers: await authHeaders() },
+      { cache: 'no-store' },
     );
     return res.ok ? ((await res.json()) as Status) : null;
   } catch {
@@ -81,7 +80,6 @@ export default function BrowserLoginControl({ url }: { url: string }) {
         ...init,
         headers: {
           'Content-Type': 'application/json',
-          ...(await authHeaders()),
         },
       });
       const data = (await res.json()) as Partial<Status> & { error?: string };

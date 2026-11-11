@@ -1,4 +1,3 @@
-import { verifyRequest } from '@/lib/auth';
 import { canLaunchLocally, captureEnv } from '@/lib/browser';
 import { isLocalRequest } from '@/lib/localhost';
 import { takeScreenshot } from '@/lib/screenshot';
@@ -43,9 +42,6 @@ function hasEnvToken(): boolean {
  * is: a workspace that hears `key` is the one that has to ask the user for one.
  */
 export async function GET(request: Request) {
-  if (!(await verifyRequest(request))) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
   return Response.json({
     source: hasEnvToken() ? 'env' : 'key',
     localAvailable: localAvailable(request),
@@ -53,11 +49,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  // Capturing is the expensive thing this app can be asked to do, so the gate
-  // covers it too: the browser sends the password it has stored with the call.
-  if (!(await verifyRequest(request))) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   const wantsLocal = request.headers.get(LOCAL_HEADER) === '1';
   if (wantsLocal && !localAvailable(request)) {

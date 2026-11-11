@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { authHeaders } from '@/lib/gate';
 
 /** Where the token a Figma export runs with comes from. */
 export type FigmaSource = 'env' | 'key';
@@ -20,7 +19,6 @@ export function useFigmaSource(): FigmaSource | null {
       try {
         const res = await fetch('/api/figma', {
           cache: 'no-store',
-          headers: await authHeaders(),
         });
         if (!res.ok) return;
         const data = (await res.json()) as { source?: unknown };

@@ -24,7 +24,10 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Pixel Perfect — Figma vs Site Diff',
+  title: {
+    default: 'Pixel Perfect — Figma vs Site Diff',
+    template: '%s · Pixel Perfect',
+  },
   description:
     'Compare a live website screenshot with your Figma design, pixel by pixel.',
 };
@@ -42,10 +45,9 @@ export default function RootLayout({
       // sharper for the 11-12px labels this app is built from.
       className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="flex h-full flex-col overflow-hidden bg-ink-void">
-        <div className="press-bar" aria-hidden="true" />
-        {children}
-      </body>
+      {/* The body stays neutral: the tool locks itself to the viewport in its
+          own layout, while the public site scrolls like any other page. */}
+      <body className="min-h-full bg-ink-void">{children}</body>
     </html>
   );
 }

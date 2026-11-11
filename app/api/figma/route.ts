@@ -1,4 +1,3 @@
-import { verifyRequest } from '@/lib/auth';
 import {
   isFigmaTarget,
   type FigmaLayer,
@@ -166,9 +165,6 @@ interface ImagesResponse {
  * workspace mounts. Like the capture route, it never says what the token is.
  */
 export async function GET(request: Request) {
-  if (!(await verifyRequest(request))) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   // With `?render=`, the bytes of a render the browser could not fetch itself
   const render = new URL(request.url).searchParams.get('render');
@@ -190,9 +186,6 @@ export async function GET(request: Request) {
  * every part of one frame is rendered at the frame's scale, not its own.
  */
 export async function POST(request: Request) {
-  if (!(await verifyRequest(request))) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   const token = envToken() ?? readClientToken(request);
   if (!token) {

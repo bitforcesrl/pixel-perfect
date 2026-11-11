@@ -48,7 +48,6 @@ import {
   loadFigmaToken,
   subscribeFigmaToken,
 } from '@/lib/figma-token';
-import { forgetPassword } from '@/lib/gate';
 import type { ScrollPos } from '@/lib/scrollsync';
 import {
   toCompactBlob,
@@ -955,13 +954,6 @@ export default function Workspace({
               sitePassword: page.sitePassword || undefined,
             }),
           });
-          // The stored password stopped being accepted mid-capture: drop it and
-          // reload onto the gate, rather than reporting a screenshot failure.
-          if (res.status === 401) {
-            await forgetPassword();
-            window.location.reload();
-            return;
-          }
           const data = await res.json();
           // The key was removed or refused. That is a thing to fix in a dialog,
           // not an error to leave sitting on every card of the run.
@@ -1132,11 +1124,6 @@ export default function Workspace({
                 ...(frameScale !== null ? { scale: frameScale } : {}),
               }),
             });
-            if (res.status === 401) {
-              await forgetPassword();
-              window.location.reload();
-              throw stopped;
-            }
             const data = await res.json();
             if (!res.ok && data?.needsToken) {
               setFigmaTokenError(

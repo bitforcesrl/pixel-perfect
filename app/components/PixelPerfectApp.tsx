@@ -23,6 +23,7 @@ import {
   saveProjects,
 } from '@/lib/storage';
 import type { ViewportKey } from '@/lib/viewports';
+import { importDemoProject, swapInDemo } from '@/lib/demo';
 
 /**
  * The project and page layer.
@@ -31,8 +32,16 @@ import type { ViewportKey } from '@/lib/viewports';
  * else: the workspace below is mounted keyed by page id, so opening another
  * page remounts it and every capture, export, snapshot and note is re-read
  * under the new namespace.
+ *
+ * With `demoUrl` (the /demo route) it first imports that ZIP, exactly like
+ * File ▸ Import project from ZIP, and opens on it.
  */
-export default function PixelPerfectApp() {
+export default function PixelPerfectApp({
+  demoUrl,
+}: {
+  /** A project export to import and open before anything else. */
+  demoUrl?: string;
+} = {}) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activePageId, setActivePageId] = useState<string | null>(null);
@@ -43,11 +52,41 @@ export default function PixelPerfectApp() {
     projectName: string;
     pageName: string;
   } | null>(null);
+  // Only the demo route ever sets these
+  const [demoState, setDemoState] = useState<'loading' | 'ready' | 'failed'>(
+    demoUrl ? 'loading' : 'ready',
+  );
+  const [demoError, setDemoError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const { projects: stored, active } = await loadProjects();
+      let { projects: stored, active } = await loadProjects();
+
+      if (demoUrl) {
+        try {
+          // Unpacked into storage first; only then does the list learn of it,
+          // the same order a manual import follows
+          const demo = await importDemoProject(demoUrl);
+          stored = swapInDemo(stored, demo);
+          active = demo;
+          await saveProjects(stored);
+          await saveActiveProject(demo.id);
+          await saveActivePage(demo.id, demo.pages[0].id);
+          // From here on it is the visitor's own copy: a reload must not
+          // import it again, so the address becomes the plain app's
+          window.history.replaceState(null, '', '/app');
+          if (!cancelled) setDemoState('ready');
+        } catch (err) {
+          if (cancelled) return;
+          setDemoError(
+            err instanceof Error ? err.message : 'The demo could not be loaded',
+          );
+          setDemoState('failed');
+          return;
+        }
+      }
+
       const project = active ?? stored[0] ?? null;
       // Read before the first paint, so the app opens on the page it was left
       // on rather than jumping to it a moment later
@@ -64,7 +103,7 @@ export default function PixelPerfectApp() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [demoUrl]);
 
   // Persist the list on change, past hydration. A page's URL edits as you type,
   // so this debounces rather than writing per keystroke.
@@ -260,10 +299,35 @@ export default function PixelPerfectApp() {
     );
   };
 
+  if (demoState === 'failed') {
+    return (
+      <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-4 bg-ink-void p-6 text-center">
+        <RegistrationMark size={56} className="text-ink-700" />
+        <p className="text-sm text-ink-200">
+          The demo project could not be loaded.
+        </p>
+        <p className="font-mono text-xs text-ink-500">{demoError}</p>
+        <a
+          href="/app"
+          className="rounded bg-press-violet px-3 py-2 text-sm font-semibold text-ink-950 hover:bg-press-violet/85"
+        >
+          Open the app without it
+        </a>
+      </div>
+    );
+  }
+
   if (!active || !activePage) {
     return (
       <div className="flex min-h-0 w-full flex-1 items-center justify-center bg-ink-void">
-        <RegistrationMark size={64} className="text-ink-800" />
+        <div className="flex flex-col items-center gap-4">
+          <RegistrationMark size={64} className="text-ink-800" />
+          {demoState === 'loading' ? (
+            <p className="text-xs tracking-[0.14em] text-ink-500 uppercase">
+              Loading the demo project…
+            </p>
+          ) : null}
+        </div>
       </div>
     );
   }

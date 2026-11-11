@@ -1,4 +1,3 @@
-import { authHeaders } from './gate';
 
 /**
  * The Figma token — client side.
@@ -51,11 +50,10 @@ export function clearFigmaToken(): void {
   announce();
 }
 
-/** The site password when there is one, and the Figma token when stored. */
+/** JSON headers, plus the Figma token when one is stored. */
 export async function figmaHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(await authHeaders()),
   };
   const token = loadFigmaToken();
   if (token) headers[FIGMA_TOKEN_HEADER] = token;

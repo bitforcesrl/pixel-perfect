@@ -259,3 +259,18 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+ * ── Public site ─────────────────────────────────────────────────────────────
+ * The tap placeholder flips between plates the way the real Tap mode does.
+ */
+@keyframes plate-tap {
+  0%, 49.9% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.plate-tap-a {
+  animation: plate-tap 1.6s steps(1) infinite;
+}
+.plate-tap-b {
+  animation: plate-tap 1.6s steps(1) infinite reverse;
+}

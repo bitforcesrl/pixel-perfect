@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { authHeaders } from '@/lib/gate';
 
 /** Where the browser a capture runs in comes from. */
 export type CaptureSource = 'env' | 'key';
@@ -32,7 +31,6 @@ export function useCaptureSource(): CaptureSourceState {
       try {
         const res = await fetch('/api/screenshot', {
           cache: 'no-store',
-          headers: await authHeaders(),
         });
         if (!res.ok) return;
         const data = (await res.json()) as {

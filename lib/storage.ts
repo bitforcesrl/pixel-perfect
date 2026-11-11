@@ -20,7 +20,6 @@ const META = 'meta';
 const NOTES_KEY = 'notes';
 const PREVIEW_KEY = 'preview';
 const SETTINGS_KEY = 'viewportSettings';
-const PASSWORD_KEY = 'sitePassword';
 const PROJECTS_KEY = 'projects';
 const ACTIVE_PROJECT_KEY = 'activeProject';
 const ACTIVE_PAGE_KEY = 'activePage';
@@ -423,41 +422,6 @@ export async function loadActivePage(
     }),
   );
   return pageId;
-}
-
-/**
- * The site password, as accepted by the server once. It sits next to the rest
- * of this browser's working state — being able to read it back is the point:
- * it is what lets the app open again on the next visit without asking. Shared
- * by every project: the gate is the deployment's, not a project's.
- */
-export function savePassword(password: string): Promise<void> {
-  return swallow(() =>
-    withStore(META, 'readwrite', (store) => {
-      store.put(password, PASSWORD_KEY);
-    }),
-  );
-}
-
-export async function loadPassword(): Promise<string | null> {
-  let password: string | null = null;
-  await swallow(() =>
-    withStore(META, 'readonly', (store) => {
-      const request = store.get(PASSWORD_KEY);
-      request.onsuccess = () => {
-        if (typeof request.result === 'string') password = request.result;
-      };
-    }),
-  );
-  return password;
-}
-
-export function clearPassword(): Promise<void> {
-  return swallow(() =>
-    withStore(META, 'readwrite', (store) => {
-      store.delete(PASSWORD_KEY);
-    }),
-  );
 }
 
 /**

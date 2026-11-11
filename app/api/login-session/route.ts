@@ -1,4 +1,3 @@
-import { verifyRequest } from '@/lib/auth';
 import { isLocalRequest } from '@/lib/localhost';
 import {
   canOpenLoginWindow,
@@ -19,9 +18,6 @@ export const runtime = 'nodejs';
  * machine: a local request to an app that is not in Docker or on a server.
  */
 async function guard(request: Request): Promise<Response | null> {
-  if (!(await verifyRequest(request))) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
   if (!isLocalRequest(request) || !canOpenLoginWindow()) {
     return Response.json(
       { error: 'Browser login is only available when running on localhost' },
@@ -38,9 +34,6 @@ function urlFromQuery(request: Request): string | null {
 
 /** Whether a session is saved for the URL's host, and whether its window is open. */
 export async function GET(request: Request) {
-  if (!(await verifyRequest(request))) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
   const available = isLocalRequest(request) && canOpenLoginWindow();
   const url = urlFromQuery(request);
   if (!available || !url) {

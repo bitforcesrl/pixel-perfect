@@ -1,4 +1,3 @@
-import { authHeaders } from './gate';
 
 /**
  * The Browserless key — client side.
@@ -68,7 +67,6 @@ export async function captureHeaders(
 ): Promise<Record<string, string>> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(await authHeaders()),
   };
   if (opts.local) {
     // A local capture wants this machine's browser, whatever key is stored
