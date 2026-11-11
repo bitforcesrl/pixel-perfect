@@ -4,6 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.9-339933.svg?logo=node.js&logoColor=white)](.nvmrc)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black.svg?logo=next.js)](https://nextjs.org)
+[![GitHub Discussions](https://img.shields.io/github/discussions/bitforcesrl/pixel-perfect?logo=github)](https://github.com/bitforcesrl/pixel-perfect/discussions)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
@@ -12,6 +13,8 @@
 Pixel Perfect is a web app for **design QA**. For each page and each viewport (mobile, tablet, desktop or your own sizes) it stacks a screenshot of the website over the matching Figma frame, then gives you four ways to compare them, plus tools to align, measure, annotate and share what you find.
 
 Start with two images dragged onto the canvas. Add a Figma token and the design frames are fetched for you. Run it locally and the site is captured for you too, with Playwright.
+
+💡 **Got an idea or a feature you're missing?** [Propose it in Discussions](https://github.com/bitforcesrl/pixel-perfect/discussions/new?category=feature-request) and vote on the ones you'd like to see next.
 
 ---
 
@@ -312,14 +315,15 @@ Stack: **Next.js 16**, **React 19**, **Tailwind CSS 4**, **Playwright**, **Vites
 
 ## Contributing
 
-Contributions are welcome: bug reports, ideas, docs and code. Read the [contributing guide](CONTRIBUTING.md) for the setup, code style and pull request process, and run `npm run check` before opening a PR.
+Contributions are welcome: bug reports, ideas, docs and code. New ideas start in [Discussions](https://github.com/bitforcesrl/pixel-perfect/discussions/categories/feature-request), where the community can vote on them; the ones we pick become issues. Read the [contributing guide](CONTRIBUTING.md) for the setup, code style and pull request process, and run `npm run check` before opening a PR.
 
 Looking for a place to start? Browse the issues labelled [`good first issue`](https://github.com/bitforcesrl/pixel-perfect/labels/good%20first%20issue).
 
 ## Community
 
-- 🐛 **Bugs and feature requests**: [GitHub Issues](https://github.com/bitforcesrl/pixel-perfect/issues)
-- 💬 **Questions and ideas**: [GitHub Discussions](https://github.com/bitforcesrl/pixel-perfect/discussions)
+- 🐛 **Bugs**: [GitHub Issues](https://github.com/bitforcesrl/pixel-perfect/issues)
+- 💡 **Feature requests and ideas**: [propose and vote in Discussions](https://github.com/bitforcesrl/pixel-perfect/discussions/categories/feature-request)
+- 💬 **Questions and help**: [GitHub Discussions](https://github.com/bitforcesrl/pixel-perfect/discussions)
 - 🔒 **Security vulnerabilities**: report them privately as described in [SECURITY.md](SECURITY.md)
 - 📝 **What's new**: [CHANGELOG.md](CHANGELOG.md)
 

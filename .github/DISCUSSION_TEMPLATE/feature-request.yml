@@ -1,0 +1,51 @@
+# Form for the "Feature request" Discussions category.
+# GitHub matches this file to the category by its slug, so the category must be
+# named "Feature request" (slug: feature-request) for the form to appear.
+title: '[Idea] '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing an idea! Discussions are the place to shape it with the community before it becomes an issue.
+        Please search existing discussions first and upvote the idea if it is already there.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would it solve?
+      description: Describe the situation in your design QA workflow where you feel something is missing.
+      placeholder: When I compare a page with its Figma frame, I can't…
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How you imagine it working. Mockups, screenshots and videos are welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you use today, or other tools that solve it.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area of the app
+      options:
+        - Capture (screenshots, viewports)
+        - Figma import
+        - Comparison (overlay, split, side by side)
+        - Annotations (guides, pen, notes)
+        - Projects (export, import, storage)
+        - Public site / docs
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd like to work on this myself.
