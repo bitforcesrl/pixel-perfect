@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import Modal from './Modal';
 import {
   clearKey,
+  ensureKeyLoaded,
   loadKey,
   saveKey,
   subscribeKey,
@@ -25,9 +26,10 @@ const FIELD =
  * Where the user's own Browserless key is typed.
  *
  * Captures run in a browser at browserless.io, and this deployment has no token
- * of its own — so the key is the user's, kept in their browser and sent with
- * each capture. It is never written to the server, which is the whole reason
- * this dialog exists rather than an environment variable.
+ * of its own — so the key is the user's, kept in this browser's IndexedDB with
+ * the app's other settings and sent with each capture. It is never written to
+ * the server, which is the whole reason this dialog exists rather than an
+ * environment variable.
  */
 export default function BrowserlessKeyDialog({
   open,
@@ -39,20 +41,62 @@ export default function BrowserlessKeyDialog({
   // stored and the store keeps the rest of the sheet honest from there
   const stored = useSyncExternalStore(subscribeKey, loadKey, () => null);
   const [value, setValue] = useState(() => loadKey() ?? '');
+  // The field was touched — a late database read must not overwrite typing
+  const [edited, setEdited] = useState(false);
+  const [busy, setBusy] = useState(false);
+  // A write the database refused: the key still works until the next reload
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Opened before the stored key was read: fill the field once it arrives
+  useEffect(() => {
+    let cancelled = false;
+    void ensureKeyLoaded().then((key) => {
+      if (!cancelled && !edited && key) setValue(key);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [edited]);
 
   const trimmed = value.trim();
 
-  const handleSave = () => {
-    if (trimmed === '') return;
-    saveKey(trimmed);
-    onSaved();
-    onClose();
+  const handleSave = async () => {
+    if (trimmed === '' || busy) return;
+    setBusy(true);
+    setSaveError(null);
+    try {
+      await saveKey(trimmed);
+      onSaved();
+      onClose();
+    } catch (err) {
+      console.error('pixel-perfect: could not save the Browserless key', err);
+      // The key is already in use for this session; say it will not last
+      setSaveError(
+        'The key could not be saved in this browser (storage blocked or full). It works until you reload — allow site data to keep it.',
+      );
+      onSaved();
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const handleRemove = () => {
-    clearKey();
+  const handleRemove = async () => {
+    if (busy) return;
+    setBusy(true);
+    setSaveError(null);
     setValue('');
-    onSaved();
+    setEdited(true);
+    try {
+      await clearKey();
+    } catch (err) {
+      console.error('pixel-perfect: could not remove the Browserless key', err);
+      setSaveError(
+        'The key was removed for this session but could not be deleted from this browser — it may come back after a reload.',
+      );
+    } finally {
+      setBusy(false);
+      onSaved();
+    }
   };
 
   return (
@@ -63,12 +107,12 @@ export default function BrowserlessKeyDialog({
       subtitle={stored ? 'saved in this browser' : 'not set'}
     >
       <div className="flex flex-col gap-4">
-        {error && (
+        {(error || saveError) && (
           <p
             role="alert"
             className="rounded border border-press-red/40 bg-press-red/10 px-3 py-2 text-[12px] leading-5 text-press-red"
           >
-            {error}
+            {saveError ?? error}
           </p>
         )}
 
@@ -82,9 +126,10 @@ export default function BrowserlessKeyDialog({
           >
             browserless.io
           </a>
-          , and this deployment has no key of its own. Paste yours below — it is
-          kept in this browser and sent with each capture, never stored on the
-          server.
+          , and this deployment has no key of its own. Create a free account,
+          copy the API token from your dashboard and paste it below — it is
+          saved in this browser with the app&apos;s settings and sent with each
+          capture, never stored on the server.
         </p>
 
         <label className="flex flex-col gap-1.5">
@@ -98,9 +143,12 @@ export default function BrowserlessKeyDialog({
             spellCheck={false}
             autoComplete="off"
             placeholder="2S1a…"
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => {
+              setEdited(true);
+              setValue(e.target.value);
+            }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSave();
+              if (e.key === 'Enter') void handleSave();
             }}
             className={FIELD}
           />
@@ -109,16 +157,16 @@ export default function BrowserlessKeyDialog({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={handleSave}
-            disabled={trimmed === '' || trimmed === stored}
+            onClick={() => void handleSave()}
+            disabled={busy || trimmed === '' || trimmed === stored}
             className="rounded bg-press-cyan px-3 py-1.5 text-[12px] font-semibold text-ink-950 transition-colors hover:bg-press-cyan/85 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save key
           </button>
           <button
             type="button"
-            onClick={handleRemove}
-            disabled={stored === null}
+            onClick={() => void handleRemove()}
+            disabled={busy || stored === null}
             className="rounded border border-ink-700 px-3 py-1.5 text-[12px] text-ink-300 transition-colors hover:border-press-red/60 hover:text-press-red disabled:cursor-not-allowed disabled:opacity-40"
           >
             Remove

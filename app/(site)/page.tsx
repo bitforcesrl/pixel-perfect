@@ -4,6 +4,7 @@ import BrandMark from '../components/BrandMark';
 import RegistrationMark from '../components/RegistrationMark';
 import InstalledAppRedirect from '../components/site/InstalledAppRedirect';
 import MediaSlot from '../components/site/MediaSlot';
+import ModeShowcase, { type ModeEntry } from '../components/site/ModeShowcase';
 import Plates from '../components/site/Plates';
 import { SITE } from '@/lib/site';
 
@@ -16,32 +17,44 @@ export const metadata: Metadata = {
 /* ── Content ──────────────────────────────────────────────────────────────
  * Kept as data so the copy can be edited without reading the markup.     */
 
-const MODES = [
+const MODES: ModeEntry[] = [
   {
     key: 'split',
     media: SITE.media.split,
     name: 'Split',
-    body: 'Drag a divider across both layers. Edges and alignment jump out at the seam.',
+    shortcut: '1',
+    lead: 'Slide a seam across both layers.',
+    body: 'Figma on one side of the divider, the live site on the other. Drag it over a heading, a button or the edge of a card: whatever does not line up breaks at the seam. In the demo the product title is set 20% larger than designed, and the cut shows it at once.',
+    controls: ['drag the divider', 'hold Space to pan'],
   },
   {
     key: 'overlay',
     media: SITE.media.overlay,
     name: 'Overlay',
-    body: 'Stack them with difference blending. A 1px offset or a wrong hex lights up.',
+    shortcut: '2',
+    lead: 'Stack them and let the drift light up.',
+    body: 'The design sits on top of the screenshot. Lower the opacity to ghost it, or switch to difference blending: what matches turns black, what does not glows. A font size off by a few pixels, a block pushed down, a colour that is almost right.',
+    controls: ['opacity 0–100%', 'normal / difference'],
   },
   {
     key: 'tap',
     media: SITE.media.tap,
     name: 'Tap',
-    body: 'Flip between design and build. Changed copy, icons and spacing flicker.',
+    shortcut: '3',
+    lead: 'Hold to flip from the build to the design.',
+    body: 'You look at the live site; press and hold and Figma takes its place, release and the site is back. Your eye catches whatever jumps between the two: copy, icons, spacing, the size of a price. The fastest way to review a page top to bottom.',
+    controls: ['press and hold the canvas'],
   },
   {
     key: 'side',
     media: SITE.media.sideBySide,
     name: 'Side by side',
-    body: 'Two columns with synced scroll, for long pages and vertical rhythm.',
+    shortcut: '4',
+    lead: 'Two columns, one scroll.',
+    body: 'Design and build next to each other at any zoom, scrolling together. Made for long pages and vertical rhythm: here the title wraps onto a third line and pushes everything below it down, and the centred description is easy to spot against the original.',
+    controls: ['synced scroll', 'offset shifts the lock'],
   },
-] as const;
+];
 
 const LEVELS = [
   {
@@ -247,26 +260,7 @@ export default function LandingPage() {
             kicker="Four ways to compare"
             title="Each mode catches a different kind of drift."
           />
-          <div className="grid gap-6 sm:grid-cols-2">
-            {MODES.map((mode) => (
-              <article key={mode.key} className="flex flex-col gap-4">
-                <MediaSlot
-                  media={mode.media}
-                  label={`${mode.name} comparison mode`}
-                  className="aspect-[16/10]"
-                  fallback={<Plates mode={mode.key} />}
-                />
-                <div>
-                  <h3 className="font-display text-lg font-bold text-ink-100">
-                    {mode.name}
-                  </h3>
-                  <p className="mt-1 text-sm leading-relaxed text-ink-400">
-                    {mode.body}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
+          <ModeShowcase modes={MODES} />
         </section>
 
         {/* Levels */}

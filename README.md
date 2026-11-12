@@ -200,16 +200,18 @@ npm run playwright:install   # downloads Firefox for local captures
 
 ### Capture
 
-When the app is opened from `localhost`, the _Site_ row in the **Layers** panel shows the **Local** button:
+The _Site_ row in the **Layers** panel always shows the **Cloud** button, which captures with a remote browser at [browserless.io](https://www.browserless.io/): it uses `BROWSERLESS_TOKEN` from `.env` when set, and otherwise asks for your own token, saved in your browser. When the app is opened from `localhost` it also shows the **Local** button, which uses Firefox on your machine (its `L` / `⇧L` shortcuts exist only there):
 
 | Action                             | Button                  | Key  | Menu                                          |
 | ---------------------------------- | ----------------------- | ---- | --------------------------------------------- |
+| Capture the site, current viewport | **Cloud**               | `C`  | Capture ▸ Capture _viewport_                  |
+| Capture the site, every viewport   | —                       | `⇧C` | Capture ▸ Capture all enabled viewports       |
 | Capture the site, current viewport | **Local**               | `L`  | Capture ▸ Capture _viewport_ on this machine  |
 | Capture the site, every viewport   | **All**                 | `⇧L` | Capture ▸ Capture all on this machine         |
 | Export Figma, current viewport     | **Capture** (Figma row) | `M`  | Capture ▸ Export _viewport_ Figma frame at 2x |
 | Export Figma, every viewport       | **All** (Figma row)     | `⇧M` | Capture ▸ Export every Figma frame at 2x      |
 
-A site capture opens the page at the viewport's exact width, waits for it to load and saves a full-page screenshot. You can capture:
+A site capture opens the page at the viewport's exact width, waits for it to load and saves a full-page screenshot. While captures or Figma exports run, the app is locked behind a progress sheet listing every viewport; **Stop** ends the run and keeps what is already done. You can capture:
 
 - your dev server (`http://localhost:3000` and so on);
 - public or staging sites;

@@ -23,6 +23,8 @@ const SETTINGS_KEY = 'viewportSettings';
 const PROJECTS_KEY = 'projects';
 const ACTIVE_PROJECT_KEY = 'activeProject';
 const ACTIVE_PAGE_KEY = 'activePage';
+/** App-wide, not per project: the Browserless key the user typed in. */
+const BROWSERLESS_KEY = 'browserlessKey';
 
 /**
  * Captures, exports, snapshots and notes are stored under a key carrying the
@@ -397,6 +399,40 @@ export async function loadSettings(
   return settings;
 }
 
+/**
+ * The user's own Browserless API key, an app-wide setting rather than a
+ * project's: one key serves every project and page.
+ *
+ * Unlike the other readers here these do not swallow errors — the key dialog
+ * has to tell the user when their key could not be kept. The record lives in
+ * the existing `meta` store, so no schema upgrade is needed and databases
+ * written by older versions open unchanged.
+ */
+export async function loadBrowserlessKey(): Promise<string | null> {
+  let key: string | null = null;
+  await withStore(META, 'readonly', (store) => {
+    const request = store.get(BROWSERLESS_KEY);
+    request.onsuccess = () => {
+      // Anything but a non-empty string (hand-edited, half written) is no key
+      const value: unknown = request.result;
+      if (typeof value === 'string' && value.trim() !== '') key = value.trim();
+    };
+  });
+  return key;
+}
+
+export function saveBrowserlessKey(key: string): Promise<void> {
+  return withStore(META, 'readwrite', (store) => {
+    store.put(key.trim(), BROWSERLESS_KEY);
+  });
+}
+
+export function clearBrowserlessKey(): Promise<void> {
+  return withStore(META, 'readwrite', (store) => {
+    store.delete(BROWSERLESS_KEY);
+  });
+}
+
 /** Which page of a project was open last, so returning lands where you left. */
 export function saveActivePage(
   projectId: string,
@@ -597,7 +633,7 @@ export function deleteProjectData(
 
 /**
  * Drop the whole database — every project, page, capture, export, snapshot and
- * note this browser holds, plus the stored site password.
+ * note this browser holds, plus the stored site password and Browserless key.
  *
  * Nothing here is recoverable and nothing of it lives on a server, so the
  * caller is expected to have asked twice. The connection is closed first:

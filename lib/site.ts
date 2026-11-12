@@ -3,16 +3,39 @@
  * links, and the media slots.
  *
  * A media slot set to `null` renders a drawn placeholder, so the page looks
- * finished before any video exists. Drop a file into `public/media/` and put
- * its path here to replace the placeholder.
+ * finished before any media exists. Drop a file into `public/media/` and put
+ * its path here to replace the placeholder: a video, or a screenshot.
  */
 
-export type Media = {
+export type VideoMedia = {
   /** An .mp4 or .webm under /public, played muted, looped and inline. */
   src: string;
   /** Still frame shown before the video loads (optional). */
   poster?: string;
-} | null;
+};
+
+export type ImageMedia = {
+  /** A .webp under /public, 16:10; the fallback `src`. */
+  image: string;
+  /** Other widths of the same picture, as an `srcset` (optional). */
+  srcSet?: string;
+};
+
+export type Media = VideoMedia | ImageMedia | null;
+
+/**
+ * Screenshots of the real app running the demo project: tablet page, app
+ * window 1200×750 at 2x (kept compact so the UI stays legible when small).
+ * Re-shot by hand after UI changes.
+ */
+const modeShot = (mode: string): ImageMedia => ({
+  image: `/media/mode-${mode}.webp`,
+  srcSet: [
+    `/media/mode-${mode}-960.webp 960w`,
+    `/media/mode-${mode}.webp 1600w`,
+    `/media/mode-${mode}-2400.webp 2400w`,
+  ].join(', '),
+});
 
 export const SITE = {
   name: 'Pixel Perfect',
@@ -24,9 +47,9 @@ export const SITE = {
   youtubeUrl: null as string | null,
   media: {
     hero: null as Media, // e.g. { src: '/media/hero.mp4', poster: '/media/hero.jpg' }
-    split: null as Media,
-    overlay: null as Media,
-    tap: null as Media,
-    sideBySide: null as Media,
+    split: modeShot('split') as Media,
+    overlay: modeShot('overlay') as Media,
+    tap: modeShot('tap') as Media,
+    sideBySide: modeShot('side') as Media,
   },
 } as const;

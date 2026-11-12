@@ -11,8 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Cloud site capture with Browserless is back: on a public deployment the first capture asks for your own browserless.io API token, saved in this browser with the app's settings; a self-hosted install can provide one for everyone instead.
+- While captures or Figma exports run, a progress sheet lists every viewport with its Figma and site status and locks the app until the run ends; a Stop button ends it early, keeping what is already done.
+
 ### Changed
 
+- The keyboard shortcuts list shows the "capture on this machine" shortcuts only where they work (when the app runs locally).
 - Running the project (locally or with Docker) now requires Node.js 26 and npm 11.11 or later.
 
 ### Fixed
