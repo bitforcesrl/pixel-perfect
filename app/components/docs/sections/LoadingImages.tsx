@@ -190,6 +190,11 @@ export default function LoadingImages() {
               The free Browserless plan allows one session of 60 seconds at a
               time, so viewports are captured one after the other.
             </>,
+            <>
+              Viewports narrower than 768 px are captured at the same scale as
+              the Figma export (2x on mobile); wider ones at 1x. A page too tall
+              to send back at 2x is captured at 1x instead.
+            </>,
           ]}
         </Bullets>
         <WindowShot

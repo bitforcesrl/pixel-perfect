@@ -37,6 +37,40 @@ Do not write tests; go straight to implementing the code.
 - Do not bump the version or create a dated release section unless asked to
   cut a release.
 
+# Keeping docs and site in sync
+
+Every user-visible change must leave the whole product telling the same
+story. In the same task that changes the behaviour — together with the
+changelog line, never left for later — update every surface that describes
+it:
+
+- **User documentation** (`/docs`): the sections in
+  `app/components/docs/sections/` and their table of contents in
+  `lib/docs.ts` (new section, renamed heading, moved anchor).
+- **Home page** (`/`, the single-page site): `app/(site)/page.tsx` and the
+  components in `app/components/site/` (modes, features, setup levels,
+  calls to action), plus `lib/site.ts` (tagline, description, media).
+- **Machine-readable copy**: `app/llms.txt/route.ts` ("What it does") and
+  the structured data in `lib/seo.ts`.
+- **In-app help**: `HelpDialog`, `ShortcutsReference` and any tooltip or
+  empty-state text that names the feature.
+- **README.md**: Features, usage steps, configuration, keyboard shortcuts.
+
+Rules:
+
+- Before finishing any task, search all the surfaces above for the feature,
+  setting, shortcut or wording you touched (`grep` for its name, old label
+  and old shortcut) and fix every stale mention. Removed features disappear
+  everywhere; renamed ones are renamed everywhere.
+- Facts must match the code exactly: names of modes and buttons, keyboard
+  shortcuts, limits, defaults, supported browsers, setup steps.
+- If a change needs a new screenshot or video on the site or in the docs,
+  say so explicitly instead of leaving an outdated one silently.
+- Internal-only changes that alter nothing a user can see need no update.
+- In the final summary, list which of these surfaces were updated, or state
+  that none needed it and why. If you spot an existing inconsistency
+  unrelated to the task, report it rather than ignoring it.
+
 # Releases
 
 Commits and production deploys are continuous; a release is a deliberate

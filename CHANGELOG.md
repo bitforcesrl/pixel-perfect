@@ -5,11 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-> **Beta.** Pixel Perfect is in public beta until 1.0.0. Releases are tagged as
-> pre-releases (`-beta.N`), and any minor version may still contain breaking
-> changes, always listed under **Removed** or **Changed**.
+> Versions before 1.0.0 were public betas (`-beta.N`); 1.0.0 is the first
+> stable release.
 
 ## [Unreleased]
+
+## [1.0.0] - 2026-11-12
 
 ### Added
 
@@ -21,6 +22,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AI assistants can read a plain-text summary of the project and its documentation at /llms.txt.
 - The public site's home page has a walkthrough video of the app, with play controls and fullscreen; it loads only when you press play.
 - Each of the four comparison modes on the public site now shows a short looping clip of the real app instead of a still screenshot.
+- A banner warns when browser storage is nearly full, or when a change could not be saved because it is full, with a shortcut to the Projects list to free space.
+- Opening the demo again when you already have a copy asks whether to open your copy as it is or start over from a fresh one.
+
+### Changed
+
+- A browser keeps up to 6 projects, each with up to 6 pages; importing a larger project keeps its first 6 pages and says so.
+- Importing a project with the same name as one you already have asks before replacing it, instead of adding a duplicate.
+- Removing a viewport, or resetting viewports to their defaults, asks for confirmation first, since it deletes that viewport's layers on every page.
+- Exported project ZIPs no longer include site passwords.
+- "Reset everything" now also forgets the Figma token saved in this browser.
+- Dragging the Figma layer or a guide, and moving the opacity and zoom sliders, is smoother.
+- Large Figma frames that are rendered in slices are ready sooner and take less memory.
+- Cloud captures of viewports narrower than 768 px are taken at the same scale as the Figma export (2x on mobile), so both layers are equally sharp; captures also arrive much lighter, and a page too tall for 2x falls back to 1x on its own.
+
+### Fixed
+
+- A project import that fails part way no longer leaves unused data behind in browser storage.
+- Revisiting the demo in the same session no longer brings back a demo project you had deleted or edited.
+- The app can no longer be embedded in another site, and responses carry stricter browser security headers.
+- Figma renders passed through the app are only ever served as images.
+- Page URLs are no longer sent to the server for the browser-login check on deployments where browser login is unavailable.
 
 ## [0.4.0-beta.1] - 2026-11-12
 
@@ -91,7 +113,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project export and import as ZIP, and diff map download.
 - Optional password gate for public deployments.
 
-[Unreleased]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.4.0-beta.1...HEAD
+[Unreleased]: https://github.com/bitforcesrl/pixel-perfect/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.4.0-beta.1...v1.0.0
 [0.4.0-beta.1]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.3.0-beta.1...v0.4.0-beta.1
 [0.3.0-beta.1]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.2.0-beta.1...v0.3.0-beta.1
 [0.2.0-beta.1]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.1.0...v0.2.0-beta.1

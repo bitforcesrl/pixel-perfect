@@ -1,17 +1,16 @@
+import { encodeStrips } from './encode';
 import type { FigmaLayer, FigmaRect, FigmaRender } from './figma';
-import { createPngWriter } from './png';
 
 /**
  * A sliced Figma render, put back together at full scale. Browser only.
  *
- * The parts are drawn into one band of the frame at a time, bottom layer
- * first, and each band goes straight into the PNG — so the frame is never
- * held as one bitmap, and its height is limited by nothing but memory for the
- * compressed file.
+ * The parts are drawn into one strip of the frame at a time, bottom layer
+ * first, and each strip is encoded on the spot into the same compact form a
+ * stored layer takes (`encode.ts`: WebP strips in a tile container). So the
+ * frame is never held as one bitmap, and the result lands as it is — no
+ * full-size PNG to write, decode and re-encode afterwards.
  */
 
-/** Device px per band. */
-const BAND_HEIGHT = 1024;
 /** Parts downloaded at once. */
 const DOWNLOADS = 6;
 /** How many times a part Figma shrank is sliced again before it is stretched. */
@@ -77,6 +76,10 @@ const BLEND: Record<string, GlobalCompositeOperation> = {
 };
 
 export interface ComposedRender {
+  /**
+   * The frame, already compact: one WebP (JPEG where WebP cannot be encoded),
+   * or a strip container of them for a tall frame. Ready to store as it is.
+   */
   blob: Blob;
   /** Parts Figma rendered below the scale asked for, stretched into place */
   shrunk: number;
@@ -90,6 +93,8 @@ export interface ComposeIO {
    * render Figma has been seen to hand back unshrunk, when one has been.
    */
   slice: (nodeId: string, maxArea: number | null) => Promise<FigmaRender>;
+  /** Stop on the overlay: ends the drawing between strips. */
+  signal?: AbortSignal;
 }
 
 type ImageLayer = Extract<FigmaLayer, { kind: 'image' }>;
@@ -224,17 +229,11 @@ export async function composeFigmaRender(
   }
   const layers = await resolve(render.layers, 0);
 
-  const canvas = document.createElement('canvas');
-  canvas.width = outWidth;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error('This browser has no 2D canvas');
-
-  const png = createPngWriter(outWidth, outHeight);
   const decoded = new Map<FigmaLayer, ImageBitmap>();
   /**
    * How far down a part paints from its top, in device px: its render's own
    * height, which can run past the box Figma reported for it — measured by the
-   * box, the overhang would be cut off at the next band's edge.
+   * box, the overhang would be cut off at the next strip's edge.
    */
   const reach = (layer: FigmaLayer) => {
     const box = layer.rect.height * scale;
@@ -242,15 +241,16 @@ export async function composeFigmaRender(
     return Math.max(box, sizes.get(layer)?.height ?? 0);
   };
 
-  for (let top = 0; top < outHeight; top += BAND_HEIGHT) {
-    const bandHeight = Math.min(BAND_HEIGHT, outHeight - top);
-    // Resizing clears it, and resets the state the last band left behind
-    canvas.height = bandHeight;
-
+  /** Every part that reaches into rows `top`…`top + rows`, bottom first. */
+  const drawStrip = async (
+    ctx: CanvasRenderingContext2D,
+    top: number,
+    rows: number,
+  ) => {
     for (const layer of layers) {
       const y = layer.rect.y * scale;
       const h = layer.rect.height * scale;
-      if (y + reach(layer) <= top || y >= top + bandHeight) continue;
+      if (y + reach(layer) <= top || y >= top + rows) continue;
 
       ctx.save();
       if (layer.clip) {
@@ -294,17 +294,25 @@ export async function composeFigmaRender(
       ctx.restore();
     }
 
-    await png.write(ctx.getImageData(0, 0, outWidth, bandHeight).data);
-
-    // Parts that end in this band are done with
+    // Parts that end in this strip are done with
     for (const [layer, bitmap] of decoded) {
-      if (layer.rect.y * scale + reach(layer) <= top + bandHeight) {
+      if (layer.rect.y * scale + reach(layer) <= top + rows) {
         bitmap.close();
         decoded.delete(layer);
       }
     }
-  }
+  };
 
-  for (const bitmap of decoded.values()) bitmap.close();
-  return { blob: await png.finish(), shrunk: shrunk.size };
+  try {
+    const blob = await encodeStrips(outWidth, outHeight, drawStrip, {
+      signal: io.signal,
+    });
+    if (!blob) {
+      throw new Error('This browser could not encode the Figma render');
+    }
+    return { blob, shrunk: shrunk.size };
+  } finally {
+    // A failed decode or a Stop mid-way still lets every bitmap go
+    for (const bitmap of decoded.values()) bitmap.close();
+  }
 }

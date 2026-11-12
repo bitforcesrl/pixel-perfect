@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { loadTiles, peekTiles, type Tiles } from '@/lib/tiles';
 
 export interface TiledImageProps {
@@ -18,8 +18,11 @@ export interface TiledImageProps {
  *
  * Lays out exactly like the one `<img>` it replaces: each strip carries its
  * natural size, so the column has its height before any strip has decoded.
+ *
+ * Memoised: a drag re-renders the viewer around it many times a second, and
+ * a full-page capture is dozens of strips that have nothing to update.
  */
-export default function TiledImage({
+export default memo(function TiledImage({
   src,
   alt,
   className = '',
@@ -75,4 +78,4 @@ export default function TiledImage({
       ))}
     </div>
   );
-}
+});

@@ -93,8 +93,8 @@ You can mix them freely: a layer you drop and a layer the app fetched behave exa
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Drag & drop**      | Drop images on the canvas (left half = Figma, right half = site) or on a viewport tab, split the same way. PNG, JPEG, WebP, AVIF, GIF and BMP are accepted; a retina screenshot is recognised by its width and shown at the viewport's CSS size. |
 | **Figma export**     | Renders a frame through the Figma REST API (2x on mobile, down to 1x on desktop), for the current viewport (`⇧M`) or all of them (menu or **All**).                                                                                              |
-| **Site capture**     | Full-page screenshots at each viewport's exact width: in the cloud with Browserless, or with Playwright's Firefox when running locally.                                                                                                          |
-| **Projects & pages** | A project holds many pages. Each page has a URL and one Figma link per viewport. Gallery with thumbnails.                                                                                                                                        |
+| **Site capture**     | Full-page screenshots at each viewport's exact width: in the cloud with Browserless, or with Playwright's Firefox when running locally. Viewports under 768 px are captured at the Figma export's scale (2x on mobile).                          |
+| **Projects & pages** | Up to 6 projects of up to 6 pages each. Each page has a URL and one Figma link per viewport. Gallery with thumbnails.                                                                                                                            |
 | **Viewports**        | Mobile, Tablet and Desktop by default. Add, rename, resize or disable them in the settings.                                                                                                                                                      |
 | **Comparison modes** | **Split**, **Overlay** (opacity + `normal` or `difference` blending), **Tap**, **Side by side** (synced scroll).                                                                                                                                 |
 | **Alignment**        | Pixel vertical offset, align top/bottom, drag the Figma layer, zoom and fit.                                                                                                                                                                     |
@@ -111,7 +111,7 @@ You can mix them freely: a layer you drop and a layer the app fetched behave exa
 - **Viewport**: a size (width × height) at which both layers are compared.
 - **Layers**: each viewport has two plates, _Figma_ (magenta) and _Site_ (cyan). The **Layers** panel shows the state of each and lets you fetch it again or remove it.
 
-> Data lives **only in the browser you're using**. To move it to another machine or share it, use **File ▸ Export project as ZIP** and **File ▸ Import project from ZIP**.
+> Data lives **only in the browser you're using**. To move it to another machine or share it, use **File ▸ Export project as ZIP** and **File ▸ Import project from ZIP**. Site passwords are left out of the ZIP; importing a project with the same name as one you have asks before replacing it. A banner warns when browser storage is nearly full.
 
 ## Documentation
 
@@ -295,7 +295,7 @@ On a public deployment, leave `FIGMA_TOKEN` and `BROWSERLESS_TOKEN` unset: the i
 ### Routes and the demo project
 
 - `/` is the public landing page, `/app` the tool, `/docs` the user guide.
-- `/demo` imports `public/demo-project.zip` into the visitor's browser, exactly like **File ▸ Import project from ZIP**, then opens it under `/app`. Coming back to `/demo` replaces the previous demo copy rather than adding another.
+- `/demo` imports `public/demo-project.zip` into the visitor's browser, exactly like **File ▸ Import project from ZIP**, then opens it under `/app`. Coming back to `/demo` when a demo copy exists asks whether to open that copy or start over with a fresh one.
 - To update the demo, export a project from the app and overwrite `public/demo-project.zip`.
 
 ---

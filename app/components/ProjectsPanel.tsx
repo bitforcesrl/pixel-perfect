@@ -10,6 +10,8 @@ export interface ProjectsPanelProps {
   onCreate: (name: string) => void;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
+  /** How many projects the browser keeps; adding stops there. */
+  maxProjects: number;
 }
 
 const NAME_INPUT =
@@ -22,6 +24,7 @@ export default function ProjectsPanel({
   onCreate,
   onRename,
   onDelete,
+  maxProjects,
 }: ProjectsPanelProps) {
   const [newName, setNewName] = useState('');
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -29,9 +32,11 @@ export default function ProjectsPanel({
   // Delete asks once, in place: the project's captures and notes go with it
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
+  const full = projects.length >= maxProjects;
+
   const create = () => {
     const trimmed = newName.trim();
-    if (trimmed.length === 0) return;
+    if (trimmed.length === 0 || full) return;
     onCreate(trimmed);
     setNewName('');
   };
@@ -142,11 +147,22 @@ export default function ProjectsPanel({
         })}
       </div>
 
-      <div className="flex gap-2 border-t border-ink-800 pt-3">
+      {full && (
+        <p className="border-t border-ink-800 pt-3 text-[11px] leading-5 text-press-amber">
+          {maxProjects} projects is the most this browser keeps. Export one you
+          are done with (File ▸ Export project as ZIP), then delete it to make
+          room.
+        </p>
+      )}
+      <div
+        className={`flex gap-2 ${full ? '' : 'border-t border-ink-800 pt-3'}`}
+      >
         <input
           type="text"
           value={newName}
           maxLength={MAX_NAME_LENGTH}
+          disabled={full}
+          aria-label="New project name"
           placeholder="New project name"
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => {
@@ -157,7 +173,7 @@ export default function ProjectsPanel({
         <button
           type="button"
           onClick={create}
-          disabled={newName.trim().length === 0}
+          disabled={full || newName.trim().length === 0}
           className="shrink-0 rounded border border-press-violet bg-press-violet/15 px-2.5 py-1.5 text-[11px] font-medium text-press-violet transition-colors hover:bg-press-violet/25 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Add

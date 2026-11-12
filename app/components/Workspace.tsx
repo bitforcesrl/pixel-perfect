@@ -28,6 +28,7 @@ import PageSwitcher from './PageSwitcher';
 import ProjectsPanel from './ProjectsPanel';
 import RegistrationMark from './RegistrationMark';
 import SettingsPanel from './SettingsPanel';
+import StorageQuotaBanner from './StorageQuotaBanner';
 import SideBySideViewer from './SideBySideViewer';
 import ViewportCards from './ViewportCards';
 import { useCaptureSource } from './useCaptureSource';
@@ -49,13 +50,22 @@ import {
   subscribeKey,
 } from '@/lib/browserless-key';
 import { generateDiffImage } from '@/lib/diff';
+import { createLiveValue } from '@/lib/live-value';
 import { parseFigmaUrl, type FigmaRender } from '@/lib/figma';
 import { composeFigmaRender, wasShrunk } from '@/lib/figma-compose';
 import {
+  clearFigmaToken,
   figmaHeaders,
   loadFigmaToken,
   subscribeFigmaToken,
 } from '@/lib/figma-token';
+import { forgetDemoCopy } from '@/lib/demo';
+import {
+  checkStorageQuota,
+  getQuota,
+  subscribeQuota,
+  type QuotaLevel,
+} from '@/lib/storage-quota';
 import type { ScrollPos } from '@/lib/scrollsync';
 import {
   toCompactBlob,
@@ -76,8 +86,10 @@ import {
 import {
   exportFileName,
   exportProject,
-  importProject,
+  readProjectArchive,
+  writeProjectArchive,
   type ExportOptions,
+  type ProjectArchive,
 } from '@/lib/transfer';
 import {
   clearAll,
@@ -109,7 +121,13 @@ import {
 import type { ScreenshotResult } from '@/lib/validation';
 import { renderScaleFor } from '@/lib/render-scale';
 import { DOCS_PATH, openDocs } from '@/lib/docs';
-import type { Page, Project } from '@/lib/projects';
+import {
+  findProjectByName,
+  MAX_PAGES,
+  MAX_PROJECTS,
+  type Page,
+  type Project,
+} from '@/lib/projects';
 import type { BlendMode, ViewMode } from '@/lib/types';
 import { SITE } from '@/lib/site';
 import GitHubIcon from './GitHubIcon';
@@ -209,8 +227,12 @@ export interface WorkspaceProps {
   onCreateProject: (name: string) => void;
   onRenameProject: (id: string, name: string) => void;
   onDeleteProject: (id: string) => void;
-  /** A project unpacked from an export, its work already written to storage. */
-  onImportProject: (project: Project) => void;
+  /**
+   * A project unpacked from an export, its work already written to storage.
+   * `replacesId` names the project it takes the place of, when the user
+   * agreed to replace one of the same name.
+   */
+  onImportProject: (project: Project, replacesId?: string | null) => void;
   onSelectPage: (id: string) => void;
   onCreatePage: (name: string, url: string) => void;
   onRenamePage: (id: string, name: string) => void;
@@ -251,6 +273,8 @@ export default function Workspace({
   const [preferredViewport, setPreferredViewport] =
     useState<ViewportKey | null>(null);
   const [opacity, setOpacity] = useState(100);
+  // The opacity slider's in-flight value, read straight by the viewer
+  const [liveOpacity] = useState(() => createLiveValue<number>());
   const [blendMode, setBlendMode] = useState<BlendMode>('normal');
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [zoom, setZoom] = useState(1);
@@ -326,6 +350,27 @@ export default function Workspace({
   const [confirming, setConfirming] = useState<'page' | 'everything' | null>(
     null,
   );
+  // An import whose project has the name of one already here, waiting for the
+  // user to agree to replace it. Nothing of it is written until they do.
+  const [pendingImport, setPendingImport] = useState<{
+    archive: ProjectArchive;
+    replaces: Project;
+  } | null>(null);
+  // A settings edit that removes viewports, held until confirmed: removing a
+  // viewport deletes its layers on every page of the project
+  const [pendingSettings, setPendingSettings] = useState<{
+    next: ViewportSettings;
+    removed: string[];
+  } | null>(null);
+  // How full browser storage is, and the warning level already put away —
+  // the banner only comes back when things get worse
+  const storageQuota = useSyncExternalStore(
+    subscribeQuota,
+    getQuota,
+    () => null,
+  );
+  const [dismissedQuota, setDismissedQuota] = useState<QuotaLevel | null>(null);
+  const atProjectLimit = projects.length >= MAX_PROJECTS;
   // An "All" run that would replace layers already in place, held until the
   // user agrees: a bad run (a password page, an error page, a cookie wall)
   // would otherwise overwrite every good capture at once
@@ -374,6 +419,11 @@ export default function Workspace({
     const thumbnail = await toThumbnailDataUrl(src);
     if (thumbnail) void savePreview(pageId, thumbnail);
   };
+
+  // How full storage is, measured once on opening; every write re-measures
+  useEffect(() => {
+    void checkStorageQuota();
+  }, []);
 
   // Revoke every object URL still held when the app goes away
   const slotsRef = useRef(slots);
@@ -744,7 +794,21 @@ export default function Workspace({
       setUploadError(`Could not read ${file.name}`);
       return;
     }
+    landFigmaLayer(key, src, blob, file.name);
+  };
 
+  /**
+   * Put a Figma layer that is already in its stored form on a viewport: the
+   * last step of a drop, and the whole of a sliced Figma render, which comes
+   * out of `composeFigmaRender` already compact and is never decoded again.
+   * `src` is an object URL of `blob`, owned by the slot from here on.
+   */
+  const landFigmaLayer = (
+    key: ViewportKey,
+    src: string,
+    blob: Blob,
+    name: string,
+  ) => {
     setSlots((prev) => {
       const replaced = slotOf(prev, key).figmaSrc;
       if (replaced && replaced !== src) releaseLayerUrl(replaced);
@@ -753,13 +817,13 @@ export default function Workspace({
         [key]: {
           ...slotOf(prev, key),
           figmaSrc: src,
-          figmaFileName: file.name,
+          figmaFileName: name,
           figmaHeight: null,
           offsetY: 0,
         },
       };
     });
-    void saveFigma(pageId, key, blob, file.name);
+    void saveFigma(pageId, key, blob, name);
     setPreferredViewport(key);
     setUploadError(null);
 
@@ -1307,27 +1371,37 @@ export default function Workspace({
           }
 
           let warning = render.warning ?? null;
-          if (!blob) {
+          const name = `${render.name}@${render.scale}x`;
+          if (blob) {
+            // One whole render: a plain PNG from Figma, compacted like a drop
+            if (signal.aborted) break;
+            const file = new File([blob], `${name}.png`, {
+              type: 'image/png',
+            });
+            await handleFigmaDropOn(preset.key, file);
+          } else {
+            // A sliced one is put together straight into its stored form
             const composed = await composeFigmaRender(render, {
               download,
               slice: (nodeId, maxArea) => {
                 learn(maxArea);
                 return ask(nodeId, true);
               },
+              signal,
             });
-            blob = composed.blob;
             if (composed.shrunk > 0) {
               const parts = `${composed.shrunk} part${composed.shrunk === 1 ? '' : 's'}`;
               warning = `${parts} could not be sliced small enough for Figma to render at ${render.scale}x and ${composed.shrunk === 1 ? 'was' : 'were'} stretched into place`;
             }
+            // Stopped while the last strip was drawing: nothing lands
+            if (signal.aborted) break;
+            landFigmaLayer(
+              preset.key,
+              URL.createObjectURL(composed.blob),
+              composed.blob,
+              name,
+            );
           }
-
-          // Stopped while the last part was arriving: nothing lands
-          if (signal.aborted) break;
-          const file = new File([blob], `${render.name}@${render.scale}x.png`, {
-            type: 'image/png',
-          });
-          await handleFigmaDropOn(preset.key, file);
           // After the drop, which clears the message line on success
           if (warning) setUploadError(`${preset.label}: ${warning}`);
         } catch (err) {
@@ -1416,15 +1490,59 @@ export default function Workspace({
     }
   };
 
-  const handleImportProject = async (file: File) => {
+  /** Unpack a checked archive and hand the project to the list. */
+  const finishImport = async (
+    archive: ProjectArchive,
+    replaces: Project | null,
+  ) => {
     setIsTransferring(true);
     try {
-      onImportProject(await importProject(file));
+      const imported = await writeProjectArchive(archive);
+      onImportProject(imported, replaces?.id ?? null);
+      // Said after the hand-over: the workspace remounts on the new project,
+      // so this lands on the new one's banner
+      if (archive.droppedPages > 0) {
+        setUploadError(
+          `${imported.name}: only the first ${MAX_PAGES} of ${archive.pageCount} pages were imported — a project holds ${MAX_PAGES} at most`,
+        );
+      }
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Import failed');
     } finally {
       setIsTransferring(false);
     }
+  };
+
+  /**
+   * File ▸ Import project. The ZIP is read and checked first, without writing
+   * anything: a project of the same name is only replaced once the user
+   * agrees, and a new one only fits while the browser holds fewer than
+   * {@link MAX_PROJECTS}.
+   */
+  const handleImportProject = async (file: File) => {
+    setIsTransferring(true);
+    let archive: ProjectArchive;
+    try {
+      archive = await readProjectArchive(file);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Import failed');
+      setIsTransferring(false);
+      return;
+    }
+    setIsTransferring(false);
+
+    const replaces = findProjectByName(projects, archive.name);
+    if (replaces) {
+      setPendingImport({ archive, replaces });
+      return;
+    }
+    if (atProjectLimit) {
+      setUploadError(
+        `“${archive.name}” was not imported: this browser already holds ${MAX_PROJECTS} projects, the most it keeps. Delete one under File ▸ Projects, or import over a project with the same name.`,
+      );
+      return;
+    }
+    await finishImport(archive, null);
   };
 
   /**
@@ -1501,8 +1619,17 @@ export default function Workspace({
    */
   const handleSettingsChange = (next: ViewportSettings) => {
     const removed = Object.keys(settings).filter((key) => !(key in next));
+    if (removed.length > 0) {
+      // Removing a viewport deletes data on every page: asked first
+      setPendingSettings({ next, removed });
+      return;
+    }
     setSettings(next);
-    if (removed.length === 0) return;
+  };
+
+  /** A confirmed edit that removes viewports, with their layers everywhere. */
+  const applySettingsRemoval = (next: ViewportSettings, removed: string[]) => {
+    setSettings(next);
     for (const key of removed) {
       const src = storedSlots[key]?.figmaSrc;
       if (src) releaseLayerUrl(src);
@@ -1529,7 +1656,9 @@ export default function Workspace({
 
   /**
    * Drop the database: every project, page, capture, export, snapshot and note
-   * in this browser, and the stored site password with them.
+   * in this browser, with the site passwords and the Browserless key stored in
+   * it — and the Figma token and demo marker kept beside it, so nothing the
+   * user typed in survives "delete everything".
    *
    * The reload is not a courtesy — this workspace was hydrated from records
    * that no longer exist, and the app has to come up again from an empty
@@ -1538,7 +1667,17 @@ export default function Workspace({
   const handleResetEverything = () => {
     setConfirming(null);
     void (async () => {
-      await deleteDatabase();
+      clearFigmaToken();
+      forgetDemoCopy();
+      try {
+        await deleteDatabase();
+      } catch (err) {
+        // The reload would show the same data as if it had worked: say so
+        setUploadError(
+          `Could not delete the local data: ${err instanceof Error ? err.message : 'unknown error'}. Close other Pixel Perfect tabs and try again.`,
+        );
+        return;
+      }
       window.location.reload();
     })();
   };
@@ -1721,7 +1860,9 @@ export default function Workspace({
     },
     pages: () => setPagesOpen(true),
     projects: () => setProjectsModalOpen((open) => !open),
-    newProject: () => setNewProjectOpen(true),
+    newProject: () => {
+      if (!atProjectLimit) setNewProjectOpen(true);
+    },
     exportProject: () => {
       if (!isTransferring) setExportDialogOpen(true);
     },
@@ -1807,7 +1948,9 @@ export default function Workspace({
       exportDialogOpen ||
       helpOpen ||
       confirming !== null ||
-      pendingOverwrite !== null;
+      pendingOverwrite !== null ||
+      pendingImport !== null ||
+      pendingSettings !== null;
   });
 
   /**
@@ -1917,7 +2060,15 @@ export default function Workspace({
       id: 'file',
       label: 'File',
       entries: [
-        { label: 'New project…', shortcut: 'N', onSelect: commands.newProject },
+        {
+          label: 'New project…',
+          shortcut: 'N',
+          disabled: atProjectLimit,
+          title: atProjectLimit
+            ? `This browser holds ${MAX_PROJECTS} projects, the most it keeps — delete one to start another`
+            : undefined,
+          onSelect: commands.newProject,
+        },
         { kind: 'separator' },
         { label: 'Pages…', shortcut: 'P', onSelect: commands.pages },
         {
@@ -1935,7 +2086,8 @@ export default function Workspace({
         },
         {
           label: 'Import project from ZIP…',
-          title: 'Open a ZIP made by Export project as a new project',
+          title:
+            'Open a ZIP made by Export project — it replaces a project of the same name once you confirm',
           disabled: isTransferring,
           onSelect: commands.importProject,
         },
@@ -2379,6 +2531,7 @@ export default function Workspace({
             onCreate={onCreateProject}
             onRename={onRenameProject}
             onDelete={onDeleteProject}
+            maxProjects={MAX_PROJECTS}
           />
         </Modal>
 
@@ -2399,6 +2552,8 @@ export default function Workspace({
           onSitePasswordChange={onSitePasswordChange}
           presets={presets}
           onFigmaUrlChange={onFigmaUrlChange}
+          maxPages={MAX_PAGES}
+          localLogin={localAvailable}
         />
 
         <NewProjectDialog
@@ -2474,13 +2629,71 @@ export default function Workspace({
               <span className="font-medium text-ink-100">
                 every project, page, capture, Figma export, snapshot and note
               </span>{' '}
-              this browser holds, and the saved site password with them. It
-              cannot be undone — none of it exists anywhere else. The app
-              reloads empty.
+              this browser holds, along with the site passwords, the Browserless
+              key and the Figma token saved in it. It cannot be undone — none of
+              it exists anywhere else. The app reloads empty.
             </>
           }
           onConfirm={handleResetEverything}
           onCancel={() => setConfirming(null)}
+        />
+
+        {/* An import named like a project already here */}
+        <ConfirmDialog
+          open={pendingImport !== null}
+          title="Replace project"
+          danger
+          confirmLabel="Replace"
+          message={
+            <>
+              A project called{' '}
+              <span className="font-medium text-ink-100">
+                {pendingImport?.replaces.name}
+              </span>{' '}
+              is already in this browser. Importing replaces it: its pages,
+              captures, Figma exports, snapshots and notes are deleted and the
+              ZIP&apos;s take their place. Export it first if you want to keep
+              it.
+            </>
+          }
+          onConfirm={() => {
+            const pending = pendingImport;
+            setPendingImport(null);
+            if (pending) void finishImport(pending.archive, pending.replaces);
+          }}
+          onCancel={() => setPendingImport(null)}
+        />
+
+        {/* Removing viewports takes their layers off every page */}
+        <ConfirmDialog
+          open={pendingSettings !== null}
+          title="Remove viewports"
+          danger
+          confirmLabel={`Remove ${pendingSettings?.removed.length ?? 0}`}
+          message={
+            <>
+              <span className="font-medium text-ink-100">
+                {pendingSettings?.removed
+                  .map((key) => labels[key] ?? key)
+                  .join(', ')}
+              </span>{' '}
+              {pendingSettings?.removed.length === 1 ? 'is' : 'are'} removed
+              from{' '}
+              <span className="font-medium text-ink-100">{project.name}</span>,
+              with {pendingSettings?.removed.length === 1 ? 'its' : 'their'}{' '}
+              site captures and Figma exports on{' '}
+              {project.pages.length === 1
+                ? 'its page'
+                : `all ${project.pages.length} pages`}
+              . Snapshots in History stay. This cannot be undone.
+            </>
+          }
+          onConfirm={() => {
+            const pending = pendingSettings;
+            setPendingSettings(null);
+            if (pending) applySettingsRemoval(pending.next, pending.removed);
+          }}
+          onCancel={() => setPendingSettings(null)}
         />
 
         {/* An "All" run that would replace layers already in place */}
@@ -2567,6 +2780,7 @@ export default function Workspace({
               }
               opacity={opacity}
               onOpacityChange={setOpacity}
+              liveOpacity={liveOpacity}
               blendMode={blendMode}
               onBlendModeChange={setBlendMode}
               notes={notes}
@@ -2681,42 +2895,60 @@ export default function Workspace({
                     : 'overflow-auto'
                 }`}
               >
-                {(uploadError || captureErrors.length > 0) && (
-                  <div
-                    role="alert"
-                    className="sticky top-0 z-20 flex items-start gap-3 border-b border-press-red/40 bg-press-red/10 px-4 py-2 text-sm text-press-red"
-                  >
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      {uploadError && <span>{uploadError}</span>}
-                      {captureErrors.map((preset) => (
-                        <span key={preset.key}>
-                          {preset.label}: {slots[preset.key].error}
-                        </span>
-                      ))}
-                    </div>
-                    {/* Read it, put it away — the banner is a notice, not a state
-                      you have to capture your way out of */}
-                    <button
-                      type="button"
-                      onClick={dismissErrors}
-                      aria-label="Dismiss errors"
-                      title="Dismiss"
-                      className="-mr-1 shrink-0 rounded p-1 text-press-red/70 transition-colors hover:bg-press-red/20 hover:text-press-red"
+                {/* One sticky stack, so the notices never ride over each other */}
+                <div className="sticky top-0 z-20">
+                  {storageQuota &&
+                    storageQuota.level !== 'ok' &&
+                    // Put away until it gets worse: "high" dismissed still
+                    // comes back as "full"
+                    !(
+                      dismissedQuota === storageQuota.level ||
+                      (dismissedQuota === 'full' &&
+                        storageQuota.level === 'high')
+                    ) && (
+                      <StorageQuotaBanner
+                        quota={storageQuota}
+                        onManageProjects={() => setProjectsModalOpen(true)}
+                        onDismiss={() => setDismissedQuota(storageQuota.level)}
+                      />
+                    )}
+                  {(uploadError || captureErrors.length > 0) && (
+                    <div
+                      role="alert"
+                      className="flex items-start gap-3 border-b border-press-red/40 bg-press-red/10 px-4 py-2 text-sm text-press-red"
                     >
-                      <svg
-                        className="h-3.5 w-3.5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                        strokeLinecap="round"
-                        aria-hidden="true"
+                      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        {uploadError && <span>{uploadError}</span>}
+                        {captureErrors.map((preset) => (
+                          <span key={preset.key}>
+                            {preset.label}: {slots[preset.key].error}
+                          </span>
+                        ))}
+                      </div>
+                      {/* Read it, put it away — the banner is a notice, not a state
+                      you have to capture your way out of */}
+                      <button
+                        type="button"
+                        onClick={dismissErrors}
+                        aria-label="Dismiss errors"
+                        title="Dismiss"
+                        className="-mr-1 shrink-0 rounded p-1 text-press-red/70 transition-colors hover:bg-press-red/20 hover:text-press-red"
                       >
-                        <path d="M6 6l12 12M18 6L6 18" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
+                        <svg
+                          className="h-3.5 w-3.5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2.5}
+                          strokeLinecap="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M6 6l12 12M18 6L6 18" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 {/* `w-fit min-w-full` so the wrapper grows with a zoomed capture
                   rather than stopping at the scrollport — the annotation layer
@@ -2756,6 +2988,7 @@ export default function Workspace({
                             activeSlot.screenshot?.height ?? null
                           }
                           opacity={opacity}
+                          liveOpacity={liveOpacity}
                           blendMode={blendMode}
                           viewMode={viewMode}
                           offsetY={activeSlot.offsetY}

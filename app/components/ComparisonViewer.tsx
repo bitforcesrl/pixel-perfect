@@ -1,8 +1,17 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import type { LiveValue } from '@/lib/live-value';
 import { clampOffset } from '@/lib/offset';
 import TiledImage from './TiledImage';
+import { useDraft } from './useDraft';
 import type { BlendMode, ViewMode } from '@/lib/types';
 
 export interface ComparisonViewerProps {
@@ -11,6 +20,7 @@ export interface ComparisonViewerProps {
   screenshotWidth: number | null; // px, from API — the unscaled image size
   screenshotHeight: number | null;
   opacity: number; // 0-100, applied to Figma layer
+  liveOpacity?: LiveValue<number>; // the opacity slider while it is dragged
   blendMode: BlendMode; // applied to Figma layer
   viewMode: ViewMode;
   offsetY: number; // image px, vertical offset of the Figma layer (positive = down)
@@ -42,22 +52,37 @@ const CHIP = 'rounded border px-2 py-1 text-xs font-medium bg-ink-void';
 const CHIP_SITE = `${CHIP} border-press-cyan/40 text-press-cyan`;
 const CHIP_FIGMA = `${CHIP} border-press-magenta/40 text-press-magenta`;
 
+/** For a viewer given no live opacity: nothing to listen to. */
+const noSubscribe = () => () => {};
+
 export default function ComparisonViewer(props: ComparisonViewerProps) {
   const {
     screenshotSrc,
     figmaSrc,
     screenshotWidth,
     screenshotHeight,
-    opacity,
+    opacity: committedOpacity,
+    liveOpacity,
     blendMode,
     viewMode,
-    offsetY,
+    offsetY: committedOffsetY,
     zoom,
     figmaDragEnabled,
     scrollRef,
     onOffsetYChange,
     onFigmaHeightChange,
   } = props;
+
+  // A drag moves the Figma layer here and tells the workspace once, on release
+  const offsetDraft = useDraft(committedOffsetY);
+  const offsetY = offsetDraft.value;
+  // The opacity slider mid-drag, straight from the panel
+  const live = useSyncExternalStore(
+    liveOpacity?.subscribe ?? noSubscribe,
+    () => liveOpacity?.get() ?? null,
+    () => null,
+  );
+  const opacity = live ?? committedOpacity;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [splitPos, setSplitPos] = useState(50); // 0-100, % from left
@@ -112,16 +137,36 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
       ? screenshotWidth * measured.ratio
       : null;
 
-  const handleFigmaSize = (naturalWidth: number, naturalHeight: number) => {
-    if (!figmaSrc || !naturalWidth) return;
-    const ratio = naturalHeight / naturalWidth;
-    setMeasured({ src: figmaSrc, ratio, width: naturalWidth });
-    // Without a capture there is nothing to fit the layer to, so the panel's
-    // align controls stay out of it
-    onFigmaHeightChange(
-      screenshotWidth === null ? null : screenshotWidth * ratio,
-    );
-  };
+  // Stable across renders, so the strips under a drag are not re-rendered
+  // (TiledImage is memoised): what it reads changes through the ref
+  const sizeInputs = useRef({ figmaSrc, screenshotWidth, onFigmaHeightChange });
+  useEffect(() => {
+    sizeInputs.current = { figmaSrc, screenshotWidth, onFigmaHeightChange };
+  });
+  const handleFigmaSize = useCallback(
+    (naturalWidth: number, naturalHeight: number) => {
+      const {
+        figmaSrc: src,
+        screenshotWidth: width,
+        onFigmaHeightChange: report,
+      } = sizeInputs.current;
+      if (!src || !naturalWidth) return;
+      const ratio = naturalHeight / naturalWidth;
+      setMeasured({ src, ratio, width: naturalWidth });
+      // Without a capture there is nothing to fit the layer to, so the
+      // panel's align controls stay out of it
+      report(width === null ? null : width * ratio);
+    },
+    [],
+  );
+
+  const figmaStyle = useMemo(
+    () =>
+      viewMode === 'overlay'
+        ? { mixBlendMode: blendMode, opacity: opacity / 100 }
+        : undefined,
+    [viewMode, blendMode, opacity],
+  );
 
   const updateSplitFromPointer = useCallback((clientX: number) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -181,8 +226,9 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
       return;
     }
 
-    // Pointer travel is on screen, the offset is in image px
-    onOffsetYChange(
+    // Pointer travel is on screen, the offset is in image px. Held here
+    // until release: the workspace hears about it once
+    offsetDraft.set(
       clampOffset(
         drag.offset + (e.clientY - drag.y) / zoom,
         screenshotHeight ?? 0,
@@ -195,6 +241,8 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
     setIsDragging(false);
     setIsPressing(false);
     dragRef.current = null;
+    const moved = offsetDraft.take();
+    if (moved) onOffsetYChange(moved.value);
   };
 
   // Sub-pixel drift still rounds to 0px on screen, so the readout agrees
@@ -322,11 +370,7 @@ export default function ComparisonViewer(props: ComparisonViewerProps) {
                 alt="Figma design"
                 onSize={handleFigmaSize}
                 className="block w-full"
-                style={
-                  viewMode === 'overlay'
-                    ? { mixBlendMode: blendMode, opacity: opacity / 100 }
-                    : undefined
-                }
+                style={figmaStyle}
               />
             </div>
           </>

@@ -115,14 +115,36 @@ function captureBudget(budgetMs: number | null) {
 const MAX_CAPTURE_HEIGHT = 30_000;
 
 /*
- * Device pixels per CSS pixel for a local capture: `renderScaleFor` the
- * viewport width — 2x for a mobile layout, which gets zoomed in a lot and
- * where 1x type would smear next to a crisp Figma export, sliding to 1x for a
- * desktop one, which is viewed near 100% and where 2x is mostly bytes. The
- * Figma route picks its export scale the same way, so both layers match. The
- * remote browser is driven over CDP, which ignores context options, so it
- * stays at 1x.
+ * Device pixels per CSS pixel: `renderScaleFor` the viewport width — 2x for a
+ * mobile layout, which gets zoomed in a lot and where 1x type would smear next
+ * to a crisp Figma export, sliding to 1x for a desktop one, which is viewed
+ * near 100% and where 2x is mostly bytes. The Figma route picks its export
+ * scale the same way, so both layers match.
+ *
+ * The remote browser follows it only below {@link REMOTE_HIGH_DENSITY_BELOW}:
+ * it pays for every extra pixel in session time and in the size of the
+ * answer, and a wide layout gains little from it. See `remoteScreenshot`.
  */
+
+/** Remote captures narrower than this many CSS px are taken above 1x. */
+const REMOTE_HIGH_DENSITY_BELOW = 768;
+
+/**
+ * Past this many device px a side, WebP cannot hold the picture and a remote
+ * capture is encoded as JPEG instead (which goes to 65535).
+ */
+const MAX_WEBP_SIDE = 16_383;
+
+/** Quality of a remote capture's WebP or JPEG — then the lighter fallback. */
+const REMOTE_QUALITY = 85;
+const REMOTE_FALLBACK_QUALITY = 65;
+
+/**
+ * The largest image a serverless deployment can send back, as base64
+ * characters. Vercel refuses response bodies past ~4.5 MB; this leaves room
+ * for the JSON around it. A capture over it is taken again lighter.
+ */
+const MAX_SERVERLESS_IMAGE_CHARS = 4_000_000;
 
 /** Firefox refuses any screenshot taller (or wider) than this many device px. */
 const MAX_SCREENSHOT_PX = 32_767;
@@ -1065,11 +1087,106 @@ async function applyViewport(
   await page.setViewportSize(viewport);
 }
 
+type CDPSession = import('playwright').CDPSession;
+
+/**
+ * Set the remote page's device pixel ratio, keeping its size. Playwright's
+ * own resizes always send 1x over CDP (its context has no scale), so this is
+ * sent after each of them.
+ */
+async function setDensity(
+  cdp: CDPSession,
+  size: { width: number; height: number },
+  scale: number,
+) {
+  await cdp.send('Emulation.setDeviceMetricsOverride', {
+    width: size.width,
+    height: size.height,
+    deviceScaleFactor: scale,
+    mobile: false,
+  });
+}
+
+/**
+ * The full page from the remote browser, as WebP (JPEG past WebP's size
+ * limit) rather than PNG: the picture travels back as base64 in a JSON
+ * answer, and a PNG of a tall 2x page is several times what a serverless
+ * response may hold. WebP at this quality is far lighter and indistinguishable
+ * for aligning against a design.
+ *
+ * Tried heaviest first, falling back until it fits: the asked scale, then 1x,
+ * then 1x at a lower quality. `limitChars` is the most a response may carry —
+ * null where there is no such limit, which keeps the first attempt that the
+ * format can hold. Over the limit even at its lightest, it says so plainly
+ * rather than letting the platform fail with an opaque error.
+ */
+async function remoteScreenshot(
+  cdp: CDPSession,
+  scale: number,
+  {
+    viewportWidth,
+    limitChars,
+  }: { viewportWidth: number; limitChars: number | null },
+): Promise<ScreenshotResult> {
+  // A classic scrollbar takes its width out of the page (375 came back as
+  // 368): hide it, and never return narrower than the viewport asked for —
+  // the overlay fits the Figma export to this width
+  await cdp.send('Emulation.setScrollbarsHidden', { hidden: true });
+  const { cssContentSize } = await cdp.send('Page.getLayoutMetrics');
+  const width = Math.max(Math.ceil(cssContentSize.width), viewportWidth);
+  const height = Math.min(Math.ceil(cssContentSize.height), MAX_CAPTURE_HEIGHT);
+
+  const attempts = [
+    ...(scale > 1 && height * scale <= MAX_WEBP_SIDE
+      ? [{ scale, quality: REMOTE_QUALITY }]
+      : []),
+    { scale: 1, quality: REMOTE_QUALITY },
+    { scale: 1, quality: REMOTE_FALLBACK_QUALITY },
+  ];
+
+  let density = scale;
+  let size = 0;
+  for (const attempt of attempts) {
+    if (attempt.scale !== density) {
+      // Same layout, fewer device pixels: no reload, the next shot is lighter
+      await setDensity(cdp, { width, height }, attempt.scale);
+      density = attempt.scale;
+    }
+    const deviceSide = Math.max(width, height) * attempt.scale;
+    const format = deviceSide <= MAX_WEBP_SIDE ? 'webp' : 'jpeg';
+    const { data } = await cdp.send('Page.captureScreenshot', {
+      format,
+      quality: attempt.quality,
+      captureBeyondViewport: true,
+      clip: { x: 0, y: 0, width, height, scale: 1 },
+    });
+    size = data.length;
+    if (limitChars === null || size <= limitChars) {
+      return {
+        image: `data:image/${format};base64,${data}`,
+        width,
+        height,
+      };
+    }
+  }
+  throw new Error(
+    `The page is too tall to send back from this deployment ` +
+      `(${(size / 1_000_000).toFixed(1)} MB even at 1x). Capture it on a ` +
+      'self-hosted install, or upload a screenshot instead.',
+  );
+}
+
+/** The density a capture is taken at, before any fallback. */
+function captureScale(remote: boolean, cssWidth: number): number {
+  if (remote && cssWidth >= REMOTE_HIGH_DENSITY_BELOW) return 1;
+  return renderScaleFor(cssWidth);
+}
+
 async function captureWith(
   lease: BrowserLease,
   req: ScreenshotRequest,
   session: SavedSession | null,
-  scale = lease.remote ? 1 : renderScaleFor(req.viewportWidth),
+  scale = captureScale(lease.remote, req.viewportWidth),
 ): Promise<ScreenshotResult> {
   const budget = captureBudget(lease.budgetMs);
   const viewport = { width: req.viewportWidth, height: req.viewportHeight };
@@ -1097,9 +1214,19 @@ async function captureWith(
   }
   try {
     const page = await context.newPage();
+    // The remote browser takes its density from the DevTools protocol: the
+    // context options that set it locally do not reach it over CDP
+    // (Chromium only — anything else keeps Playwright's own screenshot)
+    const cdp =
+      lease.remote && lease.browser.browserType().name() === 'chromium'
+        ? await context.newCDPSession(page)
+        : null;
+    const remoteDensity = (size: { width: number; height: number }) =>
+      cdp && scale > 1 ? setDensity(cdp, size, scale) : Promise.resolve();
     // The remote context has no viewport of its own, so give the page one
     // before it loads anything.
     await page.setViewportSize(viewport);
+    await remoteDensity(viewport);
 
     const targetUrl = resolveTargetUrl(req.url, lease.remote);
 
@@ -1131,6 +1258,8 @@ async function captureWith(
     // the capture the size that was asked for; the browser re-picks `srcset`
     // candidates on the resize, and the lazy-loading passes below run after.
     await applyViewport(page, viewport);
+    // Playwright's own resize put the density back to 1x: set it again
+    await remoteDensity(viewport);
 
     // Best-effort: let the page finish loading resources, but don't crash the
     // capture if something hangs.
@@ -1187,10 +1316,9 @@ async function captureWith(
     // the layout on every frame). Growing the viewport to the content height
     // makes them render everything at once, since they size to the viewport.
     if (documentHeight < contentHeight) {
-      await page.setViewportSize({
-        width: req.viewportWidth,
-        height: contentHeight,
-      });
+      const grown = { width: req.viewportWidth, height: contentHeight };
+      await page.setViewportSize(grown);
+      await remoteDensity(grown);
       await page
         .waitForLoadState('networkidle', { timeout: budget(15_000) })
         .catch(() => {});
@@ -1202,6 +1330,13 @@ async function captureWith(
     await dismissConsentBanner(page, budget(NAVIGATION_TIMEOUT_MS));
     // Most popups wait a few seconds, or for a scroll, before they open
     await dismissPopups(page, budget(NAVIGATION_TIMEOUT_MS));
+
+    if (cdp) {
+      return await remoteScreenshot(cdp, scale, {
+        viewportWidth: req.viewportWidth,
+        limitChars: canLaunchLocally() ? null : MAX_SERVERLESS_IMAGE_CHARS,
+      });
+    }
 
     if (scale > 1) {
       const fullHeight = await page.evaluate(

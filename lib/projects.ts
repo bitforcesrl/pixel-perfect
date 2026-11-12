@@ -33,10 +33,35 @@ export interface Project {
   createdAt: number;
 }
 
+/**
+ * The project already in the list that an import named `name` would replace:
+ * same name, ignoring case and surrounding spaces. Null when there is none.
+ */
+export function findProjectByName(
+  projects: Project[],
+  name: string,
+): Project | null {
+  const wanted = sanitizeName(name).toLowerCase();
+  return (
+    projects.find((project) => project.name.toLowerCase() === wanted) ?? null
+  );
+}
+
 /** The project the pre-project database becomes when it is first migrated. */
 export const LEGACY_PROJECT_ID = 'default';
 
 export const MAX_NAME_LENGTH = 60;
+
+/**
+ * How many projects one browser keeps. Everything lives in IndexedDB on this
+ * machine, so the cap keeps storage, the Projects list and every export at a
+ * size the browser handles comfortably. Older databases above it keep what
+ * they have; only adding more is refused.
+ */
+export const MAX_PROJECTS = 6;
+
+/** How many pages one project holds — the same reasoning as {@link MAX_PROJECTS}. */
+export const MAX_PAGES = 6;
 
 /** A name the list can render: trimmed, bounded, never blank. */
 export function sanitizeName(raw: string): string {

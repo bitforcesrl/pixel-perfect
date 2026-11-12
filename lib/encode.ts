@@ -9,9 +9,10 @@ import {
 } from './tile-container';
 
 /**
- * WebP quality for stored layers. 0.75 matches Squoosh's default (libwebp
- * q75): at 0.92 a re-encode in Squoosh still shaved ~40% off our output,
- * bytes spent on detail nobody sees when aligning a screenshot to a design.
+ * WebP quality for stored layers. Lower than Squoosh's default (libwebp q75):
+ * at 0.92 a re-encode in Squoosh still shaved ~40% off our output, and even
+ * 0.75 spends bytes on detail nobody sees when aligning a screenshot to a
+ * design.
  */
 const QUALITY = 0.5;
 
@@ -85,7 +86,13 @@ function createCanvas(width: number, height: number) {
 }
 
 /** Whether the picture is small enough to stay one file. */
-function fitsOneFile({ width, height }: Raster): boolean {
+function fitsOneFile({
+  width,
+  height,
+}: {
+  width: number;
+  height: number;
+}): boolean {
   return height <= MAX_UNTILED_HEIGHT && width * height <= MAX_CANVAS_AREA;
 }
 
@@ -99,51 +106,88 @@ async function encodeSingle(
   return encodeCanvas(canvas, ctx, quality);
 }
 
-/**
- * A tall picture as a strip container: every strip its own WebP, each well
- * inside the 16383 px WebP limit and the canvas area limit. The first strip
- * settles the format — WebP where the browser encodes it, JPEG elsewhere —
- * and every strip after follows it, so the set stays one format.
- */
-async function encodeTiled(
-  raster: Raster,
-  quality: number,
-): Promise<Blob | null> {
-  const { width, height } = raster;
-  // Never past the canvas limit, however wide the picture
-  const maxStrip = Math.max(
+/** Rows per strip for a picture `width` px wide: within both canvas limits. */
+function stripHeightFor(width: number): number {
+  return Math.max(
     8,
     Math.min(TILE_HEIGHT, Math.floor(MAX_CANVAS_AREA / width / 8) * 8),
   );
+}
+
+/**
+ * Paints the rows `top`…`top + rows` of the picture onto a cleared canvas of
+ * exactly that height, at y 0.
+ */
+export type DrawStrip = (
+  ctx: CanvasRenderingContext2D,
+  top: number,
+  rows: number,
+) => Promise<void>;
+
+/**
+ * Encode a picture painted strip by strip: one file when it fits one, a strip
+ * container otherwise — every strip WebP where the browser encodes it, JPEG
+ * elsewhere (the first strip settles the format for the set). Only one strip
+ * is ever held as pixels, so a picture of any height costs one canvas.
+ *
+ * Null when the browser would not encode a strip at all. `signal` stops it
+ * between strips.
+ */
+export async function encodeStrips(
+  width: number,
+  height: number,
+  draw: DrawStrip,
+  {
+    quality = QUALITY,
+    signal,
+  }: { quality?: number; signal?: AbortSignal } = {},
+): Promise<Blob | null> {
+  const single = fitsOneFile({ width, height });
   // Even strips, so the last one is never a sliver
-  const count = Math.ceil(height / maxStrip);
+  const count = single ? 1 : Math.ceil(height / stripHeightFor(width));
   const step = Math.ceil(height / count);
 
   const { canvas, ctx } = createCanvas(width, step);
   const tiles: Tile[] = [];
   let mime: string | null = null;
   for (let top = 0; top < height; top += step) {
+    signal?.throwIfAborted();
     const rows = Math.min(step, height - top);
     // Resizing also clears; the full-size strips reuse the canvas as it is
     if (canvas.height !== rows) canvas.height = rows;
     else ctx.clearRect(0, 0, width, rows);
-    await raster.draw(ctx, {
-      sx: 0,
-      sy: top,
-      sw: width,
-      sh: rows,
-      dx: 0,
-      dy: 0,
-      dw: width,
-      dh: rows,
-    });
+    await draw(ctx, top, rows);
     const blob = await encodeCanvas(canvas, ctx, quality, mime);
     if (!blob) return null;
     mime = blob.type;
     tiles.push({ height: rows, blob });
     await yieldToPage();
   }
+  if (tiles.length === 1) return tiles[0].blob;
   return packTiles({ width, height, mime: mime ?? WEBP, tiles });
+}
+
+/**
+ * A tall picture as a strip container, read from a raster. Only called for a
+ * picture that does not fit one file, so `encodeStrips` always cuts it.
+ */
+function encodeTiled(raster: Raster, quality: number): Promise<Blob | null> {
+  return encodeStrips(
+    raster.width,
+    raster.height,
+    (ctx, top, rows) =>
+      raster.draw(ctx, {
+        sx: 0,
+        sy: top,
+        sw: raster.width,
+        sh: rows,
+        dx: 0,
+        dy: 0,
+        dw: raster.width,
+        dh: rows,
+      }),
+    { quality },
+  );
 }
 
 /**

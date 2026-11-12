@@ -24,6 +24,13 @@ export interface PagesGalleryProps {
   /** The project's enabled viewports — one Figma link field each. */
   presets: ViewportPreset[];
   onFigmaUrlChange: (key: ViewportKey, url: string, pageId: string) => void;
+  /** How many pages a project holds; the New page card stops there. */
+  maxPages: number;
+  /**
+   * Whether this machine can open a browser login window. Off it, the login
+   * control is not mounted at all, so it never asks the server about URLs.
+   */
+  localLogin: boolean;
 }
 
 const FIELD =
@@ -55,6 +62,8 @@ function Gallery({
   onSitePasswordChange,
   presets,
   onFigmaUrlChange,
+  maxPages,
+  localLogin,
 }: PagesGalleryProps) {
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [newName, setNewName] = useState('');
@@ -84,9 +93,11 @@ function Gallery({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
+  const full = pages.length >= maxPages;
+
   const create = () => {
     const trimmed = newName.trim();
-    if (trimmed.length === 0) return;
+    if (trimmed.length === 0 || full) return;
     onCreate(trimmed, newUrl.trim());
     setNewName('');
     setNewUrl('');
@@ -247,7 +258,7 @@ function Gallery({
 
                     {/* A login a script cannot do (a code by email), done
                         by hand once and reused by every local capture */}
-                    <BrowserLoginControl url={page.url} />
+                    {localLogin && <BrowserLoginControl url={page.url} />}
 
                     {/* The Figma frame each viewport is exported from — the
                         link Figma copies, one per viewport */}
@@ -343,45 +354,58 @@ function Gallery({
               );
             })}
 
-            {/* New page — the card at the end of the grid */}
-            <div className="flex flex-col gap-2 rounded-lg border border-dashed border-ink-700 bg-ink-850/20 p-3">
-              <span className="text-[11px] font-medium tracking-[0.14em] text-ink-500 uppercase">
-                New page
-              </span>
-              <input
-                type="text"
-                value={newName}
-                maxLength={MAX_NAME_LENGTH}
-                placeholder="Page name"
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') create();
-                }}
-                className={FIELD}
-              />
-              <input
-                type="url"
-                value={newUrl}
-                placeholder="https://example.com"
-                onChange={(e) => setNewUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') create();
-                }}
-                className={`${FIELD} font-mono text-[10px]`}
-              />
-              <button
-                type="button"
-                onClick={create}
-                disabled={newName.trim().length === 0}
-                className="rounded border border-press-violet bg-press-violet/15 px-2.5 py-1.5 text-[11px] font-medium text-press-violet transition-colors hover:bg-press-violet/25 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Add page
-              </button>
-              <p className="text-[10px] leading-4 text-ink-600">
-                Its own URL, captures, Figma exports, snapshots and notes. The
-                viewport sizes come from the project.
-              </p>
-            </div>
+            {/* New page — the card at the end of the grid, or, once the
+                project is full, what to do instead */}
+            {full ? (
+              <div className="flex flex-col justify-center gap-2 rounded-lg border border-dashed border-ink-700 bg-ink-850/20 p-3">
+                <span className="text-[11px] font-medium tracking-[0.14em] text-ink-500 uppercase">
+                  {maxPages} of {maxPages} pages
+                </span>
+                <p className="text-[11px] leading-5 text-ink-400">
+                  A project holds {maxPages} pages at most. Delete a page you no
+                  longer need, or start another project for the rest.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 rounded-lg border border-dashed border-ink-700 bg-ink-850/20 p-3">
+                <span className="text-[11px] font-medium tracking-[0.14em] text-ink-500 uppercase">
+                  New page
+                </span>
+                <input
+                  type="text"
+                  value={newName}
+                  maxLength={MAX_NAME_LENGTH}
+                  placeholder="Page name"
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') create();
+                  }}
+                  className={FIELD}
+                />
+                <input
+                  type="url"
+                  value={newUrl}
+                  placeholder="https://example.com"
+                  onChange={(e) => setNewUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') create();
+                  }}
+                  className={`${FIELD} font-mono text-[10px]`}
+                />
+                <button
+                  type="button"
+                  onClick={create}
+                  disabled={newName.trim().length === 0}
+                  className="rounded border border-press-violet bg-press-violet/15 px-2.5 py-1.5 text-[11px] font-medium text-press-violet transition-colors hover:bg-press-violet/25 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Add page
+                </button>
+                <p className="text-[10px] leading-4 text-ink-600">
+                  Its own URL, captures, Figma exports, snapshots and notes. The
+                  viewport sizes come from the project.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

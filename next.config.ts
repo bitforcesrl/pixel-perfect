@@ -20,15 +20,44 @@ const APP_VERSION =
   process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ??
   `local-${Date.now()}`;
 
+/**
+ * Sent with every response.
+ *
+ * The CSP covers what can be locked down without per-request nonces: nobody
+ * may frame the app (clickjacking a "Delete everything"), plugins are off, and
+ * `<base>` and form posts cannot point anywhere else. Scripts are not
+ * restricted here — Next's inline bootstrap and the installed-app redirect
+ * would need a nonce from a proxy for that.
+ */
+const SECURITY_HEADERS = [
+  {
+    key: 'Content-Security-Policy',
+    value:
+      "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
+  },
+  // Older browsers that ignore frame-ancestors
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  // Nothing in the app uses these; refusing them costs nothing
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+  },
+];
+
 const nextConfig: NextConfig = {
   output: 'standalone',
+  // No framework fingerprint in every response
+  poweredByHeader: false,
   env: { NEXT_PUBLIC_APP_VERSION: APP_VERSION },
-  /**
-   * The service worker must always be fetched fresh, otherwise a cached copy
-   * could keep browsers on an old worker after a deploy.
-   */
   async headers() {
     return [
+      { source: '/:path*', headers: SECURITY_HEADERS },
+      /**
+       * The service worker must always be fetched fresh, otherwise a cached
+       * copy could keep browsers on an old worker after a deploy.
+       */
       {
         source: '/sw.js',
         headers: [

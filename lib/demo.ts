@@ -29,12 +29,38 @@ function writeDemoId(id: string): void {
   }
 }
 
+/** Forget which project came from the demo — part of "Reset everything". */
+export function forgetDemoCopy(): void {
+  try {
+    localStorage.removeItem(DEMO_ID_KEY);
+  } catch {
+    // Storage blocked: there is nothing stored to forget either
+  }
+}
+
 /**
- * One import per page load, however many times React mounts the caller
+ * One import in flight at a time, however many times React mounts the caller
  * (Strict Mode mounts effects twice in development): a second run would
- * write a second copy of every image to storage.
+ * write a second copy of every image to storage. The caller that uses the
+ * result calls {@link forgetDemoImport}, so a later visit to /demo in the
+ * same page lifetime imports again instead of reusing a project that may
+ * since have been edited or deleted.
  */
 let pending: Promise<Project> | null = null;
+
+/** The import has been put to use: the next request starts a new one. */
+export function forgetDemoImport(): void {
+  pending = null;
+}
+
+/**
+ * The copy of the demo this browser imported on an earlier visit, if it is
+ * still in the list. It may hold the visitor's own captures and notes.
+ */
+export function findDemoCopy(projects: Project[]): Project | null {
+  const id = readDemoId();
+  return projects.find((project) => project.id === id) ?? null;
+}
 
 /** Download the demo ZIP and unpack it into storage, like a manual import. */
 export function importDemoProject(

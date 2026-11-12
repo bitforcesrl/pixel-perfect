@@ -48,10 +48,11 @@ export default function Viewports() {
         ]}
       </Bullets>
       <Note tone="warn">
-        Removing a viewport deletes its captures and Figma exports on every page
-        of the project. The last enabled viewport cannot be disabled or removed.
-        After changing a width, re-capture: an amber note flags captures taken
-        at the old size.
+        Removing a viewport (with <strong>×</strong> or{' '}
+        <strong>Reset to defaults</strong>) deletes its captures and Figma
+        exports on every page of the project, so you are asked to confirm first.
+        The last enabled viewport cannot be disabled or removed. After changing
+        a width, re-capture: an amber note flags captures taken at the old size.
       </Note>
     </DocSection>
   );

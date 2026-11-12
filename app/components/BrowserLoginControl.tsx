@@ -15,6 +15,12 @@ const ACTION =
 /** How often an open window is checked on, to notice it being closed. */
 const POLL_MS = 2_000;
 
+/**
+ * The URL field edits per keystroke: its status is asked for once typing
+ * pauses, not once per character.
+ */
+const STATUS_DEBOUNCE_MS = 500;
+
 function formatSavedAt(ms: number): string {
   return new Date(ms).toLocaleString(undefined, {
     day: '2-digit',
@@ -43,7 +49,9 @@ async function fetchStatus(target: string): Promise<Status | null> {
  * For logins a script cannot do — a code sent by email. "Log in" opens a
  * Firefox window on this machine; once logged in there, "Done" (or closing the
  * window) saves the session for the site's host, and every local capture of
- * that host starts from it. Shown only where that window can actually open.
+ * that host starts from it. Mounted only where that window can actually open
+ * (the parent knows from the capture source), so a public deployment never
+ * sends the page URLs it holds to the server just to hear "not available".
  */
 export default function BrowserLoginControl({ url }: { url: string }) {
   const [status, setStatus] = useState<Status | null>(null);
@@ -61,11 +69,12 @@ export default function BrowserLoginControl({ url }: { url: string }) {
       const next = await fetchStatus(target);
       if (!cancelled && next) setStatus(next);
     };
-    void check();
+    const first = setTimeout(() => void check(), STATUS_DEBOUNCE_MS);
     // While the window is open, notice it being closed from the window itself
     const timer = open ? setInterval(() => void check(), POLL_MS) : null;
     return () => {
       cancelled = true;
+      clearTimeout(first);
       if (timer) clearInterval(timer);
     };
   }, [target, open]);

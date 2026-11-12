@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { clampOffset } from '@/lib/offset';
 import type { ScrollPos } from '@/lib/scrollsync';
+import { useDraft } from './useDraft';
 import TiledImage from './TiledImage';
 
 export interface SideBySideViewerProps {
@@ -46,13 +47,17 @@ export default function SideBySideViewer(props: SideBySideViewerProps) {
     screenshotHeight,
     figmaHeight,
     zoom,
-    offsetY,
+    offsetY: committedOffsetY,
     syncScroll,
     figmaDragEnabled,
     scrollPosRef,
     onOffsetYChange,
     onFigmaHeightChange,
   } = props;
+
+  // A drag moves the Figma pane here and tells the workspace once, on release
+  const offsetDraft = useDraft(committedOffsetY);
+  const offsetY = offsetDraft.value;
 
   const siteRef = useRef<HTMLDivElement>(null);
   const figmaRef = useRef<HTMLDivElement>(null);
@@ -152,7 +157,7 @@ export default function SideBySideViewer(props: SideBySideViewerProps) {
     }
 
     // Pointer travel is on screen, the offset is in image px
-    onOffsetYChange(
+    offsetDraft.set(
       clampOffset(
         drag.offset + (e.clientY - drag.y) / zoom,
         screenshotHeight,
@@ -164,6 +169,8 @@ export default function SideBySideViewer(props: SideBySideViewerProps) {
   const endDrag = () => {
     dragRef.current = null;
     setDragging(null);
+    const moved = offsetDraft.take();
+    if (moved) onOffsetYChange(moved.value);
   };
 
   const panCursor = dragging === 'pan' ? 'cursor-grabbing' : 'cursor-grab';

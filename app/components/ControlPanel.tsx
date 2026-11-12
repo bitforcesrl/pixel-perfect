@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { startTransition, useState, type ReactNode } from 'react';
+import RangeInput from './RangeInput';
 import SnapshotHistory from './SnapshotHistory';
+import type { LiveValue } from '@/lib/live-value';
 import type { Tool } from './AnnotationLayer';
 import { PEN_WIDTHS, type Guide, type GuideAxis } from '@/lib/annotations';
 import { bottomAlignOffset, clampOffset } from '@/lib/offset';
@@ -55,6 +57,11 @@ export interface ControlPanelProps {
   onRemoveScreenshot: () => void;
   opacity: number; // 0-100
   onOpacityChange: (opacity: number) => void;
+  /**
+   * Where the opacity slider writes while it is dragged, read by the viewer:
+   * the overlay fades live without re-rendering the workspace per step.
+   */
+  liveOpacity?: LiveValue<number>;
   blendMode: BlendMode;
   onBlendModeChange: (mode: BlendMode) => void;
   notes: string;
@@ -335,6 +342,7 @@ export default function ControlPanel(props: ControlPanelProps) {
     onRemoveScreenshot,
     opacity,
     onOpacityChange,
+    liveOpacity,
     blendMode,
     onBlendModeChange,
     notes,
@@ -698,16 +706,17 @@ export default function ControlPanel(props: ControlPanelProps) {
           </button>
         </Row>
 
-        <input
-          type="range"
+        {/* Zoom re-lays out the whole canvas, so the drag follows it — at
+            transition priority, so the thumb itself never stutters */}
+        <RangeInput
           min={MIN_ZOOM * 100}
           max={MAX_ZOOM * 100}
-          step={1}
           value={zoomPercent}
           disabled={!isViewing}
-          onChange={(e) =>
-            onZoomChange(clampZoom(Number(e.target.value) / 100))
+          onLive={(next) =>
+            startTransition(() => onZoomChange(clampZoom(next / 100)))
           }
+          onCommit={(next) => onZoomChange(clampZoom(next / 100))}
           aria-label="Zoom"
           className="ps-range w-full disabled:opacity-40"
         />
@@ -805,18 +814,25 @@ export default function ControlPanel(props: ControlPanelProps) {
           <>
             <div className="ps-groove my-0.5" />
             <Row label="Opacity">
-              <input
+              <RangeInput
                 id="opacity"
-                type="range"
                 min={0}
                 max={100}
                 value={opacity}
-                onChange={(e) => onOpacityChange(Number(e.target.value))}
+                onLive={(next) => liveOpacity?.set(next)}
+                onCommit={(next) => {
+                  // Committed first, cleared second, in one batch: the
+                  // viewer never shows the old value in between
+                  onOpacityChange(next);
+                  liveOpacity?.set(null);
+                }}
                 className="ps-range min-w-0 flex-1"
+                readout={(shown) => (
+                  <span className="w-9 shrink-0 text-right font-mono text-[11px] text-ps-300 tabular-nums">
+                    {shown}%
+                  </span>
+                )}
               />
-              <span className="w-9 shrink-0 text-right font-mono text-[11px] text-ps-300 tabular-nums">
-                {opacity}%
-              </span>
             </Row>
             <div className="grid grid-cols-3 gap-1">
               {OPACITY_PRESETS.map((preset) => (

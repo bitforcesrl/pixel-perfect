@@ -33,6 +33,7 @@ function Dialog({ projectName, onExport, onCancel }: ExportProjectDialogProps) {
         <p className="text-[12px] leading-5 text-ink-300">
           Packs <span className="font-medium text-ink-100">{projectName}</span>{' '}
           into a ZIP: pages, URLs, notes, settings, captures and Figma exports.
+          Site passwords are not included.
         </p>
 
         <label className="flex cursor-pointer items-start gap-2.5 rounded border border-ink-700 bg-ink-850 px-3 py-2.5">

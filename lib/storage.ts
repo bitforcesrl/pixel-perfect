@@ -1,4 +1,9 @@
 import type { ScreenshotResult } from './validation';
+import {
+  isQuotaError,
+  reportQuotaExceeded,
+  requestQuotaCheck,
+} from './storage-quota';
 import { VIEWPORT_KEYS, type ViewportKey } from './viewports';
 import {
   DEFAULT_SETTINGS,
@@ -167,10 +172,18 @@ async function patchSlot(
   });
 }
 
+/**
+ * Run a write without letting a storage failure break the app. A write that
+ * lands asks for a fresh quota estimate; one refused for lack of room is
+ * reported straight away, so the workspace can tell the user — the generic
+ * console warning alone would leave them believing their work was saved.
+ */
 async function swallow(action: () => Promise<void>): Promise<void> {
   try {
     await action();
+    requestQuotaCheck();
   } catch (err) {
+    if (isQuotaError(err)) reportQuotaExceeded();
     warnOnce(err);
   }
 }

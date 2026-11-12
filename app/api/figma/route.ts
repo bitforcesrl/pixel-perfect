@@ -567,7 +567,17 @@ async function sliceRender(
   };
 }
 
-/** Stream a render through, for a browser that cannot fetch it cross-origin. */
+/** What a Figma render may come back as; anything else is not passed on. */
+const RENDER_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
+
+/**
+ * Stream a render through, for a browser that cannot fetch it cross-origin.
+ *
+ * The bytes are served from this app's own origin, so they are only passed
+ * on as an image: the upstream type must be one of {@link RENDER_TYPES}, the
+ * browser is told not to sniff it, and a sandboxing CSP keeps it inert even if
+ * it is opened on its own.
+ */
 async function proxyRender(raw: string): Promise<Response> {
   let url: URL;
   try {
@@ -578,17 +588,39 @@ async function proxyRender(raw: string): Promise<Response> {
   if (url.protocol !== 'https:' || !RENDER_HOST.test(url.hostname)) {
     return Response.json({ error: 'Not a Figma render' }, { status: 400 });
   }
-  const res = await fetch(url, { cache: 'no-store' });
+  let res: Response;
+  try {
+    res = await fetch(url, { cache: 'no-store', redirect: 'error' });
+  } catch {
+    return Response.json(
+      { error: "Could not reach Figma's render storage" },
+      { status: 502 },
+    );
+  }
   if (!res.ok || !res.body) {
     return Response.json(
       { error: `Could not download the render (${res.status})` },
       { status: 502 },
     );
   }
+  // "image/png; charset=…" and upper case both count as image/png
+  const type = (res.headers.get('content-type') ?? 'image/png')
+    .split(';')[0]
+    .trim()
+    .toLowerCase();
+  if (!RENDER_TYPES.has(type)) {
+    await res.body.cancel().catch(() => {});
+    return Response.json(
+      { error: 'Figma answered with something that is not an image' },
+      { status: 502 },
+    );
+  }
   return new Response(res.body, {
     headers: {
-      'Content-Type': res.headers.get('content-type') ?? 'image/png',
+      'Content-Type': type,
       'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      'Content-Security-Policy': "default-src 'none'; sandbox",
     },
   });
 }

@@ -7,7 +7,10 @@ export interface ScreenshotRequest {
 }
 
 export interface ScreenshotResult {
-  /** data:image/png;base64,... URL of the full-page screenshot */
+  /**
+   * Data URL of the full-page screenshot: PNG from a local browser, WebP
+   * (JPEG for a very tall page) from the remote one
+   */
   image: string;
   /** full-page width in CSS pixels */
   width: number;

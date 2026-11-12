@@ -2,12 +2,15 @@ import { readAsDataUrl } from './image';
 import {
   createPage,
   createProject,
+  MAX_PAGES,
   pageIds,
   sanitizeFigmaUrls,
+  sanitizeName,
   type Project,
 } from './projects';
 import { sanitizeSettings } from './settings';
 import {
+  deleteProjectData,
   loadHistory,
   loadNotes,
   loadPreviews,
@@ -36,9 +39,11 @@ import { createZip, readZip, type ZipEntry } from './zip';
  * as a folder of its strips — one ordinary WebP each — and packed back into
  * one container on import.
  *
- * Importing never overwrites: the archive becomes a new project with new ids,
- * so importing the same file twice gives two projects, and nothing already in
- * this browser is touched.
+ * Importing is two steps: `readProjectArchive` opens and checks the file
+ * without writing anything, so the caller can ask before it replaces a project
+ * of the same name; `writeProjectArchive` then unpacks it as a new project
+ * with new ids. Site passwords never leave this browser: exports leave them
+ * out, so a ZIP can be passed around without handing over a store's password.
  */
 
 const FORMAT = 'pixel-perfect-project';
@@ -87,7 +92,11 @@ type ManifestSnapshot = ImageRef & {
 interface ManifestPage {
   name: string;
   url: string;
-  sitePassword: string;
+  /**
+   * Written by exports made before passwords were kept out of the archive.
+   * Still read back, so those files import the way they always did.
+   */
+  sitePassword?: string;
   /** Absent from exports made before pages carried Figma links. */
   figmaUrls?: Record<ViewportKey, string>;
   createdAt: number;
@@ -241,7 +250,8 @@ export async function exportProject(
     pages.push({
       name: page.name,
       url: page.url,
-      sitePassword: page.sitePassword,
+      // The site password is deliberately left out: a ZIP is passed around,
+      // and a store's password should not travel with it
       figmaUrls: page.figmaUrls,
       createdAt: page.createdAt,
       notes,
@@ -274,16 +284,27 @@ function num(value: unknown, fallback = 0): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
+/** An export opened and checked, nothing written yet. */
+export interface ProjectArchive {
+  /** The project's name as it will appear in the list. */
+  name: string;
+  /** Pages in the file. */
+  pageCount: number;
+  /** Pages past {@link MAX_PAGES} that the import leaves out. */
+  droppedPages: number;
+  /** @internal what `writeProjectArchive` unpacks */
+  manifest: Partial<Manifest>;
+  /** @internal the archive's files, by path */
+  files: Map<string, Uint8Array<ArrayBuffer>>;
+}
+
 /**
- * Unpack an export into a new project, writing its work to storage first.
- *
- * The project itself is returned for the caller to add to the list: until it
- * is, the records written here belong to nothing, so a failure halfway leaves
- * no half-imported project behind.
+ * Open an export and check it is one this version can read. Nothing is
+ * written, so the caller can still decide not to import it.
  */
-export async function importProject(file: Blob): Promise<Project> {
-  const archive = await readZip(file);
-  const rawManifest = archive.get(MANIFEST);
+export async function readProjectArchive(file: Blob): Promise<ProjectArchive> {
+  const files = await readZip(file);
+  const rawManifest = files.get(MANIFEST);
   let manifest: Partial<Manifest> | null = null;
   try {
     if (rawManifest) {
@@ -294,6 +315,7 @@ export async function importProject(file: Blob): Promise<Project> {
   }
   if (
     !manifest ||
+    typeof manifest !== 'object' ||
     manifest.format !== FORMAT ||
     !Array.isArray(manifest.pages)
   ) {
@@ -302,9 +324,31 @@ export async function importProject(file: Blob): Promise<Project> {
   if (num(manifest.version) > VERSION) {
     throw new Error('This export comes from a newer version of Pixel Perfect');
   }
+  const pageCount = manifest.pages.length;
+  return {
+    name: sanitizeName(str(manifest.project?.name, 'Imported')),
+    pageCount,
+    droppedPages: Math.max(0, pageCount - MAX_PAGES),
+    manifest,
+    files,
+  };
+}
+
+/**
+ * Unpack a checked export into a new project, writing its work to storage
+ * first. Only the first {@link MAX_PAGES} pages are kept.
+ *
+ * The project itself is returned for the caller to add to the list. If any
+ * write fails part way, everything already written for it is deleted again
+ * before the error is passed on, so a failed import leaves nothing behind.
+ */
+export async function writeProjectArchive(
+  archive: ProjectArchive,
+): Promise<Project> {
+  const { manifest, files } = archive;
 
   const fileOf = (file: unknown, type: string): Blob => {
-    const data = typeof file === 'string' ? archive.get(file) : undefined;
+    const data = typeof file === 'string' ? files.get(file) : undefined;
     if (!data) throw new Error(`The export is missing ${str(file, 'a file')}`);
     return new Blob([data], { type });
   };
@@ -329,8 +373,13 @@ export async function importProject(file: Blob): Promise<Project> {
     });
   };
 
-  const project = createProject(str(manifest.project?.name, 'Imported'));
-  const rawPages = manifest.pages as Partial<ManifestPage>[];
+  const project = createProject(archive.name);
+  // A malformed entry (null, a number) becomes an empty page rather than a crash
+  const rawPages = (manifest.pages ?? [])
+    .slice(0, MAX_PAGES)
+    .map((raw) =>
+      raw && typeof raw === 'object' ? raw : {},
+    ) as Partial<ManifestPage>[];
   project.pages = rawPages.map((raw) => ({
     ...createPage(str(raw.name, 'Page'), str(raw.url)),
     sitePassword: str(raw.sitePassword),
@@ -339,43 +388,60 @@ export async function importProject(file: Blob): Promise<Project> {
   }));
   if (project.pages.length === 0) project.pages = [createPage('Home')];
 
-  await saveSettings(project.id, sanitizeSettings(manifest.settings));
+  try {
+    await saveSettings(project.id, sanitizeSettings(manifest.settings));
 
-  for (const [index, raw] of rawPages.entries()) {
-    const pageId = project.pages[index].id;
-    if (raw.notes) await saveNotes(pageId, str(raw.notes));
-    if (raw.preview) await savePreview(pageId, str(raw.preview));
+    for (const [index, raw] of rawPages.entries()) {
+      const pageId = project.pages[index].id;
+      if (raw.notes) await saveNotes(pageId, str(raw.notes));
+      if (raw.preview) await savePreview(pageId, str(raw.preview));
 
-    for (const [key, slot] of Object.entries(raw.slots ?? {})) {
-      if (slot?.screenshot) {
-        await saveScreenshot(pageId, key, {
-          image: await readAsDataUrl(blobOf(slot.screenshot)),
-          width: num(slot.screenshot.width),
-          height: num(slot.screenshot.height),
+      for (const [key, slot] of Object.entries(raw.slots ?? {})) {
+        if (slot?.screenshot) {
+          await saveScreenshot(pageId, key, {
+            image: await readAsDataUrl(blobOf(slot.screenshot)),
+            width: num(slot.screenshot.width),
+            height: num(slot.screenshot.height),
+          });
+        }
+        if (slot?.figma) {
+          await saveFigma(
+            pageId,
+            key,
+            blobOf(slot.figma),
+            str(slot.figma.fileName, 'figma'),
+          );
+        }
+      }
+
+      for (const snapshot of raw.snapshots ?? []) {
+        await saveHistoryEntry({
+          projectId: project.id,
+          pageId,
+          viewport: str(snapshot.viewport),
+          blob: blobOf(snapshot),
+          fileName: str(snapshot.fileName, 'snapshot'),
+          offsetY: num(snapshot.offsetY),
+          savedAt: num(snapshot.savedAt, Date.now()),
         });
       }
-      if (slot?.figma) {
-        await saveFigma(
-          pageId,
-          key,
-          blobOf(slot.figma),
-          str(slot.figma.fileName, 'figma'),
-        );
-      }
     }
-
-    for (const snapshot of raw.snapshots ?? []) {
-      await saveHistoryEntry({
-        projectId: project.id,
-        pageId,
-        viewport: str(snapshot.viewport),
-        blob: blobOf(snapshot),
-        fileName: str(snapshot.fileName, 'snapshot'),
-        offsetY: num(snapshot.offsetY),
-        savedAt: num(snapshot.savedAt, Date.now()),
-      });
-    }
+  } catch (err) {
+    // Nothing points at these records yet: drop them, so a half import does
+    // not sit in storage for good. A failure here is secondary to `err`.
+    await deleteProjectData(project.id, pageIds(project)).catch((cleanup) => {
+      console.warn(
+        'pixel-perfect: could not clean up a failed import',
+        cleanup,
+      );
+    });
+    throw err;
   }
 
   return project;
+}
+
+/** Read and unpack in one go, for callers with nothing to ask in between. */
+export async function importProject(file: Blob): Promise<Project> {
+  return writeProjectArchive(await readProjectArchive(file));
 }

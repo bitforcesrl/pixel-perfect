@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useDraft } from './useDraft';
 import {
   annotationId,
   clampGuide,
@@ -61,6 +62,11 @@ export default function AnnotationLayer({
   const [drawing, setDrawing] = useState<Stroke | null>(null);
   const drawingRef = useRef<Stroke | null>(null);
   const draggingRef = useRef<string | null>(null);
+  // The guide being dragged and where it is, held here until release so the
+  // workspace is not re-rendered for every pixel of the drag
+  const guideDraft = useDraft<{ id: string; pos: number } | null>(null);
+  const posOf = (guide: Guide) =>
+    guideDraft.value?.id === guide.id ? guideDraft.value.pos : guide.pos;
 
   const localPoint = (e: React.PointerEvent): { x: number; y: number } => {
     const rect = rootRef.current?.getBoundingClientRect();
@@ -121,14 +127,16 @@ export default function AnnotationLayer({
     if (!rect) return;
     const pos =
       guide.axis === 'x' ? e.clientX - rect.left : e.clientY - rect.top;
-    onMoveGuide(
-      guide.id,
-      clampGuide(pos, guide.axis === 'x' ? rect.width : rect.height),
-    );
+    guideDraft.set({
+      id: guide.id,
+      pos: clampGuide(pos, guide.axis === 'x' ? rect.width : rect.height),
+    });
   };
 
   const endGuideDrag = () => {
     draggingRef.current = null;
+    const moved = guideDraft.take()?.value;
+    if (moved) onMoveGuide(moved.id, moved.pos);
   };
 
   const painted = drawing ? [...strokes, drawing] : strokes;
@@ -172,7 +180,7 @@ export default function AnnotationLayer({
           <div
             key={guide.id}
             className={`absolute ${vertical ? 'inset-y-0' : 'inset-x-0'}`}
-            style={vertical ? { left: guide.pos } : { top: guide.pos }}
+            style={vertical ? { left: posOf(guide) } : { top: posOf(guide) }}
           >
             <div
               className={`absolute ${
@@ -197,7 +205,7 @@ export default function AnnotationLayer({
                 role="button"
                 tabIndex={0}
                 aria-label={`${vertical ? 'Vertical' : 'Horizontal'} guide at ${Math.round(
-                  guide.pos,
+                  posOf(guide),
                 )}px — arrow keys move it, Delete removes it`}
                 onPointerDown={(e) => startGuideDrag(e, guide)}
                 onPointerMove={(e) => dragGuide(e, guide)}
@@ -226,7 +234,7 @@ export default function AnnotationLayer({
                 style={{ backgroundColor: guide.color }}
               >
                 <span aria-hidden="true">{vertical ? '↔' : '↕'}</span>
-                {Math.round(guide.pos)}
+                {Math.round(posOf(guide))}
                 <button
                   type="button"
                   aria-label="Remove guide"

@@ -9,6 +9,8 @@ export interface ConfirmDialogProps {
   /** What is about to happen, in the plainest words available. */
   message: ReactNode;
   confirmLabel: string;
+  /** The button that does nothing. "Cancel" unless doing nothing has a name. */
+  cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
   /** Red confirm button, for anything that destroys work. */
@@ -36,6 +38,7 @@ function Dialog({
   title,
   message,
   confirmLabel,
+  cancelLabel = 'Cancel',
   onConfirm,
   onCancel,
   danger = false,
@@ -88,7 +91,7 @@ function Dialog({
             autoFocus={passkey === undefined}
             className="rounded border border-ink-700 px-3 py-1.5 text-[11px] text-ink-300 transition-colors hover:border-ink-600 hover:text-ink-100"
           >
-            Cancel
+            {cancelLabel}
           </button>
           <button
             type="button"
