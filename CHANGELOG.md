@@ -16,9 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New brand mark (two ink discs out of register over a crosshair) in the app menu bar, the site header and the app icons.
 - Installable app (PWA): web app manifest, icons and a service worker, so Pixel Perfect can be installed as a desktop app.
 - "New version available" toast: open tabs check `/api/version` on load, every 10 minutes and when they regain focus, and offer a one-click update.
+- Upload buttons in the Layers panel for Figma exports and site screenshots, with automatic placement on the right viewport.
 
 ### Changed
 
+- Figma exports at 2x now land on the correct viewport.
 - The service worker never pins a tab to an old build: pages are network-first, only content-hashed `/_next/static` files are cached, and updating clears the worker and its caches before reloading.
 
 ## [0.2.0-beta.1] - 2026-11-11
