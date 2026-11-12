@@ -46,6 +46,10 @@ export interface ControlPanelProps {
   /** Every viewport's site capture */
   onCaptureAllSites: () => void;
   onExportFigma: () => void;
+  /** Open the picker for Figma exports — routed to viewports by width */
+  onUploadFigma: () => void;
+  /** Open the picker for site screenshots — routed to viewports by width */
+  onUploadSite: () => void;
   onRemoveFigma: () => void;
   onRemoveScreenshot: () => void;
   opacity: number; // 0-100
@@ -224,6 +228,24 @@ function TrashIcon({ className }: { className: string }) {
   );
 }
 
+/** An arrow rising out of a tray: upload files from disk. */
+function UploadIcon({ className }: { className: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 15V3M7 8l5-5 5 5M4 15v4a2 2 0 002 2h12a2 2 0 002-2v-4" />
+    </svg>
+  );
+}
+
 /**
  * One layer's state: its ink when present, red when the capture failed, a
  * spinner while it is being fetched, grey while there is nothing yet.
@@ -277,6 +299,8 @@ export default function ControlPanel(props: ControlPanelProps) {
     onExportAllFigma,
     onCaptureAllSites,
     onExportFigma,
+    onUploadFigma,
+    onUploadSite,
     onRemoveFigma,
     onRemoveScreenshot,
     opacity,
@@ -424,6 +448,17 @@ export default function ControlPanel(props: ControlPanelProps) {
                   >
                     All
                   </button>
+                  {/* Upload: any number of exports, each landing on the
+                      viewport its width matches at 1x or 2x */}
+                  <button
+                    type="button"
+                    onClick={onUploadFigma}
+                    title="Upload Figma exports — each goes to the viewport its width matches at 1x or 2x (I)"
+                    aria-label="Upload Figma exports"
+                    className={`${BTN} px-1.5 py-1 text-press-magenta`}
+                  >
+                    <UploadIcon className="h-3 w-3" />
+                  </button>
                   <button
                     type="button"
                     onClick={onRemoveFigma}
@@ -495,6 +530,17 @@ export default function ControlPanel(props: ControlPanelProps) {
                       All
                     </button>
                   )}
+                  {/* Upload: screenshots taken elsewhere, each landing on the
+                      viewport its width matches at 1x or 2x */}
+                  <button
+                    type="button"
+                    onClick={onUploadSite}
+                    title="Upload site screenshots — each goes to the viewport its width matches at 1x or 2x"
+                    aria-label="Upload site screenshots"
+                    className={`${BTN} px-1.5 py-1 text-press-cyan`}
+                  >
+                    <UploadIcon className="h-3 w-3" />
+                  </button>
                   <button
                     type="button"
                     onClick={onRemoveScreenshot}

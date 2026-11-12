@@ -54,7 +54,7 @@ import {
   toCompactDataUrl,
   toThumbnailDataUrl,
 } from '@/lib/encode';
-import { readAsDataUrl, readImageSize } from '@/lib/image';
+import { readAsDataUrl, readImageSize, type ImageSize } from '@/lib/image';
 import { bottomAlignOffset, clampOffset } from '@/lib/offset';
 import { prewarmTiles, releaseTiles } from '@/lib/tiles';
 import { inferDeviceScale } from '@/lib/device-scale';
@@ -110,7 +110,7 @@ import {
   stepZoom,
 } from '@/lib/zoom';
 import {
-  assignViewport,
+  assignViewportByDensity,
   createSlots,
   fillSlots,
   firstReadyViewport,
@@ -323,6 +323,8 @@ export default function Workspace({
   };
   // The I accelerator opens the same picker the drop zone uses
   const figmaInputRef = useRef<HTMLInputElement>(null);
+  // The Layers panel's site upload: screenshots routed to viewports by width
+  const siteInputRef = useRef<HTMLInputElement>(null);
   // File ▸ Import project picks a ZIP made by File ▸ Export project
   const projectInputRef = useRef<HTMLInputElement>(null);
   // A modal dialog owns the keyboard while it is up — Escape closes it, and
@@ -597,7 +599,10 @@ export default function Workspace({
     setZoom(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, fit)));
   };
 
-  /** Route each export to a viewport by its pixel width. Last file wins. */
+  /**
+   * Route each export to a viewport by its pixel width, read at 1x or 2x
+   * (`assignViewportByDensity`). Last file wins.
+   */
   const handleFigmaFilesChange = async (files: File[]) => {
     const assigned = new Map<
       ViewportKey,
@@ -613,7 +618,7 @@ export default function Workspace({
       let src = original;
       try {
         const { width } = await readImageSize(original);
-        const key = assignViewport(width, routingPresets);
+        const key = assignViewportByDensity(width, routingPresets);
         // Claimed as soon as the viewport is known: a drop on the same
         // viewport made while this file is still encoding must win over it
         const isLatest = nextDrop(`figma:${key}`);
@@ -790,10 +795,67 @@ export default function Workspace({
    * same size as a capture and every offset keeps counting CSS px.
    */
   const handleScreenshotDrop = async (key: ViewportKey, file: File) => {
+    const landed = await landScreenshotFile(key, file);
+    if (landed) setUploadError(null);
+    else setUploadError(`Could not read ${file.name}`);
+  };
+
+  /**
+   * Upload site screenshots from the picker, each routed to a viewport by its
+   * width read at 1x or 2x (`assignViewportByDensity`) — the same rule the
+   * Figma picker follows. Several files for one viewport: the last one wins.
+   */
+  const handleScreenshotFilesChange = async (files: File[]) => {
+    // Like Figma routing, every viewport counts — a 750 px shot is mobile
+    // even while mobile is switched off in settings
+    const routingPresets = allPresets(settings);
+    const routed = new Map<ViewportKey, { file: File; size: ImageSize }>();
+    const unreadable: string[] = [];
+
+    // Measure first, land after: a file superseded on its viewport is never
+    // encoded at all
+    for (const file of files) {
+      const url = URL.createObjectURL(file);
+      try {
+        const size = await readImageSize(url);
+        routed.set(assignViewportByDensity(size.width, routingPresets), {
+          file,
+          size,
+        });
+      } catch {
+        unreadable.push(file.name);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    // One at a time: each re-encode holds a full-size bitmap in memory
+    for (const [key, { file, size }] of routed) {
+      if (!(await landScreenshotFile(key, file, size))) {
+        unreadable.push(file.name);
+      }
+    }
+
+    setUploadError(
+      unreadable.length > 0 ? `Could not read ${unreadable.join(', ')}` : null,
+    );
+  };
+
+  /**
+   * Read, re-encode and land one screenshot file on `key`. `known` skips the
+   * size read when the caller already measured the file. Resolves false when
+   * the file could not be read; a file superseded by a later drop on the same
+   * viewport still resolves true — nothing went wrong, it just lost the race.
+   */
+  const landScreenshotFile = async (
+    key: ViewportKey,
+    file: File,
+    known?: ImageSize,
+  ): Promise<boolean> => {
     const isLatest = nextDrop(`site:${key}`);
     const original = URL.createObjectURL(file);
     try {
-      const natural = await readImageSize(original);
+      const natural = known ?? (await readImageSize(original));
       const cssWidth =
         allPresets(settings).find((preset) => preset.key === key)?.width ?? 0;
       const scale = inferDeviceScale(natural.width, cssWidth);
@@ -802,7 +864,7 @@ export default function Workspace({
       const image =
         (await toCompactDataUrl(original)) ?? (await readAsDataUrl(file));
       URL.revokeObjectURL(original);
-      if (!isLatest()) return;
+      if (!isLatest()) return true;
       const screenshot = {
         image,
         width: Math.round(natural.width / scale),
@@ -814,10 +876,10 @@ export default function Workspace({
       void saveScreenshot(pageId, key, screenshot);
       void refreshPreview(image);
       setPreferredViewport(key);
-      setUploadError(null);
+      return true;
     } catch {
       URL.revokeObjectURL(original);
-      setUploadError(`Could not read ${file.name}`);
+      return false;
     }
   };
 
@@ -2064,6 +2126,21 @@ export default function Workspace({
         className="hidden"
       />
 
+      {/* The Layers panel's site upload — any number of screenshots, each
+          routed to the viewport its width belongs to */}
+      <input
+        ref={siteInputRef}
+        type="file"
+        multiple
+        accept={IMAGE_ACCEPT}
+        onChange={(e) => {
+          const files = Array.from(e.target.files ?? []);
+          if (files.length > 0) void handleScreenshotFilesChange(files);
+          e.target.value = '';
+        }}
+        className="hidden"
+      />
+
       {/* File ▸ Import project — a ZIP from File ▸ Export project */}
       <input
         ref={projectInputRef}
@@ -2245,6 +2322,8 @@ export default function Workspace({
             onExportFigma={() =>
               activeViewport && handleFigmaExport(activeViewport)
             }
+            onUploadFigma={() => figmaInputRef.current?.click()}
+            onUploadSite={() => siteInputRef.current?.click()}
             onRemoveFigma={() =>
               activeViewport && handleRemoveFigma(activeViewport)
             }

@@ -99,6 +99,47 @@ export function assignViewport(
   ).key;
 }
 
+/**
+ * The pixel densities an uploaded image is assumed to have been exported or
+ * captured at: plain 1x, or the 2x that Figma exports and retina screenshots
+ * default to. Order matters — on a tie the 1x reading wins.
+ */
+export const UPLOAD_SCALES = [1, 2] as const;
+
+/**
+ * Which viewport an uploaded image belongs to, reading its width at every
+ * density in `scales`.
+ *
+ * Unlike `assignViewport`, a 750 px image is not "nearest to 768, so tablet":
+ * at 2x it is exactly a 375 px layout, so it lands on mobile. Each preset is
+ * scored by the smallest gap, in CSS px, between its width and the image's
+ * width divided by any of the scales; the lowest score wins, ties going to
+ * the earlier scale and then to the earlier preset.
+ *
+ * `presets` must not be empty; `sanitizeSettings` guarantees at least one
+ * enabled viewport.
+ */
+export function assignViewportByDensity(
+  width: number,
+  presets: ViewportPreset[],
+  scales: readonly number[] = UPLOAD_SCALES,
+): ViewportKey {
+  let best = presets[0];
+  let bestGap = Infinity;
+  for (const scale of scales) {
+    const cssWidth = width / scale;
+    for (const preset of presets) {
+      const gap = Math.abs(preset.width - cssWidth);
+      // Strictly smaller: an equal gap keeps the lower scale's match
+      if (gap < bestGap) {
+        best = preset;
+        bestGap = gap;
+      }
+    }
+  }
+  return best.key;
+}
+
 export function createSlot(): ViewportSlot {
   return {
     screenshot: null,
