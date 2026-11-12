@@ -8,6 +8,7 @@ import { bottomAlignOffset, clampOffset } from '@/lib/offset';
 import type { HistoryEntry } from '@/lib/storage';
 import { BLEND_MODES, type BlendMode, type ViewMode } from '@/lib/types';
 import { clampZoom, MAX_ZOOM, MIN_ZOOM, ZOOM_STEPS } from '@/lib/zoom';
+import { docsHref, PANEL_DOCS, type PanelTitle } from '@/lib/docs';
 import {
   type ViewportKey,
   type ViewportPreset,
@@ -132,8 +133,34 @@ const SWATCH =
   'h-6 w-8 shrink-0 cursor-pointer rounded border border-ps-700 bg-transparent p-0';
 
 /**
+ * The `?` at the right end of a panel's title bar: opens that panel's section
+ * of the docs in a new tab, so the comparison in progress stays as it is.
+ *
+ * A plain link rather than a script, so it still works when pop-ups from
+ * scripts are blocked, and middle-click or "copy link" behave as expected.
+ */
+function PanelHelpLink({ title }: { title: PanelTitle }) {
+  return (
+    <a
+      href={docsHref(PANEL_DOCS[title])}
+      target="_blank"
+      rel="noopener"
+      aria-label={`Help: ${title} panel`}
+      title={`How the ${title} panel works — opens the docs in a new tab`}
+      className="mr-1.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-ps-500 text-[9px] leading-none font-bold text-ps-400 transition-colors hover:border-ps-300 hover:text-ps-200"
+    >
+      ?
+    </a>
+  );
+}
+
+/**
  * A docked panel, Photoshop style: a title bar you collapse it by, and a body
  * cut off from the one above it by a black seam.
+ *
+ * The title bar holds two controls side by side — the collapse toggle and the
+ * help link — never one inside the other, since a link nested in a button is
+ * invalid HTML and its click would also fold the panel.
  */
 function Panel({
   title,
@@ -141,7 +168,7 @@ function Panel({
   accent,
   dimmed = false,
 }: {
-  title: string;
+  title: PanelTitle;
   children: ReactNode;
   /** A hairline in the layer's ink, so a panel says which plate it drives */
   accent?: string;
@@ -151,27 +178,30 @@ function Panel({
 
   return (
     <section className="shrink-0">
-      <button
-        type="button"
-        onClick={() => setOpen((on) => !on)}
-        aria-expanded={open}
-        className="ps-titlebar flex w-full items-center gap-1.5 px-2 py-1.5 text-left"
-      >
-        <svg
-          className={`h-2.5 w-2.5 shrink-0 text-ps-400 ${open ? '' : '-rotate-90'}`}
-          viewBox="0 0 12 12"
-          fill="currentColor"
-          aria-hidden="true"
+      <div className="ps-titlebar flex items-center">
+        <button
+          type="button"
+          onClick={() => setOpen((on) => !on)}
+          aria-expanded={open}
+          className="flex min-w-0 flex-1 items-center gap-1.5 px-2 py-1.5 text-left"
         >
-          <path d="M2 4l4 5 4-5z" />
-        </svg>
-        <span className="text-[10px] font-semibold tracking-[0.14em] text-ps-200 uppercase">
-          {title}
-        </span>
-        {accent && (
-          <span className={`ml-1 h-px w-6 ${accent}`} aria-hidden="true" />
-        )}
-      </button>
+          <svg
+            className={`h-2.5 w-2.5 shrink-0 text-ps-400 ${open ? '' : '-rotate-90'}`}
+            viewBox="0 0 12 12"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M2 4l4 5 4-5z" />
+          </svg>
+          <span className="text-[10px] font-semibold tracking-[0.14em] text-ps-200 uppercase">
+            {title}
+          </span>
+          {accent && (
+            <span className={`ml-1 h-px w-6 ${accent}`} aria-hidden="true" />
+          )}
+        </button>
+        <PanelHelpLink title={title} />
+      </div>
       {open && (
         <div
           className={`flex flex-col gap-3 px-2.5 py-3 ${
@@ -411,7 +441,7 @@ export default function ControlPanel(props: ControlPanelProps) {
                   </span>
                 </div>
 
-                {/* The page's Figma frame for this viewport, rendered at 2x by
+                {/* The page's Figma frame for this viewport, rendered by
                     Figma itself — the link is set under File ▸ Pages */}
                 <Row label="Figma">
                   <LayerMark
@@ -430,7 +460,7 @@ export default function ControlPanel(props: ControlPanelProps) {
                         ? `No Figma frame link for ${preset.label} — set one under File ▸ Pages`
                         : figmaBusy
                           ? 'Figma is rendering this frame'
-                          : `Capture the ${preset.label} Figma frame at 2x (M)`
+                          : `Capture the ${preset.label} Figma frame (⇧M)`
                     }
                     className={`${BTN} flex-1 py-1`}
                   >
@@ -442,7 +472,7 @@ export default function ControlPanel(props: ControlPanelProps) {
                     disabled={layers.figmaAllBlockedReason !== null}
                     title={
                       layers.figmaAllBlockedReason ??
-                      'Capture the Figma frame of every viewport at 2x (⇧M)'
+                      'Capture the Figma frame of every viewport — asks before replacing existing exports'
                     }
                     className={`${BTN} flex-1 py-1`}
                   >
@@ -489,7 +519,7 @@ export default function ControlPanel(props: ControlPanelProps) {
                       disabled={blocked !== null}
                       title={
                         blocked ??
-                        `Capture ${preset.label} at ${preset.width}×${preset.height} with Browserless (C)`
+                        `Capture ${preset.label} at ${preset.width}×${preset.height} with Browserless (⇧C)`
                       }
                       className={`${BTN} flex-1 py-1`}
                     >
@@ -503,7 +533,7 @@ export default function ControlPanel(props: ControlPanelProps) {
                       disabled={blocked !== null}
                       title={
                         blocked ??
-                        `Capture ${preset.label} with the browser on this machine (L)`
+                        `Capture ${preset.label} with the browser on this machine (⇧L)`
                       }
                       className={`${BTN} flex-1 py-1`}
                     >

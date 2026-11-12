@@ -12,7 +12,9 @@
 
 Pixel Perfect is a web app for **design QA**. For each page and each viewport (mobile, tablet, desktop or your own sizes) it stacks a screenshot of the website over the matching Figma frame, then gives you four ways to compare them, plus tools to align, measure, annotate and share what you find.
 
-Start with two images dragged onto the canvas. Add a Figma token and the design frames are fetched for you. Run it locally and the site is captured for you too, with Playwright.
+Start with two images dragged onto the canvas. Add a Figma token and the design frames are fetched for you. Add a Browserless key, or run it on your machine, and the site is captured for you too.
+
+📖 **User guide:** the app ships its own documentation at **`/docs`**, with screenshots of every panel. Each panel's `?` icon opens its section.
 
 💡 **Got an idea or a feature you're missing?** [Propose it in Discussions](https://github.com/bitforcesrl/pixel-perfect/discussions/new?category=feature-request) and vote on the ones you'd like to see next.
 
@@ -25,6 +27,7 @@ Start with two images dragged onto the canvas. Add a Figma token and the design 
 - [Three ways to use it](#three-ways-to-use-it)
 - [Features](#features)
 - [Core concepts](#core-concepts)
+- [Documentation](#documentation)
 - [Using the hosted version](#using-the-hosted-version)
 - [Running it locally](#running-it-locally)
 - [Configuration](#configuration)
@@ -56,9 +59,9 @@ Pixel Perfect keeps the whole loop in one place:
   - **Overlay** with `difference` blending for 1px offsets and color shifts;
   - **Tap** for flipping between the two to spot changes in copy, icons or spacing;
   - **Side by side** with synced scrolling for long pages and layout rhythm.
-- **No manual resizing or exporting.** One key captures the page at 375, 768 or 1440 px (or any viewport you define), full-page. Another renders the Figma frame at 2x straight from the Figma API.
+- **No manual resizing or exporting.** One click captures the page at 375, 768 or 1440 px (or any viewport you define), full-page. Another renders the Figma frame straight from the Figma API, at a scale that follows the viewport width (2x on mobile, down to 1x on desktop).
 - **Works on `localhost`.** Compare your branch while you build it, before it's deployed, even on pages behind a login.
-- **Bug reports with full context.** A tester sends you a ZIP with captures, Figma frames, guides, drawings and notes, and you open it exactly as they left it.
+- **Bug reports with full context.** A tester sends you a ZIP with captures, Figma frames, snapshots and notes, and you open it exactly as they left it.
 
 ### For QA testers
 
@@ -72,11 +75,11 @@ Pixel Perfect keeps the whole loop in one place:
 
 ## Three ways to use it
 
-| Level                         | Figma layer                 | Site layer                             | Needs                           |
-| ----------------------------- | --------------------------- | -------------------------------------- | ------------------------------- |
-| **1. Drag & drop** (base)     | Drop a PNG/JPEG export      | Drop a PNG/JPEG screenshot             | Nothing: works anywhere         |
-| **2. Figma API**              | Fetched automatically at 2x | Drop a screenshot                      | A Figma personal access token   |
-| **3. Local, fully automatic** | Fetched automatically at 2x | Captured automatically with Playwright | The app running on your machine |
+| Level                     | Figma layer           | Site layer                                      | Needs                                         |
+| ------------------------- | --------------------- | ----------------------------------------------- | --------------------------------------------- |
+| **1. Drag & drop** (base) | Drop an image export  | Drop a screenshot                               | Nothing: works anywhere                       |
+| **2. Figma API**          | Fetched automatically | Drop a screenshot                               | A Figma personal access token                 |
+| **3. Fully automatic**    | Fetched automatically | Captured automatically (Browserless or locally) | A Browserless key, or the app on your machine |
 
 You can mix them freely: a layer you drop and a layer the app fetched behave exactly the same.
 
@@ -87,15 +90,15 @@ You can mix them freely: a layer you drop and a layer the app fetched behave exa
 | Area                 | What it does                                                                                                                                                                                                                                     |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Drag & drop**      | Drop images on the canvas (left half = Figma, right half = site) or on a viewport tab, split the same way. PNG, JPEG, WebP, AVIF, GIF and BMP are accepted; a retina screenshot is recognised by its width and shown at the viewport's CSS size. |
-| **Figma export**     | Renders a frame at 2x through the Figma REST API, for one viewport (`M`) or all of them (`⇧M`).                                                                                                                                                  |
-| **Site capture**     | Full-page screenshots at each viewport's exact width with Playwright, when running locally.                                                                                                                                                      |
+| **Figma export**     | Renders a frame through the Figma REST API (2x on mobile, down to 1x on desktop), for the current viewport (`⇧M`) or all of them (menu or **All**).                                                                                              |
+| **Site capture**     | Full-page screenshots at each viewport's exact width: in the cloud with Browserless, or with Playwright's Firefox when running locally.                                                                                                          |
 | **Projects & pages** | A project holds many pages. Each page has a URL and one Figma link per viewport. Gallery with thumbnails.                                                                                                                                        |
 | **Viewports**        | Mobile, Tablet and Desktop by default. Add, rename, resize or disable them in the settings.                                                                                                                                                      |
-| **Comparison modes** | **Split**, **Overlay** (opacity + `difference`, `normal`, `overlay`, `exclusion` blend modes), **Tap**, **Side by side** (synced scroll).                                                                                                        |
+| **Comparison modes** | **Split**, **Overlay** (opacity + `normal` or `difference` blending), **Tap**, **Side by side** (synced scroll).                                                                                                                                 |
 | **Alignment**        | Pixel vertical offset, align top/bottom, drag the Figma layer, zoom and fit.                                                                                                                                                                     |
 | **Annotations**      | Vertical and horizontal guides, a pen with colors and widths, per-page text notes.                                                                                                                                                               |
 | **History**          | Save Figma exports as named snapshots to compare design versions over time.                                                                                                                                                                      |
-| **Sharing**          | Export/import a whole project as a ZIP: layers, guides, drawings, notes and settings.                                                                                                                                                            |
+| **Sharing**          | Export/import a whole project as a ZIP: layers, snapshots, notes and settings (guides and drawings stay in the session).                                                                                                                         |
 | **Diff map**         | Download the difference image to attach to a ticket.                                                                                                                                                                                             |
 | **Persistence**      | Everything is kept in the browser (IndexedDB). Reload and pick up where you left off.                                                                                                                                                            |
 
@@ -107,6 +110,10 @@ You can mix them freely: a layer you drop and a layer the app fetched behave exa
 - **Layers**: each viewport has two plates, _Figma_ (magenta) and _Site_ (cyan). The **Layers** panel shows the state of each and lets you fetch it again or remove it.
 
 > Data lives **only in the browser you're using**. To move it to another machine or share it, use **File ▸ Export project as ZIP** and **File ▸ Import project from ZIP**.
+
+## Documentation
+
+The full user guide is part of the app, at **`/docs`** on any deployment (and on `http://localhost:7654/docs` locally): projects, pages and their fields, viewports, every way to load the layers (including how to get a Figma token and a Browserless key), each inspector panel, sharing and shortcuts. In the app, the `?` at the right of each panel title and **Help ▸ Documentation** open it in a new tab.
 
 ---
 
@@ -139,7 +146,7 @@ Instead of exporting from Figma by hand, add a Figma token once:
 2. Create a token with the **File content: Read-only** scope.
 3. Paste it when the app asks, or via **Capture ▸ Figma token…**. It is stored only in your browser.
 4. In **File ▸ Pages**, paste each viewport's frame link (right-click the frame in Figma ▸ **Copy link to selection**).
-5. Press **Capture** on the _Figma_ row of the **Layers** panel (`M`), or **All** (`⇧M`) for every viewport.
+5. Press **Capture** on the _Figma_ row of the **Layers** panel (`⇧M`), or **All** for every viewport.
 
 > Figma's image-rendering endpoint is tightly rate limited for _View_ and _Collab_ seats. Use a _Dev_ or _Full_ seat.
 
@@ -166,7 +173,7 @@ capture again, verify
 
 ## Running it locally
 
-Running the app on your own machine unlocks **fully automatic capture**. Configure each page once (URL + Figma links) and the app fetches both layers for every viewport in one go: Figma through its API, the site through a real browser driven by **Playwright**. That includes `localhost`, staging servers on your network and pages behind a login.
+Running the app on your own machine adds **local capture**: the site is shot by a real browser on your machine, driven by **Playwright**, with no Browserless key. That reaches `localhost`, staging servers on your network and pages behind a login, and lets you set the Figma and Browserless keys once for everyone.
 
 ### Requirements
 
@@ -200,16 +207,18 @@ npm run playwright:install   # downloads Firefox for local captures
 
 ### Capture
 
-The _Site_ row in the **Layers** panel always shows the **Cloud** button, which captures with a remote browser at [browserless.io](https://www.browserless.io/): it uses `BROWSERLESS_TOKEN` from `.env` when set, and otherwise asks for your own token, saved in your browser. When the app is opened from `localhost` it also shows the **Local** button, which uses Firefox on your machine (its `L` / `⇧L` shortcuts exist only there):
+The _Site_ row in the **Layers** panel always shows the **Cloud** button, which captures with a remote browser at [browserless.io](https://www.browserless.io/): it uses `BROWSERLESS_TOKEN` from `.env` when set, and otherwise asks for your own token, saved in your browser. When the app is opened from `localhost` it also shows the **Local** button, which uses Firefox on your machine (its `⇧L` shortcut exists only there).
 
-| Action                             | Button                  | Key  | Menu                                          |
-| ---------------------------------- | ----------------------- | ---- | --------------------------------------------- |
-| Capture the site, current viewport | **Cloud**               | `C`  | Capture ▸ Capture _viewport_                  |
-| Capture the site, every viewport   | —                       | `⇧C` | Capture ▸ Capture all enabled viewports       |
-| Capture the site, current viewport | **Local**               | `L`  | Capture ▸ Capture _viewport_ on this machine  |
-| Capture the site, every viewport   | **All**                 | `⇧L` | Capture ▸ Capture all on this machine         |
-| Export Figma, current viewport     | **Capture** (Figma row) | `M`  | Capture ▸ Export _viewport_ Figma frame at 2x |
-| Export Figma, every viewport       | **All** (Figma row)     | `⇧M` | Capture ▸ Export every Figma frame at 2x      |
+Anything that replaces a layer needs **Shift**, so a stray key never overwrites a good capture, and the every-viewport runs have **no key at all**. When an every-viewport run would replace captures or exports already in place, the app asks first.
+
+| Action                             | Button                  | Key  | Menu                                         |
+| ---------------------------------- | ----------------------- | ---- | -------------------------------------------- |
+| Capture the site, current viewport | **Cloud**               | `⇧C` | Capture ▸ Capture _viewport_                 |
+| Capture the site, every viewport   | —                       | —    | Capture ▸ Capture all enabled viewports      |
+| Capture the site, current viewport | **Local**               | `⇧L` | Capture ▸ Capture _viewport_ on this machine |
+| Capture the site, every viewport   | **All**                 | —    | Capture ▸ Capture all on this machine        |
+| Export Figma, current viewport     | **Capture** (Figma row) | `⇧M` | Capture ▸ Export _viewport_ Figma frame      |
+| Export Figma, every viewport       | **All** (Figma row)     | —    | Capture ▸ Export every Figma frame           |
 
 A site capture opens the page at the viewport's exact width, waits for it to load and saves a full-page screenshot. While captures or Figma exports run, the app is locked behind a progress sheet listing every viewport; **Stop** ends the run and keeps what is already done. You can capture:
 
@@ -269,15 +278,21 @@ The image ships with Firefox for captures. To capture a server running on your h
 
 Every variable is optional. See [`.env.example`](.env.example) for details.
 
-| Variable      | Purpose                                                            |
-| ------------- | ------------------------------------------------------------------ |
-| `FIGMA_TOKEN` | A server-wide Figma token. When unset, each user enters their own. |
+| Variable                    | Purpose                                                                                               |
+| --------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `FIGMA_TOKEN`               | A server-wide Figma token. When unset, each user enters their own.                                    |
+| `BROWSERLESS_TOKEN`         | A server-wide Browserless key for cloud captures. When unset, each user enters their own.             |
+| `BROWSERLESS_URL`           | Browserless endpoint (region or self-hosted instance). Default: `wss://production-sfo.browserless.io` |
+| `BROWSERLESS_TIMEOUT_MS`    | Session length allowed by your plan, in ms. Default: `60000` (the free tier)                          |
+| `BROWSERLESS_PROXY`         | Route sessions through a Browserless proxy, e.g. `residential` (paid plans)                           |
+| `BROWSERLESS_PROXY_COUNTRY` | ISO country code for the proxy, e.g. `it`                                                             |
+| `BROWSERLESS_CONCURRENCY`   | Sessions run at once, capped by your plan. Default: `1`                                               |
 
 On a public deployment, leave `FIGMA_TOKEN` and `BROWSERLESS_TOKEN` unset: the instance is open to anyone, and server-wide tokens would be spent by every visitor. Each user then brings their own.
 
 ### Routes and the demo project
 
-- `/` is the public landing page, `/app` the tool.
+- `/` is the public landing page, `/app` the tool, `/docs` the user guide.
 - `/demo` imports `public/demo-project.zip` into the visitor's browser, exactly like **File ▸ Import project from ZIP**, then opens it under `/app`. Coming back to `/demo` replaces the previous demo copy rather than adding another.
 - To update the demo, export a project from the app and overwrite `public/demo-project.zip`.
 
@@ -287,19 +302,20 @@ On a public deployment, leave `FIGMA_TOKEN` and `BROWSERLESS_TOKEN` unset: the i
 
 The full list is under **Help ▸ Keyboard shortcuts**. The main ones:
 
-| Key             | Action                                     |
-| --------------- | ------------------------------------------ |
-| `1` `2` `3` `4` | Split / Overlay / Tap / Side by side       |
-| `I`             | Open Figma exports from disk               |
-| `L` / `⇧L`      | Local site capture: current viewport / all |
-| `M` / `⇧M`      | Figma export: current viewport / all       |
-| `+` `-` `f` `0` | Zoom in / out / fit / 100%                 |
-| `G` / `⇧G`      | Vertical / horizontal guide                |
-| `D` / `Z`       | Pen / undo last stroke                     |
-| `S`             | Save snapshot                              |
-| `E`             | Download diff map                          |
-| `N` / `P`       | New project / pages                        |
-| `B`             | Show/hide the inspector                    |
+| Key             | Action                                                  |
+| --------------- | ------------------------------------------------------- |
+| `1` `2` `3` `4` | Split / Overlay / Tap / Side by side                    |
+| `I`             | Open Figma exports from disk                            |
+| `⇧C`            | Cloud site capture, current viewport                    |
+| `⇧L`            | Local site capture, current viewport (self-hosted only) |
+| `⇧M`            | Figma export, current viewport                          |
+| `+` `-` `f` `0` | Zoom in / out / fit / 100%                              |
+| `G` / `⇧G`      | Vertical / horizontal guide                             |
+| `D` / `Z`       | Pen / undo last stroke                                  |
+| `S`             | Save snapshot                                           |
+| `E`             | Download diff map                                       |
+| `N` / `P`       | New project / pages                                     |
+| `B`             | Show/hide the inspector                                 |
 
 ---
 
@@ -307,7 +323,8 @@ The full list is under **Help ▸ Keyboard shortcuts**. The main ones:
 
 ```text
 app/
-  api/            Server routes: screenshot, figma, auth, login-session
+  api/            Server routes: screenshot, figma, login-session, version
+  (site)/         Public pages: landing (/) and the user guide (/docs)
   components/     React components (Workspace is the smart container; the rest are reusable UI)
 lib/              Pure logic: capture, Figma, IndexedDB storage, ZIP, diff, viewports, feature flags
 scripts/          git hooks (gitleaks pre-commit)

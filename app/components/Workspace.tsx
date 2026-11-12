@@ -108,6 +108,7 @@ import {
 } from '@/lib/settings';
 import type { ScreenshotResult } from '@/lib/validation';
 import { renderScaleFor } from '@/lib/render-scale';
+import { DOCS_PATH, openDocs } from '@/lib/docs';
 import type { Page, Project } from '@/lib/projects';
 import type { BlendMode, ViewMode } from '@/lib/types';
 import {
@@ -167,11 +168,20 @@ function screenshotUsedElsewhere(
  * A dropped file that is not an image — said out loud, so a drop never just
  * does nothing.
  */
+/** An "All" run held back because it would replace layers already there. */
+interface PendingOverwrite {
+  layer: 'site' | 'figma';
+  /** The viewports that would lose their current layer */
+  labels: string[];
+  /** The run itself, started once the user agrees */
+  run: () => void;
+}
+
 function notAnImageError(transfer: DataTransfer | null): string {
   const name = transfer?.files?.[0]?.name;
   return name
-    ? `${name} is not an image — drop a PNG, JPEG or WebP`
-    : 'Drop a PNG, JPEG or WebP image';
+    ? `${name} is not an image — drop a PNG, JPEG, WebP, AVIF, GIF or BMP`
+    : 'Drop a PNG, JPEG, WebP, AVIF, GIF or BMP image';
 }
 /**
  * The view modes, in the order the View menu and the inspector list them.
@@ -314,6 +324,11 @@ export default function Workspace({
   const [confirming, setConfirming] = useState<'page' | 'everything' | null>(
     null,
   );
+  // An "All" run that would replace layers already in place, held until the
+  // user agrees: a bad run (a password page, an error page, a cookie wall)
+  // would otherwise overwrite every good capture at once
+  const [pendingOverwrite, setPendingOverwrite] =
+    useState<PendingOverwrite | null>(null);
   const canvasRef = useRef<HTMLElement>(null);
   // The running capture and Figma runs, so Stop on the overlay can end them
   const captureAbortRef = useRef<AbortController | null>(null);
@@ -1613,6 +1628,32 @@ export default function Workspace({
    * The menu items and the accelerators below both dispatch from here, so a
    * command cannot end up meaning two things depending on how it was reached.
    */
+  /**
+   * Runs an "All" command straight away when it only fills empty viewports,
+   * and asks first when it would replace captures or exports already there.
+   */
+  const runUnlessItOverwrites = (
+    layer: PendingOverwrite['layer'],
+    targets: ViewportPreset[],
+    run: () => void,
+  ) => {
+    const replaced = targets.filter((preset) => {
+      const slot = slotOf(slots, preset.key);
+      return layer === 'site'
+        ? slot.screenshot !== null
+        : slot.figmaSrc !== null;
+    });
+    if (replaced.length === 0) {
+      run();
+      return;
+    }
+    setPendingOverwrite({
+      layer,
+      labels: replaced.map((preset) => preset.label),
+      run,
+    });
+  };
+
   const commands = {
     // Browserless captures — no-ops while the cloud capture is switched off
     captureCurrent: () => {
@@ -1620,14 +1661,23 @@ export default function Workspace({
     },
     captureAll: () => {
       if (CLOUD_CAPTURE_ENABLED && url.trim() !== '' && !isCapturing)
-        handleCaptureAll();
+        runUnlessItOverwrites('site', presets, () => handleCaptureAll());
     },
     captureCurrentLocal: () => {
       if (canCapture && localAvailable) handleCaptureCurrent({ local: true });
     },
     captureAllLocal: () => {
       if (url.trim() !== '' && !isCapturing && localAvailable)
-        handleCaptureAll({ local: true });
+        runUnlessItOverwrites('site', presets, () =>
+          handleCaptureAll({ local: true }),
+        );
+    },
+    // The Layers panel's All: the local browser when there is one
+    captureAllSites: () => {
+      if (canCaptureAllSites && (localAvailable || CLOUD_CAPTURE_ENABLED))
+        runUnlessItOverwrites('site', presets, () =>
+          handleCaptureAll({ local: localAvailable }),
+        );
     },
     browserlessKey: () => {
       setKeyError(null);
@@ -1638,7 +1688,13 @@ export default function Workspace({
         handleFigmaExport(activeViewport);
     },
     figmaAll: () => {
-      if (!isExportingFigma) runFigmaExports(presets);
+      if (!isExportingFigma)
+        runUnlessItOverwrites(
+          'figma',
+          // Only the viewports with a link get a new export
+          presets.filter((preset) => figmaTargetOf(preset.key) !== null),
+          () => runFigmaExports(presets),
+        );
     },
     figmaToken: () => {
       setFigmaTokenError(null);
@@ -1671,6 +1727,15 @@ export default function Workspace({
       if (!isTransferring) projectInputRef.current?.click();
     },
     help: () => setHelpOpen(true),
+    // A new tab keeps this session's guides, strokes and offset alive; when
+    // the browser blocks it, say so instead of doing nothing
+    docs: () => {
+      if (!openDocs()) {
+        setUploadError(
+          `The documentation could not open in a new tab — allow pop-ups for this site, or visit ${DOCS_PATH} directly.`,
+        );
+      }
+    },
     settingsPanel: () => setSettingsModalOpen((open) => !open),
     zoomIn: () => {
       if (isViewing) setZoom((z) => stepZoom(z, 1));
@@ -1739,14 +1804,19 @@ export default function Workspace({
       figmaDialogOpen ||
       exportDialogOpen ||
       helpOpen ||
-      confirming !== null;
+      confirming !== null ||
+      pendingOverwrite !== null;
   });
 
   /**
    * The menu accelerators.
    *
-   * Plain keys, no modifier: this is a canvas app, and every one of them is
-   * printed beside the menu item it fires. Typing anywhere keeps them off.
+   * Plain keys for everything that is harmless or undoable: this is a canvas
+   * app, and every one of them is printed beside the menu item it fires.
+   * Commands that replace a layer — capture, Figma export — need Shift, so a
+   * stray key cannot overwrite a good capture; the "All" variants have no key
+   * at all and are reached from the menu or the Layers panel only.
+   * Typing anywhere keeps them off.
    */
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -1767,11 +1837,11 @@ export default function Workspace({
       };
       const c = commandsRef.current;
       switch (e.key) {
-        // Capture — lower case this viewport, upper case the whole set
-        case 'c':
-          return run(c.captureCurrent);
+        // Capture this viewport — ⇧C. Checked on shiftKey, not just on the
+        // capital letter, so Caps Lock alone never fires it
         case 'C':
-          return run(c.captureAll);
+          if (!e.shiftKey) return;
+          return run(c.captureCurrent);
         // The digits are whatever VIEW_MODES advertises, so the menu's
         // accelerators and the keyboard can never drift apart
         case '1':
@@ -1810,17 +1880,14 @@ export default function Workspace({
           return run(c.downloadDiff);
         case 's':
           return run(c.saveSnapshot);
-        // Capture with the browser on this machine — lower case this viewport,
-        // upper case the whole set, matching c/⇧C
-        case 'l':
-          return run(c.captureCurrentLocal);
+        // Capture this viewport with the browser on this machine — ⇧L
         case 'L':
-          return run(c.captureAllLocal);
-        // Export the Figma frame — this viewport, or every one with a link
-        case 'm':
-          return run(c.figmaCurrent);
+          if (!e.shiftKey) return;
+          return run(c.captureCurrentLocal);
+        // Export this viewport's Figma frame — ⇧M
         case 'M':
-          return run(c.figmaAll);
+          if (!e.shiftKey) return;
+          return run(c.figmaCurrent);
         // The annotation tools
         case 'g':
           return run(c.addGuideV);
@@ -2051,13 +2118,12 @@ export default function Workspace({
                 label: activePreset
                   ? `Capture ${activePreset.label}`
                   : 'Capture this viewport',
-                shortcut: 'C',
+                shortcut: '⇧C',
                 disabled: !canCapture,
                 onSelect: commands.captureCurrent,
               },
               {
                 label: `Capture all ${presets.length} enabled viewports`,
-                shortcut: '⇧C',
                 disabled: url.trim() === '' || isCapturing,
                 onSelect: commands.captureAll,
               },
@@ -2071,13 +2137,12 @@ export default function Workspace({
                 label: activePreset
                   ? `Capture ${activePreset.label} on this machine`
                   : 'Capture this viewport on this machine',
-                shortcut: 'L',
+                shortcut: '⇧L',
                 disabled: !canCapture,
                 onSelect: commands.captureCurrentLocal,
               },
               {
                 label: 'Capture all on this machine',
-                shortcut: '⇧L',
                 disabled: url.trim() === '' || isCapturing,
                 onSelect: commands.captureAllLocal,
               },
@@ -2098,7 +2163,7 @@ export default function Workspace({
           label: activePreset
             ? `Export ${activePreset.label} Figma frame at ${renderScaleFor(activePreset.width)}x`
             : "Export this viewport's Figma frame",
-          shortcut: 'M',
+          shortcut: '⇧M',
           disabled:
             activeViewport === null ||
             figmaTargetOf(activeViewport) === null ||
@@ -2107,7 +2172,6 @@ export default function Workspace({
         },
         {
           label: 'Export every Figma frame',
-          shortcut: '⇧M',
           disabled:
             isExportingFigma ||
             !presets.some((preset) => figmaTargetOf(preset.key) !== null),
@@ -2148,6 +2212,12 @@ export default function Workspace({
           shortcut: '?',
           checked: helpOpen,
           onSelect: commands.help,
+        },
+        { kind: 'separator' },
+        {
+          label: 'Documentation',
+          title: 'Opens the docs in a new tab',
+          onSelect: commands.docs,
         },
       ],
     },
@@ -2210,8 +2280,8 @@ export default function Workspace({
               onManage={() => setPagesOpen(true)}
             />
           }
-          // Capture moved onto the viewport cards, where the size it shoots is
-          // printed next to it — the bar keeps commands, not buttons
+          // Capture lives in the Layers panel and the Capture menu — the bar
+          // keeps commands, not buttons
           actions={
             isCapturing ? (
               <span className="text-[11px] text-press-cyan">
@@ -2398,6 +2468,48 @@ export default function Workspace({
           onCancel={() => setConfirming(null)}
         />
 
+        {/* An "All" run that would replace layers already in place */}
+        <ConfirmDialog
+          open={pendingOverwrite !== null}
+          title={
+            pendingOverwrite?.layer === 'figma'
+              ? 'Replace Figma exports'
+              : 'Replace site captures'
+          }
+          danger
+          confirmLabel={`Replace ${pendingOverwrite?.labels.length ?? 0}`}
+          message={
+            pendingOverwrite?.layer === 'figma' ? (
+              <>
+                <span className="font-medium text-ink-100">
+                  {pendingOverwrite.labels.join(', ')}
+                </span>{' '}
+                already {pendingOverwrite.labels.length === 1 ? 'has' : 'have'}{' '}
+                a Figma export. Exporting again replaces{' '}
+                {pendingOverwrite.labels.length === 1 ? 'it' : 'them'}; save a
+                snapshot in History first to keep the current version.
+              </>
+            ) : pendingOverwrite ? (
+              <>
+                <span className="font-medium text-ink-100">
+                  {pendingOverwrite.labels.join(', ')}
+                </span>{' '}
+                already {pendingOverwrite.labels.length === 1 ? 'has' : 'have'}{' '}
+                a site capture. Capturing again replaces{' '}
+                {pendingOverwrite.labels.length === 1 ? 'it' : 'them'} — if the
+                page answers with something unexpected (a password page, an
+                error, a cookie wall), the current captures are lost.
+              </>
+            ) : null
+          }
+          onConfirm={() => {
+            const run = pendingOverwrite?.run;
+            setPendingOverwrite(null);
+            run?.();
+          }}
+          onCancel={() => setPendingOverwrite(null)}
+        />
+
         {/* Narrow screens stack the inspector above the canvas and scroll the
           pair; from lg the two sit side by side and each scrolls on its own. */}
         <div className="flex min-h-0 w-full flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
@@ -2424,14 +2536,8 @@ export default function Workspace({
                   : null
               }
               onCapture={commands.captureCurrent}
-              onExportAllFigma={() =>
-                canExportAllFigma && runFigmaExports(presets)
-              }
-              onCaptureAllSites={() =>
-                canCaptureAllSites &&
-                (localAvailable || CLOUD_CAPTURE_ENABLED) &&
-                handleCaptureAll({ local: localAvailable })
-              }
+              onExportAllFigma={() => canExportAllFigma && commands.figmaAll()}
+              onCaptureAllSites={commands.captureAllSites}
               onCaptureLocal={commands.captureCurrentLocal}
               onExportFigma={() =>
                 activeViewport && handleFigmaExport(activeViewport)
@@ -2658,8 +2764,8 @@ export default function Workspace({
                           {isCapturing
                             ? `Capturing ${capturingLabels.join(', ')}…`
                             : url.trim() === ''
-                              ? `Give “${page.name}” a URL from the page menu in the title bar, then press Capture on a viewport card. Drop a Figma export here and it becomes this viewport's layer.`
-                              : `Press Capture on a viewport card above, or shoot the whole set from the Capture menu. Drop a Figma export here and it becomes this viewport's layer.`}
+                              ? `Give “${page.name}” a URL under File ▸ Pages, then capture it from the Layers panel. Drop a Figma export on the left half and it becomes this viewport's layer.`
+                              : `Capture the site from the Layers panel, or every viewport from the Capture menu. Drop a Figma export on the left half and it becomes this viewport's layer.`}
                         </p>
                         <ViewportStatusList
                           presets={presets}

@@ -280,3 +280,12 @@ body {
 .plate-tap-b {
   animation: plate-tap 1.6s steps(1) infinite reverse;
 }
+
+/* ── Docs ───────────────────────────────────────────────────────────────
+ * Anchor jumps (sidebar, `?` links from the app) glide on the docs page
+ * only, and only for people who have not asked for less motion.        */
+@media (prefers-reduced-motion: no-preference) {
+  html:has([data-docs]) {
+    scroll-behavior: smooth;
+  }
+}

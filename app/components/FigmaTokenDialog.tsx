@@ -74,8 +74,8 @@ export default function FigmaTokenDialog({
         )}
 
         <p className="text-[12px] leading-5 text-ink-400">
-          Frames are rendered at 2x by the Figma API, and this deployment has no
-          token of its own. In Figma open{' '}
+          Frames are rendered by the Figma API — 2x on mobile, down to 1x on
+          desktop — and this deployment has no token of its own. In Figma open{' '}
           <span className="text-ink-200">
             Settings ▸ Security ▸ Personal access tokens
           </span>

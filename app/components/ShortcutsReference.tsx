@@ -2,6 +2,11 @@ import type { ShortcutGroup } from '@/lib/shortcuts';
 
 export interface ShortcutsReferenceProps {
   groups: ShortcutGroup[];
+  /**
+   * Level of each group's title: `h2` in the help dialog, `h3` on the docs
+   * page, where the list already sits under a section heading.
+   */
+  headingLevel?: 'h2' | 'h3';
 }
 
 /**
@@ -12,6 +17,7 @@ export interface ShortcutsReferenceProps {
  */
 export default function ShortcutsReference({
   groups,
+  headingLevel: Heading = 'h2',
 }: ShortcutsReferenceProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -20,9 +26,9 @@ export default function ShortcutsReference({
           key={group.title}
           className="rounded-lg border border-ink-800 bg-ink-900 p-4"
         >
-          <h2 className="font-display text-[11px] font-bold tracking-[0.16em] text-ink-200 uppercase">
+          <Heading className="font-display text-[11px] font-bold tracking-[0.16em] text-ink-200 uppercase">
             {group.title}
-          </h2>
+          </Heading>
           {group.note && (
             <p className="mt-1 text-[11px] text-ink-500">{group.note}</p>
           )}

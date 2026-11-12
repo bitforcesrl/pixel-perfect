@@ -25,7 +25,7 @@ export default function HelpDialog({
       open={open}
       onClose={onClose}
       title="Keyboard shortcuts"
-      subtitle="Plain keys — off while typing or with a dialog open"
+      subtitle="⇧ for anything that replaces a layer — off while typing or with a dialog open"
       size="lg"
     >
       <ShortcutsReference groups={shortcutGroups({ localCapture })} />

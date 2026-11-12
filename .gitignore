@@ -47,4 +47,5 @@ next-env.d.ts
 
 # personal working notes, not part of the project
 /note.txt
+/note.markdown
 /prompt.md

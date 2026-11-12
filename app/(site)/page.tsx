@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import BrandMark from '../components/BrandMark';
 import RegistrationMark from '../components/RegistrationMark';
+import ButtonLink from '../components/site/ButtonLink';
 import InstalledAppRedirect from '../components/site/InstalledAppRedirect';
 import MediaSlot from '../components/site/MediaSlot';
 import ModeShowcase, { type ModeEntry } from '../components/site/ModeShowcase';
 import Plates from '../components/site/Plates';
+import SectionTitle from '../components/site/SectionTitle';
+import SiteFooter from '../components/site/SiteFooter';
+import SiteHeader from '../components/site/SiteHeader';
 import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -66,14 +68,14 @@ const LEVELS = [
   {
     step: '02',
     name: 'Figma API',
-    body: 'Paste a frame link and the design is rendered at 2x for every viewport.',
+    body: 'Paste a frame link and the design is rendered for every viewport, sharp on mobile and desktop alike.',
     needs: 'A Figma personal access token',
   },
   {
     step: '03',
     name: 'Fully automatic',
-    body: 'Run it locally and Playwright captures the site at each exact width, localhost and logged-in pages included.',
-    needs: 'The app on your machine',
+    body: 'The site is captured full-page at each exact width in a cloud browser. Self-hosted, localhost and logged-in pages too.',
+    needs: 'A Browserless key, or the app on your machine',
   },
 ];
 
@@ -101,45 +103,6 @@ cd pixel-perfect
 npm install
 npm run dev   # → http://localhost:7654/app`;
 
-/* ── Pieces ─────────────────────────────────────────────────────────────── */
-
-function ButtonLink({
-  href,
-  children,
-  primary = false,
-}: {
-  href: string;
-  children: React.ReactNode;
-  primary?: boolean;
-}) {
-  const external = href.startsWith('http');
-  const className = primary
-    ? 'rounded bg-press-violet px-4 py-2.5 text-sm font-semibold text-ink-950 transition-colors hover:bg-press-violet/85'
-    : 'rounded border border-ink-700 px-4 py-2.5 text-sm font-semibold text-ink-100 transition-colors hover:border-ink-500 hover:bg-ink-900';
-  return external ? (
-    <a href={href} className={className} target="_blank" rel="noreferrer">
-      {children}
-    </a>
-  ) : (
-    <Link href={href} className={className}>
-      {children}
-    </Link>
-  );
-}
-
-function SectionTitle({ kicker, title }: { kicker: string; title: string }) {
-  return (
-    <div className="mb-10 max-w-2xl">
-      <p className="mb-3 font-mono text-xs tracking-[0.18em] text-press-violet uppercase">
-        {kicker}
-      </p>
-      <h2 className="font-display text-3xl font-extrabold tracking-tight text-ink-100 sm:text-4xl">
-        {title}
-      </h2>
-    </div>
-  );
-}
-
 /* ── Page ───────────────────────────────────────────────────────────────── */
 
 export default function LandingPage() {
@@ -149,43 +112,7 @@ export default function LandingPage() {
       <InstalledAppRedirect />
       <div className="press-bar" aria-hidden="true" />
 
-      {/* Nav */}
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
-        <Link href="/" className="flex items-center gap-2.5">
-          <BrandMark size={28} className="text-ink-300" />
-          <span className="font-display text-sm font-extrabold tracking-[0.16em] text-ink-100 uppercase">
-            {SITE.name}
-          </span>
-        </Link>
-        <nav className="flex items-center gap-5 text-sm">
-          <a
-            href="#modes"
-            className="hidden text-ink-400 hover:text-ink-100 sm:inline"
-          >
-            Features
-          </a>
-          <a
-            href="#run"
-            className="hidden text-ink-400 hover:text-ink-100 sm:inline"
-          >
-            Self-host
-          </a>
-          <a
-            href={SITE.githubUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-ink-400 hover:text-ink-100"
-          >
-            GitHub
-          </a>
-          <Link
-            href="/app"
-            className="font-semibold text-press-violet hover:text-ink-100"
-          >
-            Open app →
-          </Link>
-        </nav>
-      </header>
+      <SiteHeader />
 
       <main>
         {/* Hero */}
@@ -332,13 +259,14 @@ export default function LandingPage() {
             <div>
               <SectionTitle
                 kicker="Self-host"
-                title="Run it on your machine for automatic captures."
+                title="Run it on your machine for even more."
               />
               <p className="-mt-4 text-sm leading-relaxed text-ink-400">
-                The hosted version covers drag & drop and the Figma API.
-                Locally, Playwright captures every viewport for you, including
-                localhost and pages behind a login. Docker and Vercel setups are
-                in the README.
+                The hosted version covers drag & drop, the Figma API and cloud
+                captures with your own Browserless key. On your machine a local
+                browser captures localhost and pages behind a login too, and the
+                Figma and Browserless keys can be set once for everyone. Docker
+                setup is in the README.
               </p>
             </div>
             <pre className="overflow-x-auto rounded-md border border-ink-800 bg-ink-void p-5 font-mono text-[13px] leading-relaxed text-ink-200">
@@ -362,19 +290,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-ink-850">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-ink-500 sm:px-6">
-          <span>{SITE.name} · free and open source</span>
-          <a
-            href={SITE.githubUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-ink-200"
-          >
-            GitHub
-          </a>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

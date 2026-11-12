@@ -94,6 +94,7 @@ export function shortcutGroups({
         { keys: ['⇧', 'G'], description: 'Add horizontal guide' },
         { keys: ['D'], description: 'Pen' },
         { keys: ['Z'], description: 'Undo last stroke' },
+        { keys: ['S'], description: 'Save the Figma export to History' },
       ],
     },
     {
@@ -107,32 +108,27 @@ export function shortcutGroups({
     },
     {
       title: 'Capture',
+      // Replacing a layer is the one thing a stray key must not do: these
+      // need Shift, and the every-viewport runs have no key at all
+      note: 'Every viewport at once: Capture menu or Layers panel',
       shortcuts: [
         // Browserless captures, listed only while the cloud capture is on
         ...(CLOUD_CAPTURE_ENABLED
-          ? [
-              { keys: ['C'], description: 'Capture this viewport' },
-              {
-                keys: ['⇧', 'C'],
-                description: 'Capture all enabled viewports',
-              },
-            ]
+          ? [{ keys: ['⇧', 'C'], description: 'Capture this viewport' }]
           : []),
         // Development only: production has no browser of its own to offer
         ...(localCapture
           ? [
               {
-                keys: ['L'],
+                keys: ['⇧', 'L'],
                 description: 'Capture this viewport on this machine',
               },
-              { keys: ['⇧', 'L'], description: 'Capture all on this machine' },
             ]
           : []),
-        {
-          keys: ['M'],
-          description: "Export this viewport's Figma frame at 2x",
-        },
-        { keys: ['⇧', 'M'], description: 'Export every Figma frame at 2x' },
+        // The export scale follows the viewport width (2x mobile → 1x
+        // desktop), so the description does not promise one
+        { keys: ['⇧', 'M'], description: "Export this viewport's Figma frame" },
+        { keys: ['I'], description: 'Upload Figma exports' },
         { keys: [','], description: 'Viewport settings' },
       ],
     },
