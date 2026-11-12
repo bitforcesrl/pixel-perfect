@@ -1,4 +1,3 @@
-
 /**
  * The Browserless key — client side.
  *

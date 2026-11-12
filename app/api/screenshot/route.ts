@@ -49,7 +49,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-
   const wantsLocal = request.headers.get(LOCAL_HEADER) === '1';
   if (wantsLocal && !localAvailable(request)) {
     return Response.json(

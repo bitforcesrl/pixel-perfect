@@ -267,9 +267,9 @@ The image ships with Firefox for captures. To capture a server running on your h
 
 Every variable is optional. See [`.env.example`](.env.example) for details.
 
-| Variable        | Purpose                                                                                                                    |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `FIGMA_TOKEN`   | A server-wide Figma token. When unset, each user enters their own.                                                         |
+| Variable      | Purpose                                                            |
+| ------------- | ------------------------------------------------------------------ |
+| `FIGMA_TOKEN` | A server-wide Figma token. When unset, each user enters their own. |
 
 On a public deployment, leave `FIGMA_TOKEN` and `BROWSERLESS_TOKEN` unset: the instance is open to anyone, and server-wide tokens would be spent by every visitor. Each user then brings their own.
 

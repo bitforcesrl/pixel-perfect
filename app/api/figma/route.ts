@@ -165,7 +165,6 @@ interface ImagesResponse {
  * workspace mounts. Like the capture route, it never says what the token is.
  */
 export async function GET(request: Request) {
-
   // With `?render=`, the bytes of a render the browser could not fetch itself
   const render = new URL(request.url).searchParams.get('render');
   if (render !== null) return proxyRender(render);
@@ -186,7 +185,6 @@ export async function GET(request: Request) {
  * every part of one frame is rendered at the frame's scale, not its own.
  */
 export async function POST(request: Request) {
-
   const token = envToken() ?? readClientToken(request);
   if (!token) {
     return Response.json(

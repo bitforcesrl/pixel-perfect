@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0-beta.1] - 2026-11-12
+
 ### Added
 
 - New brand mark (two ink discs out of register over a crosshair) in the app menu bar, the site header and the app icons.
@@ -53,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project export and import as ZIP, and diff map download.
 - Optional password gate for public deployments.
 
-[Unreleased]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.2.0-beta.1...HEAD
+[Unreleased]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.3.0-beta.1...HEAD
+[0.3.0-beta.1]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.2.0-beta.1...v0.3.0-beta.1
 [0.2.0-beta.1]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.1.0...v0.2.0-beta.1
 [0.1.0]: https://github.com/bitforcesrl/pixel-perfect/releases/tag/v0.1.0
