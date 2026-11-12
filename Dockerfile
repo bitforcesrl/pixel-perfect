@@ -1,5 +1,5 @@
 # Stage 1: Install dependencies and build
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production image (Debian-based for glibc compatibility with Playwright)
-FROM node:22-bookworm-slim AS runner
+FROM node:26-bookworm-slim AS runner
 
 WORKDIR /app
 

@@ -40,19 +40,23 @@ Open an issue with the **Feature request** template. Describe the problem you ar
 
 ## Setting up the project
 
-Requirements: **Node.js 20.9+** (the version in [`.nvmrc`](.nvmrc) is recommended) and npm.
+Requirements: **Node.js 26** (the version in [`.nvmrc`](.nvmrc)) and **npm 11.11+**.
+Older npm versions rewrite `package-lock.json` differently (they drop the
+`libc` fields that pick the right native binaries on Linux), so a lockfile
+they touch differs from the one on `main`. Check with `npm -v` and, if needed,
+run `npm install -g npm@latest`.
 
 ```bash
 git clone https://github.com/bitforcesrl/pixel-perfect.git
 cd pixel-perfect
 nvm use              # optional: picks the Node version from .nvmrc
-npm install          # also enables the git hooks
+npm ci               # installs exactly what package-lock.json says; also enables the git hooks
 npm run playwright:install  # optional: Firefox, only needed for automatic site capture
 cp .env.example .env # optional: no variable is required locally
 npm run dev          # http://localhost:7654
 ```
 
-`npm install` points git at [`scripts/git-hooks`](scripts/git-hooks), whose pre-commit hook scans staged changes for secrets with [gitleaks](https://github.com/gitleaks/gitleaks). Install it with `brew install gitleaks` (or see its README); without it the check is skipped with a warning.
+`npm ci` (like `npm install`) points git at [`scripts/git-hooks`](scripts/git-hooks), whose pre-commit hook scans staged changes for secrets with [gitleaks](https://github.com/gitleaks/gitleaks). Install it with `brew install gitleaks` (or see its README); without it the check is skipped with a warning.
 
 ## Making a change
 

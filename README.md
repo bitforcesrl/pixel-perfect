@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/bitforcesrl/pixel-perfect/actions/workflows/ci.yml/badge.svg)](https://github.com/bitforcesrl/pixel-perfect/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D20.9-339933.svg?logo=node.js&logoColor=white)](.nvmrc)
+[![Node.js](https://img.shields.io/badge/node-26-339933.svg?logo=node.js&logoColor=white)](.nvmrc)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black.svg?logo=next.js)](https://nextjs.org)
 [![GitHub Discussions](https://img.shields.io/github/discussions/bitforcesrl/pixel-perfect?logo=github)](https://github.com/bitforcesrl/pixel-perfect/discussions)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -170,8 +170,8 @@ Running the app on your own machine unlocks **fully automatic capture**. Configu
 
 ### Requirements
 
-- **Node.js 20.9+** (22 recommended)
-- npm
+- **Node.js 26** (the version in [`.nvmrc`](.nvmrc))
+- **npm 11.11+** (bundled with Node 26; otherwise `npm install -g npm@latest`)
 
 ### Install
 

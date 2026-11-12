@@ -52,7 +52,7 @@ body:
     attributes:
       label: Environment
       description: Browser, OS and Node.js version.
-      placeholder: Chrome 140, macOS 26, Node 22.11
+      placeholder: Chrome 140, macOS 26, Node 26.13
   - type: textarea
     id: logs
     attributes:

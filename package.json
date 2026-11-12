@@ -25,7 +25,8 @@
     "diff"
   ],
   "engines": {
-    "node": ">=20.9.0"
+    "node": "26.x",
+    "npm": ">=11.11.0"
   },
   "scripts": {
     "dev": "next dev -p 7654",

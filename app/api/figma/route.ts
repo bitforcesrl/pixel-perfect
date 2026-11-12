@@ -81,7 +81,11 @@ async function figmaGet<T>(path: string, token: string): Promise<T> {
   if (res.ok) return (await res.json()) as T;
 
   const body = (await res.json().catch(() => null)) as { err?: unknown } | null;
-  const detail = typeof body?.err === 'string' ? body.err : res.statusText;
+  // Over HTTP/2 (Node 26 fetch) statusText is always empty: fall back to the code
+  const detail =
+    typeof body?.err === 'string'
+      ? body.err
+      : res.statusText || `HTTP ${res.status}`;
   if (res.status === 403) {
     throw new FigmaError(`Figma refused the token: ${detail}`, 403, true);
   }

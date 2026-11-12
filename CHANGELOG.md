@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Running the project (locally or with Docker) now requires Node.js 26 and npm 11.11 or later.
+
 ### Fixed
 
 - The installed app now always opens on the tool instead of the public website.
