@@ -30,6 +30,26 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      # The capture tests drive a real Firefox through Playwright, as
+      # `npm run playwright:install` sets up locally. The browser is cached
+      # per lockfile (it changes only when Playwright does); the system
+      # libraries it needs are installed on every run.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-firefox-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Firefox for Playwright
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps firefox
+
+      - name: Install Firefox system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps firefox
+
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run format:check
