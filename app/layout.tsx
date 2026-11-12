@@ -1,5 +1,6 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
+import AppUpdater from './components/pwa/AppUpdater';
 import './globals.css';
 
 // Display — the wordmark and nothing else, set tight and loud like a plate label
@@ -30,6 +31,17 @@ export const metadata: Metadata = {
   },
   description:
     'Compare a live website screenshot with your Figma design, pixel by pixel.',
+  // Installed on macOS/iOS via "Add to Dock" / "Add to Home Screen"
+  appleWebApp: {
+    capable: true,
+    title: 'Pixel Perfect',
+    statusBarStyle: 'black-translucent',
+  },
+};
+
+// Title bar of the installed app matches the ink surface
+export const viewport: Viewport = {
+  themeColor: '#090b11',
 };
 
 export default function RootLayout({
@@ -47,7 +59,11 @@ export default function RootLayout({
     >
       {/* The body stays neutral: the tool locks itself to the viewport in its
           own layout, while the public site scrolls like any other page. */}
-      <body className="min-h-full bg-ink-void">{children}</body>
+      <body className="min-h-full bg-ink-void">
+        {children}
+        {/* Service worker + "new version available" toast, on every route */}
+        <AppUpdater />
+      </body>
     </html>
   );
 }

@@ -9,8 +9,42 @@ import type { NextConfig } from 'next';
  */
 const PROJECT_ROOT = path.resolve(__dirname);
 
+/**
+ * One value per deploy, baked into both the browser bundle and the server.
+ * The open tab compares its own value with `/api/version` to detect a new
+ * deploy. On Vercel the deployment id changes even when the same commit is
+ * redeployed; locally the build time is used.
+ */
+const APP_VERSION =
+  process.env.VERCEL_DEPLOYMENT_ID ??
+  process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ??
+  `local-${Date.now()}`;
+
 const nextConfig: NextConfig = {
   output: 'standalone',
+  env: { NEXT_PUBLIC_APP_VERSION: APP_VERSION },
+  /**
+   * The service worker must always be fetched fresh, otherwise a cached copy
+   * could keep browsers on an old worker after a deploy.
+   */
+  async headers() {
+    return [
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+          { key: 'Service-Worker-Allowed', value: '/' },
+        ],
+      },
+    ];
+  },
   turbopack: { root: PROJECT_ROOT },
   outputFileTracingRoot: PROJECT_ROOT,
   allowedDevOrigins: ['localhost'],

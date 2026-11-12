@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import AnnotationLayer, { type Tool } from './AnnotationLayer';
+import BrandMark from './BrandMark';
 import BrowserlessKeyDialog from './BrowserlessKeyDialog';
 import { CLOUD_CAPTURE_ENABLED } from '@/lib/features';
 import FigmaTokenDialog from './FigmaTokenDialog';
@@ -2078,12 +2079,7 @@ export default function Workspace({
         menus={menus}
         brand={
           <span className="mr-2 flex items-center gap-2">
-            {/* The rings close on the crosshair once the two plates line up */}
-            <RegistrationMark
-              size={16}
-              registered={isComparing && aligned}
-              className="shrink-0 text-ink-600"
-            />
+            <BrandMark size={16} className="shrink-0 text-ink-400" />
             {/* The wordmark steps back a shade so the project/page title in
                 the middle of the bar reads first */}
             <span className="hidden font-display text-[11px] font-extrabold tracking-[0.16em] text-ink-400 uppercase sm:inline">

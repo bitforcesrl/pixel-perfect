@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import BrandMark from '../components/BrandMark';
 import RegistrationMark from '../components/RegistrationMark';
 import MediaSlot from '../components/site/MediaSlot';
 import Plates from '../components/site/Plates';
@@ -135,7 +136,7 @@ export default function LandingPage() {
       {/* Nav */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
         <Link href="/" className="flex items-center gap-2.5">
-          <RegistrationMark size={28} registered className="text-ink-600" />
+          <BrandMark size={28} className="text-ink-300" />
           <span className="font-display text-sm font-extrabold tracking-[0.16em] text-ink-100 uppercase">
             {SITE.name}
           </span>
