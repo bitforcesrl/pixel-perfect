@@ -30,17 +30,15 @@ export type ImageMedia = {
 export type Media = VideoMedia | ImageMedia | null;
 
 /**
- * Screenshots of the real app running the demo project: tablet page, app
- * window 1200×750 at 2x (kept compact so the UI stays legible when small).
- * Re-shot by hand after UI changes.
+ * Micro clips of the real app running the demo project, one per comparison
+ * mode: tablet page, app window 1200×750, 6 s seamless loop at 1600×1000.
+ * Muted, looped and autoplaying; the poster is the clip's first frame.
+ * Re-recorded by hand after UI changes.
  */
-const modeShot = (mode: string): ImageMedia => ({
-  image: `/media/mode-${mode}.webp`,
-  srcSet: [
-    `/media/mode-${mode}-960.webp 960w`,
-    `/media/mode-${mode}.webp 1600w`,
-    `/media/mode-${mode}-2400.webp 2400w`,
-  ].join(', '),
+const modeClip = (mode: string): VideoMedia => ({
+  src: `/media/mode-${mode}.mp4`,
+  poster: `/media/mode-${mode}-poster.webp`,
+  mode: 'loop',
 });
 
 export const SITE = {
@@ -65,9 +63,14 @@ export const SITE = {
       poster: '/media/hero-poster.jpg',
       mode: 'player',
     } as Media,
-    split: modeShot('split') as Media,
-    overlay: modeShot('overlay') as Media,
-    tap: modeShot('tap') as Media,
-    sideBySide: modeShot('side') as Media,
+    split: modeClip('split') as Media,
+    overlay: {
+      // 10 s: the opacity slider and the blend menu need time to be read
+      ...modeClip('overlay'),
+      src: '/media/mode-overlay-v2.mp4',
+      poster: '/media/mode-overlay-v2-poster.webp',
+    } as Media,
+    tap: modeClip('tap') as Media,
+    sideBySide: modeClip('side') as Media,
   },
 } as const;

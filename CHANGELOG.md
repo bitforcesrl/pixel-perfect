@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Search engines get richer results for the site and the docs, while the app and demo screens are kept out of search results.
 - AI assistants can read a plain-text summary of the project and its documentation at /llms.txt.
 - The public site's home page has a walkthrough video of the app, with play controls and fullscreen; it loads only when you press play.
+- Each of the four comparison modes on the public site now shows a short looping clip of the real app instead of a still screenshot.
 
 ## [0.4.0-beta.1] - 2026-11-12
 
