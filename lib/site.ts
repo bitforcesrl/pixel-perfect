@@ -12,6 +12,12 @@ export type VideoMedia = {
   src: string;
   /** Still frame shown before the video loads (optional). */
   poster?: string;
+  /**
+   * `loop` (default): muted, looped, autoplaying clip, for short demos.
+   * `player`: a real player with controls and fullscreen. Nothing is
+   * downloaded until the visitor presses play, then it streams.
+   */
+  mode?: 'loop' | 'player';
 };
 
 export type ImageMedia = {
@@ -42,11 +48,23 @@ export const SITE = {
   tagline: "See every pixel that doesn't match.",
   description:
     'Stack the live site on its Figma design, per page and per viewport, and find the drift in seconds. Free and open source.',
+  /** Copyright holder, as in the LICENSE */
+  author: 'Tommaso Rossi',
+  /** Public address of the site, used for absolute URLs (metadata, sitemap) */
+  url: 'https://pixelperfect.fit',
+  /** `owner/name` on GitHub, used to read the star count */
+  githubRepo: 'bitforcesrl/pixel-perfect',
   githubUrl: 'https://github.com/bitforcesrl/pixel-perfect',
   /** The full walkthrough, also used on Product Hunt. Optional. */
   youtubeUrl: null as string | null,
   media: {
-    hero: null as Media, // e.g. { src: '/media/hero.mp4', poster: '/media/hero.jpg' }
+    // Hero walkthrough (about 45 s), exported as MP4 from the Motion film.
+    // Played on demand only: the poster shows until the visitor presses play.
+    hero: {
+      src: '/media/hero.mp4',
+      poster: '/media/hero-poster.jpg',
+      mode: 'player',
+    } as Media,
     split: modeShot('split') as Media,
     overlay: modeShot('overlay') as Media,
     tap: modeShot('tap') as Media,

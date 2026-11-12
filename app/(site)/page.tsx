@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import RegistrationMark from '../components/RegistrationMark';
+import JsonLd from '../components/JsonLd';
 import ButtonLink from '../components/site/ButtonLink';
 import InstalledAppRedirect from '../components/site/InstalledAppRedirect';
 import MediaSlot from '../components/site/MediaSlot';
@@ -8,12 +9,19 @@ import Plates from '../components/site/Plates';
 import SectionTitle from '../components/site/SectionTitle';
 import SiteFooter from '../components/site/SiteFooter';
 import SiteHeader from '../components/site/SiteHeader';
+import { OPEN_GRAPH_BASE, softwareJsonLd } from '@/lib/seo';
 import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: { absolute: `${SITE.name} — ${SITE.tagline}` },
   description: SITE.description,
-  openGraph: { title: SITE.name, description: SITE.description },
+  alternates: { canonical: '/' },
+  openGraph: {
+    ...OPEN_GRAPH_BASE,
+    url: '/',
+    title: SITE.name,
+    description: SITE.description,
+  },
 };
 
 /* ── Content ──────────────────────────────────────────────────────────────
@@ -110,6 +118,7 @@ export default function LandingPage() {
     <div className="min-h-dvh bg-ink-void text-ink-200">
       {/* First, so an installed app launching here leaves before any paint */}
       <InstalledAppRedirect />
+      <JsonLd data={softwareJsonLd()} />
       <div className="press-bar" aria-hidden="true" />
 
       <SiteHeader />

@@ -111,6 +111,8 @@ import { renderScaleFor } from '@/lib/render-scale';
 import { DOCS_PATH, openDocs } from '@/lib/docs';
 import type { Page, Project } from '@/lib/projects';
 import type { BlendMode, ViewMode } from '@/lib/types';
+import { SITE } from '@/lib/site';
+import GitHubIcon from './GitHubIcon';
 import {
   clampZoom,
   defaultZoom,
@@ -2283,11 +2285,24 @@ export default function Workspace({
           // Capture lives in the Layers panel and the Capture menu — the bar
           // keeps commands, not buttons
           actions={
-            isCapturing ? (
-              <span className="text-[11px] text-press-cyan">
-                capturing {capturingLabels.join(', ')}…
-              </span>
-            ) : null
+            <>
+              {isCapturing && (
+                <span className="text-[11px] text-press-cyan">
+                  capturing {capturingLabels.join(', ')}…
+                </span>
+              )}
+              {/* The project's source, always one click away */}
+              <a
+                href={SITE.githubUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Pixel Perfect on GitHub"
+                title="Pixel Perfect on GitHub"
+                className="rounded p-1 text-ink-400 transition-colors hover:bg-ink-850 hover:text-ink-100"
+              >
+                <GitHubIcon size={16} />
+              </a>
+            </>
           }
         />
 

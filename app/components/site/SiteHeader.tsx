@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import BrandMark from '../BrandMark';
+import GitHubStarBadge from './GitHubStarBadge';
 import { DOCS_PATH } from '@/lib/docs';
 import { SITE } from '@/lib/site';
 
@@ -40,14 +41,7 @@ export default function SiteHeader({
           Docs
         </Link>
         {/* On a phone the bar keeps Docs and the app; GitHub is in the footer */}
-        <a
-          href={SITE.githubUrl}
-          target="_blank"
-          rel="noreferrer"
-          className={`hidden sm:inline ${NAV_LINK}`}
-        >
-          GitHub
-        </a>
+        <GitHubStarBadge className="hidden sm:inline-flex" />
         <Link
           href="/app"
           className="font-semibold text-press-violet hover:text-ink-100"

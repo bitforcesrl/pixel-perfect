@@ -5,7 +5,7 @@
   "private": true,
   "license": "MIT",
   "author": "Tommaso Rossi",
-  "homepage": "https://github.com/bitforcesrl/pixel-perfect#readme",
+  "homepage": "https://pixelperfect.fit",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bitforcesrl/pixel-perfect.git"
@@ -47,7 +47,8 @@
     "next": "16.4.5",
     "playwright": "^1.65.0",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "react-github-btn": "^1.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

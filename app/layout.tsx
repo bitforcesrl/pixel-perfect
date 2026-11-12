@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import AppUpdater from './components/pwa/AppUpdater';
+import { KEYWORDS, OPEN_GRAPH_BASE, SHARE_IMAGE } from '@/lib/seo';
+import { SITE } from '@/lib/site';
 import './globals.css';
 
 // Display — the wordmark and nothing else, set tight and loud like a plate label
@@ -25,18 +27,39 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  // Makes relative Open Graph / canonical URLs absolute on the public domain
+  metadataBase: new URL(SITE.url),
   title: {
-    default: 'Pixel Perfect — Figma vs Site Diff',
-    template: '%s · Pixel Perfect',
+    default: `${SITE.name} — ${SITE.tagline}`,
+    template: `%s · ${SITE.name}`,
   },
-  description:
-    'Compare a live website screenshot with your Figma design, pixel by pixel.',
+  description: SITE.description,
+  applicationName: SITE.name,
+  keywords: KEYWORDS,
+  authors: [{ name: SITE.author, url: SITE.githubUrl }],
+  creator: SITE.author,
+  category: 'design',
+  openGraph: {
+    ...OPEN_GRAPH_BASE,
+    url: '/',
+    title: SITE.name,
+    description: SITE.description,
+  },
+  // The large card on X, with the same image as Open Graph
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE.name,
+    description: SITE.description,
+    images: [SHARE_IMAGE],
+  },
   // Installed on macOS/iOS via "Add to Dock" / "Add to Home Screen"
   appleWebApp: {
     capable: true,
-    title: 'Pixel Perfect',
+    title: SITE.name,
     statusBarStyle: 'black-translucent',
   },
+  // Points AI crawlers at the plain-text summary of the site
+  other: { 'llms.txt': `${SITE.url}/llms.txt` },
 };
 
 // Title bar of the installed app matches the ink surface

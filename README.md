@@ -8,6 +8,8 @@
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
+**Website:** [pixelperfect.fit](https://pixelperfect.fit) · **Docs:** [pixelperfect.fit/docs](https://pixelperfect.fit/docs)
+
 > Put the live site and its Figma design on top of each other, and see every pixel that doesn't match.
 
 Pixel Perfect is a web app for **design QA**. For each page and each viewport (mobile, tablet, desktop or your own sizes) it stacks a screenshot of the website over the matching Figma frame, then gives you four ways to compare them, plus tools to align, measure, annotate and share what you find.

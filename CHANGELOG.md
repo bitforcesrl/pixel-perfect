@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The app's menu bar has a GitHub link in the top-right corner.
+- The public site's header shows GitHub's Star button with the project's star count.
+- The public site now lives at pixelperfect.fit.
+- Links to the site shared on social networks and chat apps show a preview card with the title, tagline and a screenshot.
+- Search engines get richer results for the site and the docs, while the app and demo screens are kept out of search results.
+- AI assistants can read a plain-text summary of the project and its documentation at /llms.txt.
+- The public site's home page has a walkthrough video of the app, with play controls and fullscreen; it loads only when you press play.
+
 ## [0.4.0-beta.1] - 2026-11-12
 
 ### Added

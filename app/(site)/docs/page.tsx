@@ -10,10 +10,12 @@ import SelfHosting from '../../components/docs/sections/SelfHosting';
 import Sharing from '../../components/docs/sections/Sharing';
 import Shortcuts from '../../components/docs/sections/Shortcuts';
 import Viewports from '../../components/docs/sections/Viewports';
+import JsonLd from '../../components/JsonLd';
 import ButtonLink from '../../components/site/ButtonLink';
 import SiteFooter from '../../components/site/SiteFooter';
 import SiteHeader from '../../components/site/SiteHeader';
-import { DOCS_TOC } from '@/lib/docs';
+import { DOCS_PATH, DOCS_TOC } from '@/lib/docs';
+import { docsJsonLd, OPEN_GRAPH_BASE } from '@/lib/seo';
 import { SITE } from '@/lib/site';
 
 const DESCRIPTION = `How to use ${SITE.name}: projects, pages, viewports, every way to load the Figma and site layers, and what each panel does.`;
@@ -21,7 +23,13 @@ const DESCRIPTION = `How to use ${SITE.name}: projects, pages, viewports, every 
 export const metadata: Metadata = {
   title: 'Docs',
   description: DESCRIPTION,
-  openGraph: { title: `${SITE.name} docs`, description: DESCRIPTION },
+  alternates: { canonical: DOCS_PATH },
+  openGraph: {
+    ...OPEN_GRAPH_BASE,
+    url: DOCS_PATH,
+    title: `${SITE.name} docs`,
+    description: DESCRIPTION,
+  },
 };
 
 /**
@@ -35,6 +43,7 @@ export default function DocsPage() {
     // `data-docs` turns on smooth anchor scrolling for this page only
     <div data-docs className="min-h-dvh bg-ink-void text-ink-200">
       <div className="press-bar" aria-hidden="true" />
+      <JsonLd data={docsJsonLd(DESCRIPTION)} />
       <SiteHeader current="docs" />
 
       <div className="mx-auto grid max-w-6xl gap-12 px-4 pt-8 pb-24 sm:px-6 sm:pt-12 lg:grid-cols-[13rem_minmax(0,1fr)]">
