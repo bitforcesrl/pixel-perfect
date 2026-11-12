@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import BrandMark from '../components/BrandMark';
 import RegistrationMark from '../components/RegistrationMark';
+import InstalledAppRedirect from '../components/site/InstalledAppRedirect';
 import MediaSlot from '../components/site/MediaSlot';
 import Plates from '../components/site/Plates';
 import { SITE } from '@/lib/site';
@@ -131,6 +132,8 @@ function SectionTitle({ kicker, title }: { kicker: string; title: string }) {
 export default function LandingPage() {
   return (
     <div className="min-h-dvh bg-ink-void text-ink-200">
+      {/* First, so an installed app launching here leaves before any paint */}
+      <InstalledAppRedirect />
       <div className="press-bar" aria-hidden="true" />
 
       {/* Nav */}
