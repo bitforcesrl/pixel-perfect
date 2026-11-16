@@ -8,8 +8,9 @@ export interface ScreenshotRequest {
 
 export interface ScreenshotResult {
   /**
-   * Data URL of the full-page screenshot: PNG from a local browser, WebP
-   * (JPEG for a very tall page) from the remote one
+   * Data URL of the full-page screenshot: PNG from a local browser, JPEG
+   * from the remote one. The workspace re-encodes either as WebP strips
+   * before storing it.
    */
   image: string;
   /** full-page width in CSS pixels */

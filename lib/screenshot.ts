@@ -88,8 +88,39 @@ const NETWORK_IDLE_TIMEOUT_MS = 30_000;
 const SCROLL_PASS_MS = 120_000;
 const IMAGE_WAIT_MS = 10_000;
 
-/** Left for the screenshot itself, which on a very tall page is not instant. */
-const CAPTURE_RESERVE_MS = 12_000;
+/**
+ * Left for the screenshot itself, which on a very tall page is not instant:
+ * a remote browser encodes the whole page and sends it back over the socket,
+ * and a 1920 px wide, 13 000 px tall page took longer than 12s to do so.
+ */
+const CAPTURE_RESERVE_MS = 20_000;
+
+/**
+ * Below this much time left, optional steps (lazy-loading passes, popup
+ * sweeps, settle delays) are skipped rather than started: each of them costs
+ * at least this much once its own fixed pauses are counted.
+ */
+const MIN_STEP_MS = 1_500;
+
+/**
+ * Share of a remote session's usable time the first "network idle" wait may
+ * take. Shops full of analytics, chat widgets and prefetched checkout scripts
+ * never go idle, and waiting the full limit for them used to eat half of a
+ * 60s session before the page had even been scrolled.
+ */
+const FIRST_IDLE_SHARE = 0.25;
+
+type CaptureBudget = {
+  /**
+   * A wait's limit, capped to the time actually left. Never zero or negative:
+   * Playwright reads 0 as "no timeout", the opposite of a spent budget.
+   */
+  within: (limit: number) => number;
+  /** True when too little time is left to start an optional step. */
+  spent: () => boolean;
+  /** Time usable for the whole capture, or Infinity without a clock. */
+  usableMs: number;
+};
 
 /**
  * Sizes each wait to the time actually left.
@@ -100,15 +131,19 @@ const CAPTURE_RESERVE_MS = 12_000;
  * those waits. So every limit becomes a ceiling rather than a promise: take
  * the smaller of it and the time remaining, which lets a fast page use the
  * full pass and a slow one degrade to a shorter capture instead of dying with
- * nothing.
+ * nothing. Once the time is spent, optional steps are skipped altogether so
+ * the screenshot still starts before the session is taken away.
  */
-function captureBudget(budgetMs: number | null) {
-  const deadline =
-    budgetMs === null ? Infinity : Date.now() + budgetMs - CAPTURE_RESERVE_MS;
-  // Never hand a wait a zero or negative timeout: Playwright reads 0 as
-  // "no timeout", which is the opposite of what a spent budget means.
-  return (limit: number) =>
-    Math.max(1_000, Math.min(limit, deadline - Date.now()));
+function captureBudget(budgetMs: number | null): CaptureBudget {
+  const usableMs =
+    budgetMs === null ? Infinity : Math.max(0, budgetMs - CAPTURE_RESERVE_MS);
+  const deadline = Date.now() + usableMs;
+  const left = () => deadline - Date.now();
+  return {
+    within: (limit) => Math.max(1_000, Math.min(limit, left())),
+    spent: () => left() < MIN_STEP_MS,
+    usableMs,
+  };
 }
 
 /** Upper bound on capture height, to keep a runaway page from exhausting memory. */
@@ -130,13 +165,14 @@ const MAX_CAPTURE_HEIGHT = 30_000;
 const REMOTE_HIGH_DENSITY_BELOW = 768;
 
 /**
- * Past this many device px a side, WebP cannot hold the picture and a remote
- * capture is encoded as JPEG instead (which goes to 65535).
+ * Tallest remote capture, in device px, still taken above 1x. Every extra
+ * pixel costs session time to encode and send, so a very tall page drops to
+ * 1x rather than risk the session running out mid-screenshot.
  */
-const MAX_WEBP_SIDE = 16_383;
+const MAX_REMOTE_HIGH_DENSITY_SIDE = 16_383;
 
-/** Quality of a remote capture's WebP or JPEG — then the lighter fallback. */
-const REMOTE_QUALITY = 85;
+/** Quality of a remote capture's JPEG — then the lighter fallback. */
+const REMOTE_QUALITY = 75;
 const REMOTE_FALLBACK_QUALITY = 65;
 
 /**
@@ -1108,11 +1144,14 @@ async function setDensity(
 }
 
 /**
- * The full page from the remote browser, as WebP (JPEG past WebP's size
- * limit) rather than PNG: the picture travels back as base64 in a JSON
- * answer, and a PNG of a tall 2x page is several times what a serverless
- * response may hold. WebP at this quality is far lighter and indistinguishable
- * for aligning against a design.
+ * The full page from the remote browser, as JPEG. Not PNG: the picture
+ * travels back as base64 in a JSON answer, and a PNG of a tall 2x page is
+ * several times what a serverless response may hold. Not WebP either: Chrome
+ * encodes a page thousands of px tall several times slower as WebP, and that
+ * time comes out of a session Browserless closes on the clock — a 1920 px
+ * wide page ran past it. JPEG at this quality is indistinguishable for
+ * aligning against a design, and the workspace cuts it into WebP strips
+ * before storing it, exactly as it does with a local capture's PNG.
  *
  * Tried heaviest first, falling back until it fits: the asked scale, then 1x,
  * then 1x at a lower quality. `limitChars` is the most a response may carry —
@@ -1137,7 +1176,7 @@ async function remoteScreenshot(
   const height = Math.min(Math.ceil(cssContentSize.height), MAX_CAPTURE_HEIGHT);
 
   const attempts = [
-    ...(scale > 1 && height * scale <= MAX_WEBP_SIDE
+    ...(scale > 1 && height * scale <= MAX_REMOTE_HIGH_DENSITY_SIDE
       ? [{ scale, quality: REMOTE_QUALITY }]
       : []),
     { scale: 1, quality: REMOTE_QUALITY },
@@ -1152,10 +1191,8 @@ async function remoteScreenshot(
       await setDensity(cdp, { width, height }, attempt.scale);
       density = attempt.scale;
     }
-    const deviceSide = Math.max(width, height) * attempt.scale;
-    const format = deviceSide <= MAX_WEBP_SIDE ? 'webp' : 'jpeg';
     const { data } = await cdp.send('Page.captureScreenshot', {
-      format,
+      format: 'jpeg',
       quality: attempt.quality,
       captureBeyondViewport: true,
       clip: { x: 0, y: 0, width, height, scale: 1 },
@@ -1163,7 +1200,7 @@ async function remoteScreenshot(
     size = data.length;
     if (limitChars === null || size <= limitChars) {
       return {
-        image: `data:image/${format};base64,${data}`,
+        image: `data:image/jpeg;base64,${data}`,
         width,
         height,
       };
@@ -1236,7 +1273,7 @@ async function captureWith(
     // wait below so the page has a chance to settle before capture.
     let response = await page.goto(targetUrl, {
       waitUntil: 'domcontentloaded',
-      timeout: budget(NAVIGATION_TIMEOUT_MS),
+      timeout: budget.within(NAVIGATION_TIMEOUT_MS),
     });
     // A password gate answers before the page does: get past it with the
     // page's password, or say that one is needed rather than "401"
@@ -1246,7 +1283,7 @@ async function captureWith(
         targetUrl,
         req.sitePassword,
         response,
-        budget(NAVIGATION_TIMEOUT_MS),
+        budget.within(NAVIGATION_TIMEOUT_MS),
       );
     } else {
       await assertNotPasswordGated(page, response);
@@ -1262,19 +1299,23 @@ async function captureWith(
     await remoteDensity(viewport);
 
     // Best-effort: let the page finish loading resources, but don't crash the
-    // capture if something hangs.
+    // capture if something hangs. On a remote session this first wait only
+    // gets a share of the time: a page that never goes idle (analytics, chat,
+    // prefetched checkout scripts) must not starve everything after it.
     await page
       .waitForLoadState('networkidle', {
-        timeout: budget(NETWORK_IDLE_TIMEOUT_MS),
+        timeout: budget.within(
+          Math.min(NETWORK_IDLE_TIMEOUT_MS, budget.usableMs * FIRST_IDLE_SHARE),
+        ),
       })
       .catch(() => {});
 
     // Accept the cookies before anything measures or scrolls the page: the
     // banner blocks scrolling on many themes and shifts the layout on its way
     // out.
-    await dismissConsentBanner(page, budget(NAVIGATION_TIMEOUT_MS));
+    await dismissConsentBanner(page, budget.within(NAVIGATION_TIMEOUT_MS));
     // Then whatever else stands over the page: newsletter signups, promos
-    await dismissPopups(page, budget(NAVIGATION_TIMEOUT_MS));
+    await dismissPopups(page, budget.within(NAVIGATION_TIMEOUT_MS));
 
     // Hide Shopify preview bar before anything else
     await hideShopifyPreviewBar(page);
@@ -1283,26 +1324,35 @@ async function captureWith(
     await unwrapScrollContainers(page);
 
     // Walk the page so every lazy section renders, then scroll back to top.
-    await forceEagerRendering(page, budget(IMAGE_WAIT_MS));
-    await scrollUntilSettled(page, budget(SCROLL_PASS_MS));
+    // Each pass below is skipped once the time is spent: a capture missing a
+    // few lazy images beats a session closed before the screenshot.
+    if (!budget.spent()) {
+      await forceEagerRendering(page, budget.within(IMAGE_WAIT_MS));
+    }
+    if (!budget.spent()) {
+      await scrollUntilSettled(page, budget.within(SCROLL_PASS_MS));
+    }
 
     // Scroll handlers may have re-applied the transforms we cleared, and lazy
     // content arrives with its own containers and deferred media, so redo both
     // passes now that the whole page exists.
     await unwrapScrollContainers(page);
-    await forceEagerRendering(page, budget(IMAGE_WAIT_MS));
+    if (!budget.spent()) {
+      await forceEagerRendering(page, budget.within(IMAGE_WAIT_MS));
+    }
 
-    // Wait for any network activity triggered by scrolling to settle
-    await page
-      .waitForLoadState('networkidle', {
-        timeout: budget(NETWORK_IDLE_TIMEOUT_MS),
-      })
-      .catch(() => {
-        // Timeout is acceptable — proceed with what we have
-      });
-
-    // Extra small delay to let images decode
-    await page.waitForTimeout(500);
+    // Wait for any network activity triggered by scrolling to settle, then
+    // give the images a moment to decode
+    if (!budget.spent()) {
+      await page
+        .waitForLoadState('networkidle', {
+          timeout: budget.within(NETWORK_IDLE_TIMEOUT_MS),
+        })
+        .catch(() => {
+          // Timeout is acceptable — proceed with what we have
+        });
+    }
+    if (!budget.spent()) await page.waitForTimeout(500);
 
     const contentHeight = Math.min(
       await measureContentHeight(page),
@@ -1315,21 +1365,29 @@ async function captureWith(
     // Some containers refuse to unwrap (cross-origin frames, JS that re-locks
     // the layout on every frame). Growing the viewport to the content height
     // makes them render everything at once, since they size to the viewport.
+    // The resize itself always happens — without it the capture is cut short —
+    // only the wait for what it loads depends on the time left.
     if (documentHeight < contentHeight) {
       const grown = { width: req.viewportWidth, height: contentHeight };
       await page.setViewportSize(grown);
       await remoteDensity(grown);
-      await page
-        .waitForLoadState('networkidle', { timeout: budget(15_000) })
-        .catch(() => {});
-      await page.waitForTimeout(500);
+      if (!budget.spent()) {
+        await page
+          .waitForLoadState('networkidle', { timeout: budget.within(15_000) })
+          .catch(() => {});
+        await page.waitForTimeout(500);
+      }
     }
 
     // Second pass: banners that wait for an interaction or a scroll only show
     // up after the walk down the page.
-    await dismissConsentBanner(page, budget(NAVIGATION_TIMEOUT_MS));
+    if (!budget.spent()) {
+      await dismissConsentBanner(page, budget.within(NAVIGATION_TIMEOUT_MS));
+    }
     // Most popups wait a few seconds, or for a scroll, before they open
-    await dismissPopups(page, budget(NAVIGATION_TIMEOUT_MS));
+    if (!budget.spent()) {
+      await dismissPopups(page, budget.within(NAVIGATION_TIMEOUT_MS));
+    }
 
     if (cdp) {
       return await remoteScreenshot(cdp, scale, {

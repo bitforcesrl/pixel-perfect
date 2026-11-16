@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Cloud captures of slow, script-heavy or very tall pages, including at wide viewports such as 1920 px, no longer fail with "Target page, context or browser has been closed" when the Browserless session runs out of time.
+
 ## [1.0.0] - 2026-11-12
 
 ### Added

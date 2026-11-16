@@ -1150,8 +1150,9 @@ export default function Workspace({
             });
             continue;
           }
-          // PNG off the wire, WebP (or JPEG) from here on: ~10x lighter to
-          // hold and to store, and identical before and after a reload
+          // PNG (local) or JPEG (Browserless) off the wire, WebP strips (or
+          // JPEG) from here on: ~10x lighter to hold and to store, and
+          // identical before and after a reload
           const captured = data as ScreenshotResult;
           const compact = await toCompactDataUrl(captured.image);
           const screenshot = compact

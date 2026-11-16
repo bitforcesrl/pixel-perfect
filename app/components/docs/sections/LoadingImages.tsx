@@ -188,7 +188,10 @@ export default function LoadingImages() {
             </>,
             <>
               The free Browserless plan allows one session of 60 seconds at a
-              time, so viewports are captured one after the other.
+              time, so viewports are captured one after the other. On a slow
+              page the capture shortens its waits to finish within the session,
+              so a few late images may be missing rather than the whole capture
+              failing.
             </>,
             <>
               Viewports narrower than 768 px are captured at the same scale as
