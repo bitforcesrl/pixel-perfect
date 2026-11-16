@@ -9,7 +9,12 @@ import Plates from '../components/site/Plates';
 import SectionTitle from '../components/site/SectionTitle';
 import SiteFooter from '../components/site/SiteFooter';
 import SiteHeader from '../components/site/SiteHeader';
-import { OPEN_GRAPH_BASE, softwareJsonLd } from '@/lib/seo';
+import {
+  type FaqEntry,
+  faqJsonLd,
+  OPEN_GRAPH_BASE,
+  softwareJsonLd,
+} from '@/lib/seo';
 import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -106,6 +111,58 @@ const AUDIENCES = [
   },
 ];
 
+/** Plain text on purpose: the same answers feed the FAQPage structured data. */
+const FAQ: FaqEntry[] = [
+  {
+    q: 'How is this different from Figma Dev Mode or an overlay browser extension?',
+    a: 'Those work well for one page at a time, in your own browser. Pixel Perfect is built for a review that has to survive the handoff: the same page at 375, 768 and 1440 px (or your own sizes), both layers captured at the right scale, guides and notes attached, and a single file the developer opens exactly as QA left it. If an extension covers your workflow, keep using it; Pixel Perfect is for teams where QA and development are different people.',
+  },
+  {
+    q: 'Is this visual regression testing?',
+    a: 'No. Visual regression tools compare a site with an earlier version of itself. Pixel Perfect compares it with the design, which is what you need before any baseline exists. The two fit together: sign off the first build against Figma here, then let a regression tool stop it from drifting.',
+  },
+  {
+    q: 'Is “pixel-perfect” really the goal? The web is fluid.',
+    a: 'Not literally, and the name is a little tongue-in-cheek. The goal is to make differences visible, so you can decide which ones are intentional. Most of what a review catches is not a single pixel: wrong padding, a font size a few pixels off, a gap that halves at tablet width. Bugs, not fluid layout.',
+  },
+  {
+    q: 'Is my Figma token safe on the hosted version?',
+    a: 'Your token is saved in your browser’s localStorage and sent with each request to the app’s own API route, which calls Figma for you; it is never stored on the server (see app/api/figma/route.ts in the repository). Use a read-only token (File content: Read-only) and revoke it when you are done, or self-host the app and keep the token in your own .env.',
+  },
+  {
+    q: 'Why do I need a Browserless key?',
+    a: 'A browser tab cannot take a full-page screenshot of another site at an exact viewport width: something has to drive a real browser. On the public instance that is Browserless, with your own key (the free tier is enough to try it), so nobody uses up anyone else’s quota. When you run Pixel Perfect on your own machine, Playwright captures locally and no key is needed. You can also skip capture entirely and drop in two screenshots.',
+  },
+  {
+    q: 'Can it capture localhost, staging servers or pages behind a login?',
+    a: 'Yes, when it runs on your machine (npm run dev or npm start): local capture reaches localhost, servers on your network and pages behind a login. For a login a script cannot handle, such as a one-time code by email, a visible browser opens, you log in by hand, and later captures reuse the saved session. This is not available on the hosted version or inside Docker.',
+  },
+  {
+    q: 'Where is my data? Are there team accounts?',
+    a: 'Everything stays in your browser (IndexedDB): no account, no sign-up, no project data on our servers. To share a review, export the project as a ZIP and the other person imports it; site passwords are left out. Real-time collaboration is not there yet. If you need it, say so in GitHub Discussions: that is how we decide what comes next.',
+  },
+  {
+    q: 'What about dynamic content and font rendering?',
+    a: 'They add noise: carousels, cookie banners, lazy-loaded images, animations and the different ways Figma and browsers render fonts all show up as differences. Captures wait for the page to load, you can drag the Figma layer or set a vertical offset to realign after a shifted section, and Split and Tap are less sensitive to noise than a raw difference map. Dynamic regions are still the weakest spot.',
+  },
+  {
+    q: 'Was it built with AI?',
+    a: 'Largely, yes: most of the code was written with AI coding assistants. What is ours is the problem, the product decisions and testing it on real client projects. The repository runs CI with linting, type checks, tests and a secrets scan. If you find something wrong, open an issue on GitHub.',
+  },
+  {
+    q: 'Who maintains it? Will it be abandoned?',
+    a: 'Bitforce, a web agency building custom software and Shopify stores, maintains Pixel Perfect and uses it on its own client projects, so we have every reason to keep it working. Support is best-effort, with no SLA. The license is MIT, so you can always fork it.',
+  },
+  {
+    q: 'Is it really free? What’s the catch?',
+    a: 'It is free and MIT-licensed: no paid tier, no sign-up, no email gate. Bitforce is named because Bitforce builds it, but the tool does not depend on selling you anything.',
+  },
+  {
+    q: 'What are the limits?',
+    a: 'It compares pixels, not the DOM: it shows where something is off, not which CSS property is wrong. It is a manual review tool, not a CI check, so there are no baselines or pull request status. One browser holds up to 6 projects of up to 6 pages each. Figma’s image endpoint is heavily rate-limited for View and Collab seats; a Dev or Full seat works much better.',
+  },
+];
+
 const RUN_LOCALLY = `git clone ${SITE.githubUrl}.git
 cd pixel-perfect
 npm install
@@ -119,6 +176,7 @@ export default function LandingPage() {
       {/* First, so an installed app launching here leaves before any paint */}
       <InstalledAppRedirect />
       <JsonLd data={softwareJsonLd()} />
+      <JsonLd data={faqJsonLd(FAQ)} />
       <div className="press-bar" aria-hidden="true" />
 
       <SiteHeader />
@@ -165,7 +223,7 @@ export default function LandingPage() {
                 rel="noreferrer"
                 className="text-press-violet hover:text-ink-100"
               >
-                Watch the full walkthrough →
+                Watch on YouTube →
               </a>
             </p>
           ) : null}
@@ -281,6 +339,32 @@ export default function LandingPage() {
             <pre className="overflow-x-auto rounded-md border border-ink-800 bg-ink-void p-5 font-mono text-[13px] leading-relaxed text-ink-200">
               <code>{RUN_LOCALLY}</code>
             </pre>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section
+          id="faq"
+          className="mx-auto max-w-6xl scroll-mt-8 px-4 py-24 sm:px-6"
+        >
+          <SectionTitle kicker="FAQ" title="Questions we get asked." />
+          <div className="divide-y divide-ink-850 border-y border-ink-850">
+            {FAQ.map((entry) => (
+              <details key={entry.q} className="group">
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-6 py-5 text-left font-display text-base font-bold text-ink-100 marker:hidden hover:text-press-cyan sm:text-lg [&::-webkit-details-marker]:hidden">
+                  {entry.q}
+                  <span
+                    aria-hidden="true"
+                    className="mt-0.5 font-mono text-press-violet transition-transform group-open:rotate-45"
+                  >
+                    +
+                  </span>
+                </summary>
+                <p className="max-w-3xl pb-6 text-sm leading-relaxed text-ink-400">
+                  {entry.a}
+                </p>
+              </details>
+            ))}
           </div>
         </section>
 

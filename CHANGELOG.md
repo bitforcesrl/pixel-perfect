@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The public site's home page has an FAQ section, linked from the header, answering common questions about the tool, privacy, capture, limits and maintenance; search engines also get it as structured data.
+
+### Changed
+
+- The walkthrough video on the public site's home page starts muted; the speaker button in its controls turns the soundtrack on.
+- The public site's menu stays at the top of the window while you scroll, on the home page and in the docs.
+
 ### Fixed
 
 - Cloud captures of slow, script-heavy or very tall pages, including at wide viewports such as 1920 px, no longer fail with "Target page, context or browser has been closed" when the Browserless session runs out of time.

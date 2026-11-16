@@ -57,6 +57,9 @@ export default function MediaSlot({
                 // phone is the way to watch it large.
                 controls: true,
                 preload: 'none',
+                // Starts muted, as the visitor may be anywhere; the controls'
+                // speaker button turns the soundtrack on.
+                muted: true,
                 className: 'h-full w-full bg-ink-950 object-contain',
               }
             : {

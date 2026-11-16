@@ -49,7 +49,7 @@ export default function DocsPage() {
       <div className="mx-auto grid max-w-6xl gap-12 px-4 pt-8 pb-24 sm:px-6 sm:pt-12 lg:grid-cols-[13rem_minmax(0,1fr)]">
         {/* Desktop: a sticky sidebar that follows the reading position */}
         <aside className="hidden lg:block">
-          <div className="sticky top-8 max-h-[calc(100dvh-4rem)] overflow-y-auto pb-8">
+          <div className="sticky top-[calc(var(--site-header-h)+2rem)] max-h-[calc(100dvh-var(--site-header-h)-4rem)] overflow-y-auto pb-8">
             <DocsToc entries={DOCS_TOC} />
           </div>
         </aside>

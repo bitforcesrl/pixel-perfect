@@ -205,7 +205,9 @@ export function WithAside({
   return (
     <div className="grid grid-cols-1 gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
       <div className="flex min-w-0 flex-col gap-4">{children}</div>
-      <div className="md:sticky md:top-8">{aside}</div>
+      <div className="md:sticky md:top-[calc(var(--site-header-h)+2rem)]">
+        {aside}
+      </div>
     </div>
   );
 }

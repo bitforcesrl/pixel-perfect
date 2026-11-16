@@ -54,10 +54,11 @@ export const SITE = {
   githubRepo: 'bitforcesrl/pixel-perfect',
   githubUrl: 'https://github.com/bitforcesrl/pixel-perfect',
   /** The full walkthrough, also used on Product Hunt. Optional. */
-  youtubeUrl: null as string | null,
+  youtubeUrl: 'https://youtu.be/6fUzlOQt3Es' as string | null,
   media: {
     // Hero walkthrough (about 45 s), exported as MP4 from the Motion film.
-    // Played on demand only: the poster shows until the visitor presses play.
+    // Played on demand only: the poster shows until the visitor presses play,
+    // then it starts muted (the soundtrack is one tap away in the controls).
     hero: {
       src: '/media/hero.mp4',
       poster: '/media/hero-poster.jpg',

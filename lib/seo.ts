@@ -93,6 +93,23 @@ export function softwareJsonLd() {
   };
 }
 
+/** A question and its plain-text answer, shown on the landing page */
+export type FaqEntry = { q: string; a: string };
+
+/** The landing page FAQ, as schema.org FAQPage */
+export function faqJsonLd(entries: FaqEntry[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${SITE.url}/#faq`,
+    mainEntity: entries.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  };
+}
+
 /** The documentation page, as a technical article about the app */
 export function docsJsonLd(description: string) {
   return {
