@@ -37,9 +37,7 @@ export default function Sharing() {
             <>
               <Menu path={['File', 'Export project as ZIP…']} /> packs the
               project: pages, URLs, notes, viewport settings, captures and Figma
-              exports. Site passwords are left out, so the file can be shared
-              safely; whoever opens it types the password in again. Tick{' '}
-              <strong>Include snapshot history</strong> to add the{' '}
+              exports. Tick <strong>Include snapshot history</strong> to add the{' '}
               <DocLink to={DOCS.History}>snapshots</DocLink> (bigger file).
             </>,
             <>
@@ -64,8 +62,8 @@ export default function Sharing() {
         <Menu path={['File', 'Reset this page…']} /> clears the page&apos;s
         captures and exports but keeps its notes and snapshots.{' '}
         <Menu path={['File', 'Reset everything…']} /> deletes every project and
-        the Browserless key and Figma token from this browser, and asks you to
-        type <Code>RESET ALL</Code> first. Export what you want to keep.
+        the Figma token from this browser, and asks you to type{' '}
+        <Code>RESET ALL</Code> first. Export what you want to keep.
       </Note>
     </DocSection>
   );

@@ -19,7 +19,7 @@ const TOKEN_HEADER = 'x-figma-token';
 
 /**
  * Personal access tokens are `figd_` and URL-safe characters. Anything else is
- * refused rather than cleaned up, as with the Browserless key.
+ * refused rather than cleaned up.
  */
 const TOKEN_SHAPE = /^[A-Za-z0-9_-]{8,200}$/;
 

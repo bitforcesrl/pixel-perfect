@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Sites are captured automatically by the new Pixel Perfect Capture extension for Chrome, in your own browser and session: logins, store passwords and cookie choices carry over, and localhost, staging and logged-in pages work from the hosted app too.
+- From any site, the extension's toolbar button ▸ Open in Pixel Perfect opens the page that compares it (or creates one) and captures it.
+- Without the extension, the Chrome and All capture buttons stay in place and open a dialog with the link to install it.
+- The docs have a section on automatic site capture with the Chrome extension.
 - The public site's home page has an FAQ section, linked from the header, answering common questions about the tool, privacy, capture, limits and maintenance; search engines also get it as structured data.
 
 ### Changed
@@ -19,9 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The walkthrough video on the public site's home page starts muted; the speaker button in its controls turns the soundtrack on.
 - The public site's menu stays at the top of the window while you scroll, on the home page and in the docs.
 
-### Fixed
+### Removed
 
-- Cloud captures of slow, script-heavy or very tall pages, including at wide viewports such as 1920 px, no longer fail with "Target page, context or browser has been closed" when the Browserless session runs out of time.
+- Cloud capture through Browserless and the Browserless key setting.
+- Local capture with the browser on the app's machine (the Local button and ⇧L) and the Browser login for pages behind a login: sign in to the site in Chrome instead.
+- The Site password page field: enter the password in Chrome once, then capture.
 
 ## [1.0.0] - 2026-11-12
 

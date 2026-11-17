@@ -42,8 +42,7 @@ body:
         - Comparison modes (Split / Overlay / Tap / Side by side)
         - Drag & drop
         - Figma export
-        - Site capture (Playwright / Browserless)
-        - Browser login
+        - Site capture (Chrome extension)
         - Projects, pages, ZIP import/export
         - Annotations, guides, notes
         - Other

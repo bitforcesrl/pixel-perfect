@@ -26,7 +26,7 @@ const FIELD =
  *
  * Frames are rendered by the Figma REST API, and this deployment has no token
  * of its own — so the token is the user's, kept in their browser and sent with
- * each export. Same terms as the Browserless key.
+ * each export, never stored on the server.
  */
 export default function FigmaTokenDialog({
   open,

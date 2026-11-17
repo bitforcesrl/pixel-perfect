@@ -33,8 +33,9 @@ and designers can see where the build drifts from the design.
   build and design) and Side by side (synced scroll).
 - Three setup levels: drag and drop two images with nothing to configure;
   paste a Figma frame link with a Figma personal access token to render the
-  design per viewport; capture the site full-page automatically with a
-  Browserless cloud browser or a local Firefox (localhost and logged-in pages).
+  design per viewport; capture the site full-page automatically with the
+  Pixel Perfect Capture extension for Chrome, in the user's own browser and
+  session (localhost, staging and logged-in pages included).
 - Align, measure, guides, pen and notes; snapshot history; a whole project
   exported and shared as a single ZIP.
 - Runs in any browser, installable as a PWA, self-hostable with Node.js or

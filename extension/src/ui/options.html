@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Settings · Pixel Perfect Capture</title>
+    <link rel="stylesheet" href="ui.css" />
+    <style>
+      body {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 28px 16px 48px;
+      }
+      section {
+        margin-top: 24px;
+      }
+      form.row input {
+        flex: 1;
+      }
+      .status {
+        min-height: 1.4em;
+        font-size: 13px;
+        margin-top: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="brand">
+      <img src="../../icons/icon-32.png" alt="" />
+      <h1>Pixel Perfect Capture</h1>
+      <span class="badge" id="channel"></span>
+    </div>
+
+    <section class="card">
+      <h2>Pixel Perfect address</h2>
+      <p class="muted">
+        Where “Open in Pixel Perfect” goes when no Pixel Perfect tab is open.
+      </p>
+      <form class="row" id="app-url-form">
+        <input
+          type="url"
+          id="app-url"
+          required
+          placeholder="https://pixelperfect.fit/app"
+        />
+        <button type="submit">Save</button>
+      </form>
+      <div class="status muted" id="app-url-status"></div>
+    </section>
+
+    <section class="card">
+      <h2>More Pixel Perfect addresses</h2>
+      <p class="muted">
+        The extension works on pixelperfect.fit and on localhost out of the box.
+        Add the address of a self-hosted copy or a preview deployment here;
+        Chrome asks you to allow it.
+      </p>
+      <ul class="plain" id="origins"></ul>
+      <form class="row" id="origin-form" style="margin-top: 8px">
+        <input
+          type="url"
+          id="origin"
+          required
+          placeholder="https://pixel-perfect.example.com"
+        />
+        <button type="submit">Add</button>
+      </form>
+      <div class="status muted" id="origin-status"></div>
+    </section>
+
+    <section class="card">
+      <h2>Allowed sites</h2>
+      <p class="muted">
+        Sites you allowed Pixel Perfect to capture. Remove one to be asked again
+        next time.
+      </p>
+      <ul class="plain" id="sites"></ul>
+    </section>
+
+    <script src="options.js" type="module"></script>
+  </body>
+</html>

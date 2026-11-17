@@ -170,30 +170,6 @@ export function Note({
   );
 }
 
-/**
- * Where a feature works, for the few that do not work everywhere. Features
- * without a badge are available in every setup.
- */
-export function Availability({
-  only,
-}: {
-  only: 'self-hosted' | 'self-hosted-no-docker';
-}) {
-  const label = {
-    'self-hosted': 'Self-hosted only',
-    'self-hosted-no-docker': 'Self-hosted only · not in Docker',
-  }[only];
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-press-amber/40 bg-press-amber/10 px-2.5 py-0.5 font-mono text-[10px] font-medium tracking-[0.12em] whitespace-nowrap text-press-amber normal-case">
-      <span
-        className="h-1.5 w-1.5 rounded-full bg-press-amber"
-        aria-hidden="true"
-      />
-      {label}
-    </span>
-  );
-}
-
 /** Text beside a panel crop: copy on the left, the picture on the right. */
 export function WithAside({
   aside,

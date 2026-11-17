@@ -1,19 +1,16 @@
 /**
- * Feature flags — one place to switch whole capabilities on or off.
- *
- * Each flag only decides what the UI *offers*; the API routes behind it stay
- * as they are, so turning a flag back on needs no other change.
+ * Feature switches and the links they depend on — one place to change them.
  */
 
 /**
- * Site capture through Browserless (the "Cloud" button, C / ⇧C, the
- * "Browserless key…" menu entry).
+ * The Pixel Perfect Capture extension's Chrome Web Store page.
  *
- * On everywhere. Like the Figma export, the key comes from the deployment's
- * `BROWSERLESS_TOKEN` when it has one (a developer's machine), and otherwise
- * from the user, who is asked for their own browserless.io key the first time
- * they capture (a public deployment such as Vercel). Set to `false` to hide
- * the cloud capture everywhere at once; the local browser (L / ⇧L) is
- * unaffected.
+ * TODO: set it once the extension is published, e.g.
+ * `'https://chromewebstore.google.com/detail/pixel-perfect-capture/<id>'`.
+ *
+ * While it is `null`, every "install the extension" link in the app (the
+ * dialog a capture opens without the extension, Capture ▸ Install the Chrome
+ * extension…, the docs) leads to the docs section that explains how to load
+ * it by hand instead.
  */
-export const CLOUD_CAPTURE_ENABLED = true;
+export const EXTENSION_STORE_URL: string | null = null;

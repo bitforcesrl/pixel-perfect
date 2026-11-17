@@ -51,7 +51,6 @@ git clone https://github.com/bitforcesrl/pixel-perfect.git
 cd pixel-perfect
 nvm use              # optional: picks the Node version from .nvmrc
 npm ci               # installs exactly what package-lock.json says; also enables the git hooks
-npm run playwright:install  # optional: Firefox, only needed for automatic site capture
 cp .env.example .env # optional: no variable is required locally
 npm run dev          # http://localhost:7654
 ```
@@ -101,7 +100,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org):
 ```text
 feat: add a 4K viewport preset
 fix(overlay): keep the offset when switching viewport
-docs: explain the Browserless setup
+docs: explain the Chrome extension setup
 ```
 
 Common types: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `chore`, `ci`.

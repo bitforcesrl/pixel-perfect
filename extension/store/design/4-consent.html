@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>4 · Your session, your consent</title>
+    <link rel="stylesheet" href="design.css" />
+    <style>
+      /* Chrome's own popup window around the consent page */
+      .os-window {
+        position: absolute;
+        overflow: hidden;
+        border-radius: 12px;
+        background: #0b0e14;
+        box-shadow:
+          0 30px 80px rgb(0 0 0 / 0.7),
+          0 0 0 1px var(--ink-700);
+      }
+      .os-window .window-bar {
+        height: 36px;
+      }
+      .os-window .title {
+        font-size: 12px;
+        color: var(--ink-400);
+      }
+      .os-window iframe {
+        display: block;
+        border: 0;
+        width: 100%;
+      }
+      .dim {
+        position: absolute;
+        inset: 46px 0 0;
+        background: rgb(7 9 14 / 0.55);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas shot">
+      <div class="press-bar"></div>
+
+      <div class="copy">
+        <div class="kicker">
+          <img src="raw/icon.svg" alt="" />Pixel Perfect Capture
+        </div>
+        <h1>Your session.<br /><em>Your consent.</em></h1>
+        <p class="lead">
+          Captured the way you see it: logged in, past the store password,
+          cookie banner answered. Each site is allowed once, and screenshots go
+          only to your Pixel Perfect tab.
+        </p>
+        <ul class="points">
+          <li style="--dot: var(--cyan)">Banners hidden, never clicked</li>
+          <li style="--dot: var(--magenta)">Nothing collected, nothing sent</li>
+          <li style="--dot: var(--violet)">Open source on GitHub</li>
+        </ul>
+      </div>
+
+      <div
+        class="window"
+        style="left: 500px; top: 84px; width: 800px; height: 760px"
+      >
+        <div class="window-bar">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="address"><b>pixelperfect.fit</b>/app</div>
+        </div>
+        <div class="viewport" style="height: 714px">
+          <img
+            src="raw/app-split.webp"
+            alt=""
+            style="width: 1210px; left: 0; top: 0"
+          />
+        </div>
+        <div class="dim"></div>
+      </div>
+
+      <!-- The real consent window -->
+      <div class="os-window" style="left: 640px; top: 214px; width: 440px">
+        <div class="window-bar">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <span class="title">Allow capture? · Pixel Perfect</span>
+        </div>
+        <iframe
+          src="../../src/ui/confirm.html?app=https://pixelperfect.fit&target=https://shop.example.com"
+          title="Consent window"
+          style="height: 330px"
+        ></iframe>
+      </div>
+    </div>
+  </body>
+</html>

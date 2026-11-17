@@ -26,10 +26,6 @@ export interface LayersState {
   figmaLinked: boolean;
   /** Figma is rendering this viewport's frame right now */
   figmaBusy: boolean;
-  /** Only on localhost is there a browser here to offer */
-  showLocalCapture: boolean;
-  /** Browserless capture is offered — off while CLOUD_CAPTURE_ENABLED is */
-  showCloudCapture: boolean;
   /** Why capture is unavailable, null when it is */
   captureBlockedReason: string | null;
   /** Why All on the Figma row has nothing to do, null when it has */
@@ -42,8 +38,8 @@ export interface ControlPanelProps {
   activeViewport: ViewportKey | null;
   /** ── Layers: fetch, refetch and drop the selected viewport's plates ────── */
   layers: LayersState | null;
+  /** Capture this viewport through the Chrome extension (or ask to install it) */
   onCapture: () => void;
-  onCaptureLocal: () => void;
   /** Every viewport's Figma frame */
   onExportAllFigma: () => void;
   /** Every viewport's site capture */
@@ -332,7 +328,6 @@ export default function ControlPanel(props: ControlPanelProps) {
     activeViewport,
     layers,
     onCapture,
-    onCaptureLocal,
     onExportAllFigma,
     onCaptureAllSites,
     onExportFigma,
@@ -509,65 +504,39 @@ export default function ControlPanel(props: ControlPanelProps) {
                   </button>
                 </Row>
 
-                {/* The site at this size: Browserless, or — on localhost —
-                    the browser on this machine, which the target sees as this
-                    address rather than a datacentre's */}
+                {/* The site at this size, captured by the Chrome extension in
+                    the user's own browser. Always offered: without the
+                    extension the buttons open the dialog that installs it */}
                 <Row label="Site">
                   <LayerMark
                     state={siteState}
                     ink="cyan"
                     title={slot.error ?? undefined}
                   />
-                  {/* Hidden while the cloud capture is switched off
-                      (lib/features.ts) */}
-                  {layers.showCloudCapture && (
-                    <button
-                      type="button"
-                      onClick={onCapture}
-                      disabled={blocked !== null}
-                      title={
-                        blocked ??
-                        `Capture ${preset.label} at ${preset.width}×${preset.height} with Browserless (⇧C)`
-                      }
-                      className={`${BTN} flex-1 py-1`}
-                    >
-                      Cloud
-                    </button>
-                  )}
-                  {layers.showLocalCapture && (
-                    <button
-                      type="button"
-                      onClick={onCaptureLocal}
-                      disabled={blocked !== null}
-                      title={
-                        blocked ??
-                        `Capture ${preset.label} with the browser on this machine (⇧L)`
-                      }
-                      className={`${BTN} flex-1 py-1`}
-                    >
-                      Local
-                    </button>
-                  )}
-                  {/* All needs some browser to run in: this machine's, or
-                      Browserless when the cloud capture is on */}
-                  {(layers.showLocalCapture || layers.showCloudCapture) && (
-                    <button
-                      type="button"
-                      onClick={onCaptureAllSites}
-                      disabled={layers.siteAllBlockedReason !== null}
-                      title={
-                        layers.siteAllBlockedReason ??
-                        `Capture the site at every viewport ${
-                          layers.showLocalCapture
-                            ? 'with the browser on this machine'
-                            : 'with Browserless'
-                        }`
-                      }
-                      className={`${BTN} flex-1 py-1`}
-                    >
-                      All
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={onCapture}
+                    disabled={blocked !== null}
+                    title={
+                      blocked ??
+                      `Capture ${preset.label} at ${preset.width}×${preset.height} in Chrome, with your session (⇧C)`
+                    }
+                    className={`${BTN} flex-1 py-1`}
+                  >
+                    Chrome
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onCaptureAllSites}
+                    disabled={layers.siteAllBlockedReason !== null}
+                    title={
+                      layers.siteAllBlockedReason ??
+                      'Capture the site at every viewport in Chrome, with your session'
+                    }
+                    className={`${BTN} flex-1 py-1`}
+                  >
+                    All
+                  </button>
                   {/* Upload: screenshots taken elsewhere, each landing on the
                       viewport its width matches at 1x or 2x */}
                   <button

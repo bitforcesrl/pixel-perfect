@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# chrome extension release zips
+/extension/dist/
+
 # vercel
 .vercel
 
@@ -42,10 +45,11 @@ yarn-error.log*
 next-env.d.ts
 
 .playwright-mcp
-# login sessions saved by the browser login window (auth cookies)
-/.sessions
 
 # personal working notes, not part of the project
 /note.txt
 /note.md
 /prompt.md
+
+
+/docs/superpowers

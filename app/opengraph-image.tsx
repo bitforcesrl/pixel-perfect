@@ -14,15 +14,19 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 export default async function OpenGraphImage() {
-  // The hero poster is optional: without it the card is text only
+  // The hero video's poster frame (the same image the home page shows before
+  // the video plays). Optional: without it the card is text only
   let shot: string | null = null;
   try {
     const file = await readFile(
-      path.join(process.cwd(), 'public/media/hero.jpg'),
+      path.join(process.cwd(), 'public/media/hero-poster.jpg'),
     );
     shot = `data:image/jpeg;base64,${file.toString('base64')}`;
   } catch (error) {
-    console.warn('OG image: hero.jpg not found, rendering text only', error);
+    console.warn(
+      'OG image: hero-poster.jpg not found, rendering text only',
+      error,
+    );
   }
 
   return new ImageResponse(

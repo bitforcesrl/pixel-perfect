@@ -1,12 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import BrowserLoginControl from './BrowserLoginControl';
 import RegistrationMark from './RegistrationMark';
 import { parseFigmaUrl } from '@/lib/figma';
 import { MAX_NAME_LENGTH, type Page } from '@/lib/projects';
 import { loadPreviews } from '@/lib/storage';
-import { MAX_SITE_PASSWORD_LENGTH } from '@/lib/validation';
 import type { ViewportKey, ViewportPreset } from '@/lib/viewports';
 
 export interface PagesGalleryProps {
@@ -20,17 +18,11 @@ export interface PagesGalleryProps {
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
   onUrlChange: (url: string, pageId: string) => void;
-  onSitePasswordChange: (sitePassword: string, pageId: string) => void;
   /** The project's enabled viewports — one Figma link field each. */
   presets: ViewportPreset[];
   onFigmaUrlChange: (key: ViewportKey, url: string, pageId: string) => void;
   /** How many pages a project holds; the New page card stops there. */
   maxPages: number;
-  /**
-   * Whether this machine can open a browser login window. Off it, the login
-   * control is not mounted at all, so it never asks the server about URLs.
-   */
-  localLogin: boolean;
 }
 
 const FIELD =
@@ -59,11 +51,9 @@ function Gallery({
   onRename,
   onDelete,
   onUrlChange,
-  onSitePasswordChange,
   presets,
   onFigmaUrlChange,
   maxPages,
-  localLogin,
 }: PagesGalleryProps) {
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [newName, setNewName] = useState('');
@@ -236,29 +226,6 @@ function Gallery({
                         className={`${FIELD} font-mono text-[10px]`}
                       />
                     </label>
-
-                    {/* Typed into the site's password gate when a capture
-                        meets one — left empty for a public page */}
-                    <label className="flex flex-col gap-1">
-                      <span className="text-[10px] font-medium tracking-[0.12em] text-press-cyan uppercase">
-                        Site password
-                      </span>
-                      <input
-                        type="password"
-                        value={page.sitePassword}
-                        placeholder="Only if the site asks for one"
-                        autoComplete="off"
-                        maxLength={MAX_SITE_PASSWORD_LENGTH}
-                        onChange={(e) =>
-                          onSitePasswordChange(e.target.value, page.id)
-                        }
-                        className={`${FIELD} font-mono text-[10px]`}
-                      />
-                    </label>
-
-                    {/* A login a script cannot do (a code by email), done
-                        by hand once and reused by every local capture */}
-                    {localLogin && <BrowserLoginControl url={page.url} />}
 
                     {/* The Figma frame each viewport is exported from — the
                         link Figma copies, one per viewport */}

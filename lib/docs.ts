@@ -39,9 +39,7 @@ export const DOCS = {
   bulkUpload: 'bulk-upload',
   figmaExport: 'figma-export',
   figmaToken: 'figma-token',
-  browserless: 'browserless',
-  browserlessKey: 'browserless-key',
-  localCapture: 'local-capture',
+  chromeExtension: 'chrome-extension',
   panels: 'panels',
   sharing: 'sharing',
   shortcuts: 'shortcuts',
@@ -62,8 +60,10 @@ export const DOCS_TOC: DocsTocEntry[] = [
       { id: DOCS.dragAndDrop, title: 'Drag & drop' },
       { id: DOCS.bulkUpload, title: 'Bulk upload' },
       { id: DOCS.figmaExport, title: 'Figma export' },
-      { id: DOCS.browserless, title: 'Cloud capture' },
-      { id: DOCS.localCapture, title: 'Local capture' },
+      {
+        id: DOCS.chromeExtension,
+        title: 'Automatic capture (Chrome extension)',
+      },
     ],
   },
   {

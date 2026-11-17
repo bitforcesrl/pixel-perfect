@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pixel Perfect Capture</title>
+    <link rel="stylesheet" href="ui.css" />
+    <style>
+      body {
+        width: 320px;
+        padding: 16px;
+      }
+      #open {
+        width: 100%;
+        margin-top: 4px;
+      }
+      footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 14px;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="brand">
+      <img src="../../icons/icon-32.png" alt="" />
+      <h1>Pixel Perfect Capture</h1>
+    </div>
+    <p class="muted">Compare this page with its Figma design.</p>
+    <div class="card">
+      <div class="host" id="host">…</div>
+    </div>
+    <p class="error" id="reason" hidden></p>
+    <button id="open" class="primary" disabled>Open in Pixel Perfect</button>
+    <p class="muted" style="margin-top: 10px; font-size: 12px">
+      Pixel Perfect opens on the page for this address (or offers to create one)
+      and captures it at every viewport of the project, with your session.
+    </p>
+    <footer>
+      <span class="muted"
+        >v<span id="version"></span> <span class="badge" id="channel"></span
+      ></span>
+      <a href="#" id="options">Settings</a>
+    </footer>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "app/api/screenshot/route": {
-      "includeFiles": "node_modules/playwright-core/browsers.json"
-    }
-  }
-}

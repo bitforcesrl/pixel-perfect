@@ -1,8 +1,7 @@
 /**
  * The Figma token — client side.
  *
- * Same terms as the Browserless key: a deployment with `FIGMA_TOKEN` of its own
- * never asks for this. Without one, the token is the user's personal access
+ * A deployment with `FIGMA_TOKEN` of its own never asks for this. Without one, the token is the user's personal access
  * token, kept in this browser's local storage, sent with each export call and
  * never stored on the server.
  */

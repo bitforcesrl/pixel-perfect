@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Small promo tile · 440×280</title>
+    <link rel="stylesheet" href="design.css" />
+    <style>
+      .tile {
+        width: 440px;
+        height: 280px;
+      }
+      .brand {
+        position: absolute;
+        left: 26px;
+        top: 30px;
+        width: 236px;
+      }
+      .brand .kicker {
+        font-size: 11px;
+        gap: 8px;
+      }
+      .brand .kicker img {
+        width: 22px;
+        height: 22px;
+      }
+      .brand .hero-line {
+        margin-top: 18px;
+        font-size: 25px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas tile">
+      <div class="press-bar" style="height: 3px"></div>
+
+      <div class="brand">
+        <div class="kicker"><img src="raw/icon.svg" alt="" />Pixel Perfect</div>
+        <p class="hero-line">
+          Your site on top of its Figma design.
+          <span class="magenta">See every pixel</span>
+          <span class="cyan">that doesn’t match.</span>
+        </p>
+      </div>
+
+      <!-- The app in difference mode: what drifts glows -->
+      <div
+        class="window"
+        style="
+          left: 280px;
+          top: 46px;
+          width: 200px;
+          height: 260px;
+          border-radius: 10px;
+        "
+      >
+        <div class="window-bar" style="height: 18px; padding: 0 8px">
+          <div class="dots" style="gap: 4px">
+            <i style="width: 5px; height: 5px"></i
+            ><i style="width: 5px; height: 5px"></i
+            ><i style="width: 5px; height: 5px"></i>
+          </div>
+        </div>
+        <div class="viewport" style="height: 242px">
+          <img
+            src="raw/app-diff.webp"
+            alt=""
+            style="width: 720px; left: -470px; top: -96px"
+          />
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
