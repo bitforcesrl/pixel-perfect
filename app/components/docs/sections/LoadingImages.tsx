@@ -85,9 +85,10 @@ export default function LoadingImages() {
           {[
             <>
               <strong>Capture</strong> on the Figma row of the Layers panel (
-              <Kbd>⇧</Kbd> <Kbd>M</Kbd>) exports the viewport on screen;{' '}
-              <strong>All</strong> exports every viewport that has a link. Both
-              are in the <Menu path={['Capture']} /> menu too.
+              <Kbd>⇧</Kbd> <Kbd>M</Kbd>) exports the viewport on screen; its{' '}
+              <strong>▾</strong> ▸ <strong>All viewports</strong> exports every
+              viewport that has a link. Both are in the{' '}
+              <Menu path={['Capture']} /> menu too.
             </>,
             <>
               The scale follows the width: <strong>2x</strong> for mobile,{' '}
@@ -105,10 +106,11 @@ export default function LoadingImages() {
         <Note>
           <strong>Nothing is replaced by accident.</strong> Commands that
           replace a layer need <Kbd>⇧</Kbd>, and the every-viewport runs (
-          <strong>All</strong>, Capture menu) have no key at all. When one of
-          them would replace captures or exports already in place, the app asks
-          first — save a <DocLink to={DOCS.History}>snapshot</DocLink> if you
-          want to keep the current Figma version.
+          <strong>▾ All viewports</strong>, Capture menu) have no key at all.
+          When one of them would replace captures or exports already in place,
+          the app asks first — save a{' '}
+          <DocLink to={DOCS.History}>snapshot</DocLink> if you want to keep the
+          current Figma version.
         </Note>
       </DocSubsection>
 
@@ -198,10 +200,11 @@ export default function LoadingImages() {
               would: log in, enter the password, answer the cookie banner.
             </>,
             <>
-              In Pixel Perfect press <strong>Chrome</strong> on the Site row of
+              In Pixel Perfect press <strong>Capture</strong> on the Site row of
               the <DocLink to={DOCS.Layers}>Layers panel</DocLink> (<Kbd>⇧</Kbd>{' '}
-              <Kbd>C</Kbd>) for the viewport on screen, or <strong>All</strong>{' '}
-              / <Menu path={['Capture', 'Capture all enabled viewports']} /> for
+              <Kbd>C</Kbd>) for the viewport on screen, or its{' '}
+              <strong>▾</strong> ▸ <strong>All viewports</strong> /{' '}
+              <Menu path={['Capture', 'Capture all enabled viewports']} /> for
               every enabled viewport.
             </>,
           ]}
@@ -209,9 +212,9 @@ export default function LoadingImages() {
         <Bullets>
           {[
             <>
-              The <strong>Chrome</strong> and <strong>All</strong> buttons are
-              always there. Without the extension they open a dialog with the
-              link to install it; the status bar, bottom right, says which
+              The site row&apos;s <strong>Capture</strong> button and its menu
+              are always there. Without the extension they open a dialog with
+              the link to install it; the status bar, bottom right, says which
               extension version is answering, or <em>no extension</em>.
             </>,
             <>

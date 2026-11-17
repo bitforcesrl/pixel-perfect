@@ -28,7 +28,7 @@ export default function Shortcuts() {
         <DocLink to={DOCS.chromeExtension}>Chrome extension</DocLink>; without
         it, the key opens the dialog that installs it. Capturing or exporting
         every viewport has no key on purpose: use the Capture menu or{' '}
-        <strong>All</strong> in the Layers panel.
+        <strong>▾ All viewports</strong> in the Layers panel.
       </P>
     </DocSection>
   );

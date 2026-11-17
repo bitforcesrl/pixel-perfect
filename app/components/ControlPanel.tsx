@@ -1,6 +1,12 @@
 'use client';
 
-import { startTransition, useState, type ReactNode } from 'react';
+import {
+  startTransition,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import RangeInput from './RangeInput';
 import SnapshotHistory from './SnapshotHistory';
 import type { LiveValue } from '@/lib/live-value';
@@ -32,6 +38,14 @@ export interface LayersState {
   figmaAllBlockedReason: string | null;
   /** Why All on the site row cannot run, null when it can */
   siteAllBlockedReason: string | null;
+  /** Viewports enabled on this page */
+  viewportCount: number;
+  /** How many of them hold a Figma export */
+  figmaCount: number;
+  /** How many of them hold a site capture */
+  siteCount: number;
+  /** A site capture is running somewhere — deleting them all waits for it */
+  anyCapturing: boolean;
 }
 
 export interface ControlPanelProps {
@@ -51,6 +65,10 @@ export interface ControlPanelProps {
   onUploadSite: () => void;
   onRemoveFigma: () => void;
   onRemoveScreenshot: () => void;
+  /** Every viewport's Figma export — confirmed before it runs */
+  onRemoveAllFigma: () => void;
+  /** Every viewport's site capture — confirmed before it runs */
+  onRemoveAllScreenshots: () => void;
   opacity: number; // 0-100
   onOpacityChange: (opacity: number) => void;
   /**
@@ -313,6 +331,168 @@ function LayerMark({
   );
 }
 
+interface SplitItem {
+  label: string;
+  /** Right-aligned: a shortcut or a count */
+  hint?: string;
+  title?: string;
+  disabled?: boolean;
+  danger?: boolean;
+  onSelect: () => void;
+}
+
+/**
+ * A button with a scope menu fused to its right edge. The main part always
+ * acts on the current viewport; the ▾ offers the same action on this viewport
+ * or on all of them. Picking an item runs it at once — no sticky mode, so a
+ * plain click never does something wider than it says.
+ */
+function SplitButton({
+  children,
+  title,
+  ariaLabel,
+  onMain,
+  mainDisabled,
+  menuLabel,
+  items,
+  className = '',
+  grow = false,
+}: {
+  children: ReactNode;
+  title: string;
+  ariaLabel?: string;
+  onMain: () => void;
+  mainDisabled: boolean;
+  menuLabel: string;
+  items: SplitItem[];
+  /** Ink for the label, e.g. the layer's colour on an icon */
+  className?: string;
+  /** Take the row's free width */
+  grow?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const allDisabled = items.every((item) => item.disabled);
+
+  // Pressing anywhere else puts the menu away, the way MenuBar's does
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [open]);
+
+  // Hand the keyboard the first item as the menu opens
+  useEffect(() => {
+    if (!open) return;
+    menuRef.current
+      ?.querySelector<HTMLButtonElement>('button:not(:disabled)')
+      ?.focus();
+  }, [open]);
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (!open) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(false);
+      toggleRef.current?.focus();
+      return;
+    }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    const buttons = Array.from(
+      menuRef.current?.querySelectorAll<HTMLButtonElement>(
+        'button:not(:disabled)',
+      ) ?? [],
+    );
+    if (buttons.length === 0) return;
+    const at = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    const next = e.key === 'ArrowDown' ? at + 1 : at - 1;
+    buttons[(next + buttons.length) % buttons.length].focus();
+  };
+
+  return (
+    <div
+      ref={wrapRef}
+      onKeyDown={onKeyDown}
+      className={`relative flex ${grow ? 'min-w-0 flex-1' : 'shrink-0'}`}
+    >
+      <button
+        type="button"
+        onClick={onMain}
+        disabled={mainDisabled}
+        title={title}
+        aria-label={ariaLabel}
+        className={`${BTN} min-w-0 rounded-r-none py-1 ${
+          grow ? 'flex-1' : 'px-1.5'
+        } ${className}`}
+      >
+        {children}
+      </button>
+      <button
+        ref={toggleRef}
+        type="button"
+        onClick={() => setOpen((on) => !on)}
+        disabled={allDisabled}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={menuLabel}
+        title={menuLabel}
+        className={`${BTN} -ml-px rounded-l-none px-1 py-1`}
+      >
+        <svg
+          className="h-2.5 w-2.5"
+          viewBox="0 0 12 12"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M2 4l4 5 4-5z" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          ref={menuRef}
+          role="menu"
+          aria-label={menuLabel}
+          className="absolute top-full right-0 z-30 mt-1 min-w-48 rounded-md border border-ink-700 bg-ink-850 p-1 shadow-2xl shadow-ink-void/60"
+        >
+          {items.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              role="menuitem"
+              disabled={item.disabled}
+              title={item.title}
+              onClick={() => {
+                setOpen(false);
+                item.onSelect();
+              }}
+              className={`flex w-full items-center gap-3 rounded px-2 py-1.5 text-left text-[12px] whitespace-nowrap text-ink-200 transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-200 ${
+                item.danger
+                  ? 'hover:bg-press-red/15 hover:text-press-red'
+                  : 'hover:bg-press-violet/15 hover:text-ink-100'
+              }`}
+            >
+              <span className="flex-1">{item.label}</span>
+              {item.hint && (
+                <span className="font-mono text-[10px] text-ink-500 tabular-nums">
+                  {item.hint}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** A labelled row: label left, control right, the way a palette lays out. */
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -335,6 +515,8 @@ export default function ControlPanel(props: ControlPanelProps) {
     onUploadSite,
     onRemoveFigma,
     onRemoveScreenshot,
+    onRemoveAllFigma,
+    onRemoveAllScreenshots,
     opacity,
     onOpacityChange,
     liveOpacity,
@@ -435,6 +617,16 @@ export default function ControlPanel(props: ControlPanelProps) {
                   ? ('done' as const)
                   : ('pending' as const);
             const blocked = layers.captureBlockedReason;
+            const { viewportCount, figmaCount, siteCount, anyCapturing } =
+              layers;
+            const figmaCaptureTitle = !figmaLinked
+              ? `No Figma frame link for ${preset.label} — set one under File ▸ Pages`
+              : figmaBusy
+                ? 'Figma is rendering this frame'
+                : `Capture the ${preset.label} Figma frame (⇧M)`;
+            const siteCaptureTitle =
+              blocked ??
+              `Capture ${preset.label} at ${preset.width}×${preset.height} in Chrome, with your session (⇧C)`;
             return (
               <>
                 <div className="flex items-baseline gap-2 text-[11px]">
@@ -454,33 +646,33 @@ export default function ControlPanel(props: ControlPanelProps) {
                     ink="magenta"
                     title={slot.figmaFileName ?? undefined}
                   />
-                  <button
-                    type="button"
-                    onClick={onExportFigma}
-                    disabled={!figmaLinked || figmaBusy}
-                    title={
-                      !figmaLinked
-                        ? `No Figma frame link for ${preset.label} — set one under File ▸ Pages`
-                        : figmaBusy
-                          ? 'Figma is rendering this frame'
-                          : `Capture the ${preset.label} Figma frame (⇧M)`
-                    }
-                    className={`${BTN} flex-1 py-1`}
+                  <SplitButton
+                    grow
+                    onMain={onExportFigma}
+                    mainDisabled={!figmaLinked || figmaBusy}
+                    title={figmaCaptureTitle}
+                    menuLabel="Capture Figma: choose the viewports"
+                    items={[
+                      {
+                        label: `This viewport`,
+                        hint: '⇧M',
+                        title: figmaCaptureTitle,
+                        disabled: !figmaLinked || figmaBusy,
+                        onSelect: onExportFigma,
+                      },
+                      {
+                        label: 'All viewports',
+                        hint: String(viewportCount),
+                        title:
+                          layers.figmaAllBlockedReason ??
+                          'Capture the Figma frame of every viewport — asks before replacing existing exports',
+                        disabled: layers.figmaAllBlockedReason !== null,
+                        onSelect: onExportAllFigma,
+                      },
+                    ]}
                   >
                     Capture
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onExportAllFigma}
-                    disabled={layers.figmaAllBlockedReason !== null}
-                    title={
-                      layers.figmaAllBlockedReason ??
-                      'Capture the Figma frame of every viewport — asks before replacing existing exports'
-                    }
-                    className={`${BTN} flex-1 py-1`}
-                  >
-                    All
-                  </button>
+                  </SplitButton>
                   {/* Upload: any number of exports, each landing on the
                       viewport its width matches at 1x or 2x */}
                   <button
@@ -488,20 +680,38 @@ export default function ControlPanel(props: ControlPanelProps) {
                     onClick={onUploadFigma}
                     title="Upload Figma exports — each goes to the viewport its width matches at 1x or 2x (I)"
                     aria-label="Upload Figma exports"
-                    className={`${BTN} px-1.5 py-1 text-press-magenta`}
+                    className={`${BTN} shrink-0 px-1.5 py-1 text-press-magenta`}
                   >
                     <UploadIcon className="h-3 w-3" />
                   </button>
-                  <button
-                    type="button"
-                    onClick={onRemoveFigma}
-                    disabled={slot.figmaSrc === null}
-                    title={`Remove the ${preset.label} Figma export`}
-                    aria-label={`Remove the ${preset.label} Figma export`}
-                    className={`${BTN} px-1.5 py-1 text-press-magenta`}
+                  <SplitButton
+                    onMain={onRemoveFigma}
+                    mainDisabled={slot.figmaSrc === null}
+                    title={`Delete the ${preset.label} Figma export`}
+                    ariaLabel={`Delete the ${preset.label} Figma export`}
+                    menuLabel="Delete Figma exports: choose the viewports"
+                    className="text-press-magenta"
+                    items={[
+                      {
+                        label: 'This viewport',
+                        disabled: slot.figmaSrc === null,
+                        onSelect: onRemoveFigma,
+                      },
+                      {
+                        label: 'All viewports…',
+                        hint: `${figmaCount}/${viewportCount}`,
+                        title:
+                          figmaCount === 0
+                            ? 'No viewport has a Figma export'
+                            : 'Delete the Figma export of every viewport on this page — asks first',
+                        disabled: figmaCount === 0,
+                        danger: true,
+                        onSelect: onRemoveAllFigma,
+                      },
+                    ]}
                   >
                     <TrashIcon className="h-3 w-3" />
-                  </button>
+                  </SplitButton>
                 </Row>
 
                 {/* The site at this size, captured by the Chrome extension in
@@ -513,30 +723,33 @@ export default function ControlPanel(props: ControlPanelProps) {
                     ink="cyan"
                     title={slot.error ?? undefined}
                   />
-                  <button
-                    type="button"
-                    onClick={onCapture}
-                    disabled={blocked !== null}
-                    title={
-                      blocked ??
-                      `Capture ${preset.label} at ${preset.width}×${preset.height} in Chrome, with your session (⇧C)`
-                    }
-                    className={`${BTN} flex-1 py-1`}
+                  <SplitButton
+                    grow
+                    onMain={onCapture}
+                    mainDisabled={blocked !== null}
+                    title={siteCaptureTitle}
+                    menuLabel="Capture the site: choose the viewports"
+                    items={[
+                      {
+                        label: 'This viewport',
+                        hint: '⇧C',
+                        title: siteCaptureTitle,
+                        disabled: blocked !== null,
+                        onSelect: onCapture,
+                      },
+                      {
+                        label: 'All viewports',
+                        hint: String(viewportCount),
+                        title:
+                          layers.siteAllBlockedReason ??
+                          'Capture the site at every viewport in Chrome, with your session',
+                        disabled: layers.siteAllBlockedReason !== null,
+                        onSelect: onCaptureAllSites,
+                      },
+                    ]}
                   >
-                    Chrome
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onCaptureAllSites}
-                    disabled={layers.siteAllBlockedReason !== null}
-                    title={
-                      layers.siteAllBlockedReason ??
-                      'Capture the site at every viewport in Chrome, with your session'
-                    }
-                    className={`${BTN} flex-1 py-1`}
-                  >
-                    All
-                  </button>
+                    Capture
+                  </SplitButton>
                   {/* Upload: screenshots taken elsewhere, each landing on the
                       viewport its width matches at 1x or 2x */}
                   <button
@@ -544,20 +757,40 @@ export default function ControlPanel(props: ControlPanelProps) {
                     onClick={onUploadSite}
                     title="Upload site screenshots — each goes to the viewport its width matches at 1x or 2x"
                     aria-label="Upload site screenshots"
-                    className={`${BTN} px-1.5 py-1 text-press-cyan`}
+                    className={`${BTN} shrink-0 px-1.5 py-1 text-press-cyan`}
                   >
                     <UploadIcon className="h-3 w-3" />
                   </button>
-                  <button
-                    type="button"
-                    onClick={onRemoveScreenshot}
-                    disabled={!shot || capturing}
-                    title={`Remove the ${preset.label} site capture`}
-                    aria-label={`Remove the ${preset.label} site capture`}
-                    className={`${BTN} px-1.5 py-1 text-press-cyan`}
+                  <SplitButton
+                    onMain={onRemoveScreenshot}
+                    mainDisabled={!shot || capturing}
+                    title={`Delete the ${preset.label} site capture`}
+                    ariaLabel={`Delete the ${preset.label} site capture`}
+                    menuLabel="Delete site captures: choose the viewports"
+                    className="text-press-cyan"
+                    items={[
+                      {
+                        label: 'This viewport',
+                        disabled: !shot || capturing,
+                        onSelect: onRemoveScreenshot,
+                      },
+                      {
+                        label: 'All viewports…',
+                        hint: `${siteCount}/${viewportCount}`,
+                        title:
+                          siteCount === 0
+                            ? 'No viewport has a site capture'
+                            : anyCapturing
+                              ? 'Wait for the running capture to finish'
+                              : 'Delete the site capture of every viewport on this page — asks first',
+                        disabled: siteCount === 0 || anyCapturing,
+                        danger: true,
+                        onSelect: onRemoveAllScreenshots,
+                      },
+                    ]}
                   >
                     <TrashIcon className="h-3 w-3" />
-                  </button>
+                  </SplitButton>
                 </Row>
 
                 {slot.status === 'error' && slot.error && (

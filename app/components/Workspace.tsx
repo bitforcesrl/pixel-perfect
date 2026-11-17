@@ -349,9 +349,9 @@ export default function Workspace({
   const [penWidth, setPenWidth] = useState(2);
   const [selectedGuideId, setSelectedGuideId] = useState<string | null>(null);
   // Which destructive command is waiting to be confirmed, if any
-  const [confirming, setConfirming] = useState<'page' | 'everything' | null>(
-    null,
-  );
+  const [confirming, setConfirming] = useState<
+    'page' | 'everything' | 'allFigma' | 'allSite' | null
+  >(null);
   // An import whose project has the name of one already here, waiting for the
   // user to agree to replace it. Nothing of it is written until they do.
   const [pendingImport, setPendingImport] = useState<{
@@ -1000,6 +1000,45 @@ export default function Workspace({
     }
     patchSlot(key, { screenshot: null, status: 'idle', error: null });
     void clearScreenshot(pageId, key);
+  };
+
+  /** Drop the Figma export of every enabled viewport. Confirmed before it gets here. */
+  const handleRemoveAllFigma = () => {
+    setConfirming(null);
+    for (const preset of presets) {
+      if (slots[preset.key].figmaSrc) handleRemoveFigma(preset.key);
+    }
+  };
+
+  /**
+   * Drop the site capture of every enabled viewport that is not capturing.
+   * Not a loop over handleRemoveScreenshot: viewports can share one image, and
+   * each would see the others still holding it, so the tiles would never go.
+   */
+  const handleRemoveAllScreenshots = () => {
+    setConfirming(null);
+    const dropped = presets
+      .map((preset) => preset.key)
+      .filter(
+        (key) =>
+          slots[key].screenshot !== null && slots[key].status !== 'capturing',
+      );
+    const kept = new Set(
+      Object.entries(slots)
+        .filter(([key]) => !dropped.includes(key as ViewportKey))
+        .map(([, slot]) => slot?.screenshot?.image)
+        .filter((image): image is string => Boolean(image)),
+    );
+    const released = new Set<string>();
+    for (const key of dropped) {
+      const image = slots[key].screenshot?.image;
+      if (image && !kept.has(image) && !released.has(image)) {
+        releaseTiles(image);
+        released.add(image);
+      }
+      patchSlot(key, { screenshot: null, status: 'idle', error: null });
+      void clearScreenshot(pageId, key);
+    }
   };
 
   /** Archive a viewport's current Figma export, alignment included. */
@@ -1689,6 +1728,12 @@ export default function Workspace({
   const isCapturing = presets.some(
     (preset) => slots[preset.key].status === 'capturing',
   );
+  const figmaHeldCount = presets.filter(
+    (preset) => slots[preset.key].figmaSrc !== null,
+  ).length;
+  const siteHeldCount = presets.filter(
+    (preset) => slots[preset.key].screenshot !== null,
+  ).length;
   const captureErrors = presets.filter(
     (preset) => slots[preset.key].error !== null,
   );
@@ -2592,6 +2637,37 @@ export default function Workspace({
           onCancel={() => setConfirming(null)}
         />
 
+        {/* Layers ▸ Delete ▾ All viewports — one layer off every viewport */}
+        <ConfirmDialog
+          open={confirming === 'allFigma' || confirming === 'allSite'}
+          title={
+            confirming === 'allFigma'
+              ? 'Delete all Figma exports'
+              : 'Delete all site captures'
+          }
+          danger
+          confirmLabel={`Delete ${
+            confirming === 'allFigma' ? figmaHeldCount : siteHeldCount
+          }`}
+          message={
+            <>
+              Every{' '}
+              {confirming === 'allFigma' ? 'Figma export' : 'site capture'} on{' '}
+              <span className="font-medium text-ink-100">{page.name}</span> is
+              dropped —{' '}
+              {confirming === 'allFigma' ? figmaHeldCount : siteHeldCount} of{' '}
+              {presets.length} viewports. The other layer, the notes and the
+              snapshots in History stay. This cannot be undone.
+            </>
+          }
+          onConfirm={
+            confirming === 'allFigma'
+              ? handleRemoveAllFigma
+              : handleRemoveAllScreenshots
+          }
+          onCancel={() => setConfirming(null)}
+        />
+
         {/* The one command in the app that empties the browser. It asks for the
           phrase in full: there is no undo behind it and nothing on a server to
           restore from. */}
@@ -2736,6 +2812,10 @@ export default function Workspace({
                           ? 'Figma is already rendering'
                           : 'No viewport has a Figma frame link — set them under File ▸ Pages',
                       siteAllBlockedReason: captureBlockedReason,
+                      viewportCount: presets.length,
+                      figmaCount: figmaHeldCount,
+                      siteCount: siteHeldCount,
+                      anyCapturing: isCapturing,
                     }
                   : null
               }
@@ -2753,6 +2833,8 @@ export default function Workspace({
               onRemoveScreenshot={() =>
                 activeViewport && handleRemoveScreenshot(activeViewport)
               }
+              onRemoveAllFigma={() => setConfirming('allFigma')}
+              onRemoveAllScreenshots={() => setConfirming('allSite')}
               opacity={opacity}
               onOpacityChange={setOpacity}
               liveOpacity={liveOpacity}

@@ -84,7 +84,7 @@ export default function Panels() {
             <PanelShot
               name="panel-layers"
               height={293}
-              alt="The Layers panel for Tablet 768×1024: a Figma row with Capture, All, upload and delete buttons, and a Site row with Chrome, All, upload and delete."
+              alt="The Layers panel for Tablet 768×1024: a Figma row and a Site row, each with a Capture button and its ▾ menu, an upload button and a delete button with its ▾ menu."
             />
           }
         >
@@ -94,18 +94,26 @@ export default function Panels() {
             (hover it for the reason), <strong>–</strong> empty, a spinner while
             working.
           </P>
+          <P>
+            <strong>Capture</strong> and the bin act on the viewport on screen.
+            The <strong>▾</strong> beside each offers{' '}
+            <strong>This viewport</strong> or <strong>All viewports</strong>:
+            picking one runs it at once. Capturing every viewport asks before
+            replacing layers already in place; deleting every viewport always
+            asks first. The upload icon between them is always in bulk: it takes{' '}
+            <DocLink to={DOCS.bulkUpload}>several files</DocLink> and sends each
+            one to the viewport its width matches.
+          </P>
           <Fields
             items={[
               {
                 name: <Layer of="figma" />,
                 body: (
                   <>
-                    <strong>Capture</strong> (<Kbd>⇧</Kbd> <Kbd>M</Kbd>) and{' '}
-                    <strong>All</strong> export from Figma — see{' '}
+                    <strong>Capture</strong> (<Kbd>⇧</Kbd> <Kbd>M</Kbd>) exports
+                    the frame from Figma — see{' '}
                     <DocLink to={DOCS.figmaExport}>Figma export</DocLink>. The
-                    upload icon (<Kbd>I</Kbd>) takes{' '}
-                    <DocLink to={DOCS.bulkUpload}>several files</DocLink>, the
-                    bin removes this viewport&apos;s export.
+                    upload icon has the shortcut <Kbd>I</Kbd>.
                   </>
                 ),
               },
@@ -113,15 +121,13 @@ export default function Panels() {
                 name: <Layer of="site" />,
                 body: (
                   <>
-                    <strong>Chrome</strong> (<Kbd>⇧</Kbd> <Kbd>C</Kbd>) captures
-                    the viewport through the{' '}
+                    <strong>Capture</strong> (<Kbd>⇧</Kbd> <Kbd>C</Kbd>) takes
+                    the page through the{' '}
                     <DocLink to={DOCS.chromeExtension}>
                       Chrome extension
                     </DocLink>
-                    , <strong>All</strong> every enabled viewport; without the
-                    extension both open the dialog that installs it. The upload
-                    icon and the bin work as above. Either <strong>All</strong>{' '}
-                    asks before replacing layers already in place.
+                    ; without the extension it opens the dialog that installs
+                    it.
                   </>
                 ),
               },

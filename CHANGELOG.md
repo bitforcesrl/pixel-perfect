@@ -10,8 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The Layers panel can delete a layer on every viewport at once: the bin's ▾ menu ▸ All viewports, after a confirmation.
+
 ### Changed
 
+- The Layers panel's Capture buttons have a ▾ menu with This viewport and All viewports, replacing the separate All buttons; the site row's Chrome button is now called Capture.
 - On a high-density (Retina) screen, site captures and Figma exports are taken at 2x on every viewport, desktop included, so text stays sharp at 100%; on a standard screen the scale still slides from 2x on mobile to 1x on desktop.
 - Site captures land faster and keep their full sharpness on very tall pages: the Chrome extension now hands over the capture already compressed, with no second compression in the app.
 
