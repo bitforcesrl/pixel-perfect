@@ -7,8 +7,6 @@
  * arrows as glyphs — so the help dialog and the menus read the same.
  */
 
-import { CLOUD_CAPTURE_ENABLED } from './features';
-
 export interface Shortcut {
   /** One entry per key in the chord, e.g. `["⇧", "C"]`. */
   keys: string[];
@@ -22,22 +20,8 @@ export interface ShortcutGroup {
   shortcuts: Shortcut[];
 }
 
-/** What this session can do, which decides the shortcuts worth listing. */
-export interface ShortcutContext {
-  /**
-   * The app runs on this machine (development): the local-browser captures
-   * (L / ⇧L) only work there, so they are listed only there.
-   */
-  localCapture: boolean;
-}
-
-/**
- * The shortcuts that apply to this session. Keys that would do nothing — the
- * local captures on a public deployment — are left out rather than listed.
- */
-export function shortcutGroups({
-  localCapture,
-}: ShortcutContext): ShortcutGroup[] {
+/** Every shortcut the app answers, grouped as the menu bar groups them. */
+export function shortcutGroups(): ShortcutGroup[] {
   return [
     {
       title: 'File',
@@ -112,19 +96,9 @@ export function shortcutGroups({
       // need Shift, and the every-viewport runs have no key at all
       note: 'Every viewport at once: Capture menu or Layers panel',
       shortcuts: [
-        // Browserless captures, listed only while the cloud capture is on
-        ...(CLOUD_CAPTURE_ENABLED
-          ? [{ keys: ['⇧', 'C'], description: 'Capture this viewport' }]
-          : []),
-        // Development only: production has no browser of its own to offer
-        ...(localCapture
-          ? [
-              {
-                keys: ['⇧', 'L'],
-                description: 'Capture this viewport on this machine',
-              },
-            ]
-          : []),
+        // Through the Chrome extension; without it, the key opens the
+        // dialog that installs it
+        { keys: ['⇧', 'C'], description: 'Capture this viewport' },
         // The export scale follows the viewport width (2x mobile → 1x
         // desktop), so the description does not promise one
         { keys: ['⇧', 'M'], description: "Export this viewport's Figma frame" },

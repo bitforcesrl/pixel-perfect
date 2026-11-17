@@ -6,8 +6,7 @@ import { SITE } from '@/lib/site';
 const RUN_LOCALLY = `git clone ${SITE.githubUrl}.git
 cd pixel-perfect
 npm install
-npm run playwright:install   # Firefox for local captures, once
-npm run dev                  # → http://localhost:7654/app`;
+npm run dev   # → http://localhost:7654/app`;
 
 export default function SelfHosting() {
   return (
@@ -15,7 +14,7 @@ export default function SelfHosting() {
       id={DOCS.selfHosting}
       number="09"
       title="Self-hosting"
-      lead="Run Pixel Perfect on your machine to unlock local captures and browser logins, and to set the Figma and Browserless keys once for everyone."
+      lead="Run Pixel Perfect on your own machine or server, and set the Figma token once for everyone."
     >
       <pre className="overflow-x-auto rounded-md border border-ink-800 bg-ink-950 p-5 font-mono text-[13px] leading-relaxed text-ink-200">
         <code>{RUN_LOCALLY}</code>
@@ -35,36 +34,21 @@ export default function SelfHosting() {
               </>
             ),
           },
-          {
-            name: <Code>BROWSERLESS_TOKEN</Code>,
-            body: (
-              <>
-                A Browserless key for every cloud capture. See{' '}
-                <DocLink to={DOCS.browserlessKey}>
-                  Get a Browserless key
-                </DocLink>
-                .
-              </>
-            ),
-          },
-          {
-            name: <Code>BROWSERLESS_*</Code>,
-            body: (
-              <>
-                Region (<Code>BROWSERLESS_URL</Code>), session length, proxy and
-                concurrency for your Browserless plan — documented in{' '}
-                <Code>.env.example</Code>.
-              </>
-            ),
-          },
         ]}
       />
       <P>
-        Leave both tokens unset on a public deployment: each visitor then brings
-        their own. Docker and production builds are covered in the{' '}
-        <ExtLink href={`${SITE.githubUrl}#readme`}>README</ExtLink>. In Docker,
-        local captures work but browser login does not (there is no screen to
-        open a window on).
+        Leave it unset on a public deployment: each visitor then brings their
+        own. Docker and production builds are covered in the{' '}
+        <ExtLink href={`${SITE.githubUrl}#readme`}>README</ExtLink>.
+      </P>
+      <P>
+        Site captures need nothing on the server: they run in each
+        visitor&apos;s{' '}
+        <DocLink to={DOCS.chromeExtension}>Chrome extension</DocLink>. The
+        extension answers <Code>pixelperfect.fit</Code> and{' '}
+        <Code>localhost</Code> out of the box; for a copy on another address,
+        add it in the extension&apos;s settings (right-click its icon ▸{' '}
+        <strong>Options</strong>).
       </P>
     </DocSection>
   );

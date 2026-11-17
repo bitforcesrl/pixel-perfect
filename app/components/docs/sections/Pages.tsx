@@ -1,16 +1,6 @@
 import { DocSection, DocSubsection } from '../DocSection';
 import Figure from '../Figure';
-import {
-  Availability,
-  Code,
-  DocLink,
-  Fields,
-  Kbd,
-  Menu,
-  Note,
-  P,
-  WithAside,
-} from '../Prose';
+import { Code, DocLink, Fields, Kbd, Menu, P, WithAside } from '../Prose';
 import { DOCS } from '@/lib/docs';
 
 export default function Pages() {
@@ -48,9 +38,9 @@ export default function Pages() {
       <Figure
         src="/docs/pages-gallery.webp"
         width={1640}
-        height={1556}
+        height={1312}
         displayWidth={820}
-        alt="The Pages gallery: a page card with its preview, capture URL, site password, browser login button and one Figma frame URL per viewport, next to the New page card."
+        alt="The Pages gallery: a page card with its preview, capture URL and one Figma frame URL per viewport, next to the New page card."
         caption="File ▸ Pages… — one card per page, plus a card to add a new one."
       />
 
@@ -63,36 +53,10 @@ export default function Pages() {
                 <>
                   The address the site screenshots are taken from (
                   <Code>http</Code> or <Code>https</Code>). Optional: leave it
-                  empty if you only drop or upload screenshots. Needed by{' '}
-                  <DocLink to={DOCS.browserless}>cloud</DocLink> and{' '}
-                  <DocLink to={DOCS.localCapture}>local</DocLink> captures.
-                </>
-              ),
-            },
-            {
-              name: 'Site password',
-              body: (
-                <>
-                  For sites behind a <strong>password page</strong>: a Shopify
-                  storefront password, a staging gate. When the page answers
-                  with a password form, the capture types it in, submits it and
-                  reloads the URL. Leave it empty for public pages. It is not
-                  HTTP basic auth and not a user login.
-                </>
-              ),
-            },
-            {
-              name: 'Browser login',
-              badge: <Availability only="self-hosted-no-docker" />,
-              body: (
-                <>
-                  For sites that need a <strong>real login</strong> (e.g. a code
-                  sent by email). <strong>Log in</strong> opens a Firefox window
-                  on your machine at the page URL: sign in by hand, then press{' '}
-                  <strong>Done</strong>. The session (cookies and storage) is
-                  saved for that host and every local capture of it starts
-                  signed in. <strong>Log in again</strong> refreshes it,{' '}
-                  <strong>Forget</strong> deletes it. Needs a Capture URL.
+                  empty if you only drop or upload screenshots. Needed by the{' '}
+                  <DocLink to={DOCS.chromeExtension}>automatic capture</DocLink>
+                  . A site behind a password or a login is captured the way you
+                  left it in Chrome: open it there and sign in first.
                 </>
               ),
             },
@@ -112,11 +76,6 @@ export default function Pages() {
             },
           ]}
         />
-        <Note tone="warn">
-          The site password is saved with the project and travels{' '}
-          <strong>in plain text</strong> inside an exported ZIP. Share exports
-          only with people allowed to see it.
-        </Note>
       </DocSubsection>
     </DocSection>
   );

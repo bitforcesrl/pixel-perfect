@@ -1,7 +1,6 @@
 import { DocSection, DocSubsection } from '../DocSection';
 import Figure, { WindowShot } from '../Figure';
 import {
-  Availability,
   Bullets,
   Code,
   DocLink,
@@ -15,10 +14,10 @@ import {
   WithAside,
 } from '../Prose';
 import { DOCS } from '@/lib/docs';
+import { EXTENSION_STORE_URL } from '@/lib/features';
 
 const FIGMA_TOKEN_HELP =
   'https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens';
-const BROWSERLESS_SITE = 'https://www.browserless.io/';
 
 export default function LoadingImages() {
   return (
@@ -161,42 +160,89 @@ export default function LoadingImages() {
         </Note>
       </DocSubsection>
 
-      <DocSubsection id={DOCS.browserless} title="Cloud capture (Browserless)">
+      <DocSubsection
+        id={DOCS.chromeExtension}
+        title="Automatic capture (Chrome extension)"
+      >
         <P>
-          The app screenshots the page&apos;s{' '}
-          <DocLink to={DOCS.pageFields}>Capture URL</DocLink> in a browser
-          hosted by <ExtLink href={BROWSERLESS_SITE}>Browserless</ExtLink>,
-          full-page, at each viewport&apos;s exact width. It works for any
-          public address, including password-protected storefronts (see{' '}
-          <DocLink to={DOCS.pageFields}>Site password</DocLink>).
+          Install the <strong>Pixel Perfect Capture</strong> extension and the
+          site layer is generated for you: the page&apos;s{' '}
+          <DocLink to={DOCS.pageFields}>Capture URL</DocLink> is screenshotted
+          full-page, at each viewport&apos;s exact width, in your own Chrome and
+          with your session. If you are logged in, past the shop password and
+          done with the cookie banner, so is the capture. No key, no account,
+          nothing sent to a server — and <Code>localhost</Code> or staging
+          addresses work like any other.
         </P>
+        <Steps>
+          {[
+            EXTENSION_STORE_URL ? (
+              <>
+                Install it from the{' '}
+                <ExtLink href={EXTENSION_STORE_URL}>Chrome Web Store</ExtLink>{' '}
+                (Chrome, Edge, Brave, Arc) and reload Pixel Perfect.
+              </>
+            ) : (
+              <>
+                Until it is on the Chrome Web Store, load it from the{' '}
+                <Code>extension/</Code> folder of the repository: open{' '}
+                <Code>chrome://extensions</Code>, turn on Developer mode, choose{' '}
+                <strong>Load unpacked</strong> and pick the folder. Then reload
+                Pixel Perfect.
+              </>
+            ),
+            <>
+              Open the site in Chrome once and get it ready the way a visitor
+              would: log in, enter the password, answer the cookie banner.
+            </>,
+            <>
+              In Pixel Perfect press <strong>Chrome</strong> on the Site row of
+              the <DocLink to={DOCS.Layers}>Layers panel</DocLink> (<Kbd>⇧</Kbd>{' '}
+              <Kbd>C</Kbd>) for the viewport on screen, or <strong>All</strong>{' '}
+              / <Menu path={['Capture', 'Capture all enabled viewports']} /> for
+              every enabled viewport.
+            </>,
+          ]}
+        </Steps>
         <Bullets>
           {[
             <>
-              <strong>Cloud</strong> on the Site row of the Layers panel (
-              <Kbd>⇧</Kbd> <Kbd>C</Kbd>) captures the viewport on screen;{' '}
-              <Menu path={['Capture', 'Capture all enabled viewports']} />{' '}
-              captures every enabled viewport.
+              The <strong>Chrome</strong> and <strong>All</strong> buttons are
+              always there. Without the extension they open a dialog with the
+              link to install it; the status bar, bottom right, says which
+              extension version is answering, or <em>no extension</em>.
             </>,
             <>
-              Cookie banners and pop-ups are dismissed and the page is scrolled
-              once so lazy images load.
+              The first capture of a site asks you to allow it, once per site.
+              Allowed sites are listed, and can be removed, in the
+              extension&apos;s settings.
+            </>,
+            <>
+              The page opens in a small window, is captured at each viewport — a
+              real phone layout below 768 px, at the same scale as the Figma
+              export (2x on mobile, 1x from 1440 px) — and the window closes by
+              itself. Chrome shows a &ldquo;started debugging this
+              browser&rdquo; bar meanwhile: that is the extension at work;
+              cancelling it stops the capture.
+            </>,
+            <>
+              Lazy images are loaded before the shot. Cookie banners and pop-ups
+              are hidden from the screenshot, never clicked: your choices on the
+              site stay as they were.
+            </>,
+            <>
+              A site still behind its password is reported, not captured: open
+              it in Chrome, enter the password, and capture again. The extension
+              never types passwords.
             </>,
             <>
               While it runs, a progress sheet locks the app so results land on
               the right page; <strong>Stop</strong> cancels what is left.
             </>,
             <>
-              The free Browserless plan allows one session of 60 seconds at a
-              time, so viewports are captured one after the other. On a slow
-              page the capture shortens its waits to finish within the session,
-              so a few late images may be missing rather than the whole capture
-              failing.
-            </>,
-            <>
-              Viewports narrower than 768 px are captured at the same scale as
-              the Figma export (2x on mobile); wider ones at 1x. A page too tall
-              to send back at 2x is captured at 1x instead.
+              From any site, the extension&apos;s icon ▸{' '}
+              <strong>Open in Pixel Perfect</strong> opens the page that
+              compares it — or creates one — and captures it.
             </>,
           ]}
         </Bullets>
@@ -205,91 +251,10 @@ export default function LoadingImages() {
           alt="The capture progress sheet listing Mobile, Tablet and Desktop as capturing, with a Stop button."
           caption="The progress sheet, one row per viewport."
         />
-      </DocSubsection>
-
-      <DocSubsection id={DOCS.browserlessKey} title="Get a Browserless key">
-        <WithAside
-          aside={
-            <Figure
-              src="/docs/browserless-key.webp"
-              width={1152}
-              height={651}
-              displayWidth={400}
-              alt="The Browserless key dialog with instructions and an API token field."
-              caption="Capture ▸ Browserless key…"
-            />
-          }
-        >
-          <Steps>
-            {[
-              <>
-                Create a free account at{' '}
-                <ExtLink href={BROWSERLESS_SITE}>browserless.io</ExtLink>.
-              </>,
-              <>
-                Copy the <strong>API token</strong> from your account dashboard.
-              </>,
-              <>
-                In Pixel Perfect open{' '}
-                <Menu path={['Capture', 'Browserless key…']} />, paste it and
-                press <strong>Save key</strong>. The dialog also opens by itself
-                on your first cloud capture.
-              </>,
-            ]}
-          </Steps>
-          <P>
-            The key is saved in this browser with the app&apos;s data and sent
-            with each capture, never stored on a server.{' '}
-            <Menu path={['File', 'Reset everything…']} /> or clearing site data
-            removes it.
-          </P>
-        </WithAside>
         <Note>
-          <strong>Self-hosted:</strong> set <Code>BROWSERLESS_TOKEN</Code> on
-          the server and nobody is asked for a key. See{' '}
-          <DocLink to={DOCS.selfHosting}>Self-hosting</DocLink> for region,
-          proxy and session settings.
-        </Note>
-      </DocSubsection>
-
-      <DocSubsection
-        id={DOCS.localCapture}
-        title="Local capture"
-        badge={<Availability only="self-hosted" />}
-      >
-        <P>
-          When the app runs on your machine and is opened at{' '}
-          <Code>localhost</Code>, a <strong>Local</strong> button joins Cloud:
-          the capture runs in a Firefox on your computer, no key needed.
-        </P>
-        <Bullets>
-          {[
-            <>
-              <strong>Local</strong> (<Kbd>⇧</Kbd> <Kbd>L</Kbd>) captures the
-              viewport on screen,{' '}
-              <Menu path={['Capture', 'Capture all on this machine']} /> every
-              enabled one. Here <strong>All</strong> in the Layers panel uses
-              the local browser.
-            </>,
-            <>
-              It reaches what a remote browser cannot: <Code>localhost</Code>{' '}
-              addresses, and pages behind a{' '}
-              <DocLink to={DOCS.pageFields}>Browser login</DocLink>.
-            </>,
-            <>
-              Screenshots are taken at the same scale as the Figma export (2x on
-              mobile), so both layers are equally sharp.
-            </>,
-            <>
-              Install Firefox once with <Code>npm run playwright:install</Code>.
-              The Docker image already includes it.
-            </>,
-          ]}
-        </Bullets>
-        <Note>
-          A cloud capture that cannot work — a <Code>localhost</Code> address, a
-          site that blocks Browserless — is retried on the local browser
-          automatically.
+          <strong>No extension, no problem:</strong> screenshots taken any other
+          way can always be <DocLink to={DOCS.dragAndDrop}>dropped</DocLink> or{' '}
+          <DocLink to={DOCS.bulkUpload}>uploaded</DocLink> instead.
         </Note>
       </DocSubsection>
     </DocSection>

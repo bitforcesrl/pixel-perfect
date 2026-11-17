@@ -13,12 +13,6 @@ export interface Page {
   /** The page this comparison captures — remembered per page. */
   url: string;
   /**
-   * What the site's own password gate is answered with, when it has one — a
-   * Shopify store still behind its storefront password, a staging site. Empty
-   * when the page is public.
-   */
-  sitePassword: string;
-  /**
    * The Figma frame each viewport is compared against, as the link copied out
    * of Figma. Keyed by viewport; a viewport with no entry has no frame yet.
    */
@@ -82,7 +76,6 @@ export function createPage(name: string, url = ''): Page {
     id: randomId(),
     name: sanitizeName(name),
     url,
-    sitePassword: '',
     figmaUrls: {},
     createdAt: Date.now(),
   };
@@ -103,14 +96,14 @@ export function createProject(name: string): Project {
 
 function sanitizePage(raw: unknown): Page | null {
   if (typeof raw !== 'object' || raw === null) return null;
-  const { id, name, url, sitePassword, figmaUrls, createdAt } =
-    raw as Partial<Page>;
+  // Older versions also stored a site password per page; it is dropped here,
+  // so the next save removes it from this browser too
+  const { id, name, url, figmaUrls, createdAt } = raw as Partial<Page>;
   if (typeof id !== 'string' || id.length === 0) return null;
   return {
     id,
     name: sanitizeName(typeof name === 'string' ? name : ''),
     url: typeof url === 'string' ? url : '',
-    sitePassword: typeof sitePassword === 'string' ? sitePassword : '',
     figmaUrls: sanitizeFigmaUrls(figmaUrls),
     createdAt: typeof createdAt === 'number' ? createdAt : 0,
   };
@@ -162,7 +155,6 @@ function sanitizeProject(raw: unknown): Project | null {
               id,
               name: 'Home',
               url: typeof url === 'string' ? url : '',
-              sitePassword: '',
               figmaUrls: {},
               createdAt: typeof createdAt === 'number' ? createdAt : 0,
             },

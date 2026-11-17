@@ -12,7 +12,7 @@ If you find a vulnerability, please **do not** disclose it in a public issue, di
 
 A useful report includes:
 
-- the type of issue (for example SSRF through the screenshot route, auth bypass, secret exposure);
+- the type of issue (for example SSRF through the Figma route, a way around the extension's per-site consent, secret exposure);
 - the affected files, routes or features;
 - step-by-step instructions to reproduce it, and a proof of concept if you have one;
 - the impact, as you understand it.
@@ -21,8 +21,7 @@ A pull request with a fix, sent after the private report, is the fastest way to 
 
 ## Notes for anyone deploying it
 
-Pixel Perfect can open arbitrary URLs in a headless browser (`/api/screenshot`). Securing your own deployment is your responsibility. At a minimum:
+Pixel Perfect never opens other sites on the server: site screenshots are taken by the Pixel Perfect Capture Chrome extension, in each user's own browser. The server only proxies Figma API calls (`/api/figma`). Securing your own deployment is your responsibility. At a minimum:
 
-- always set `SITE_PASSWORD` on a public instance; it also guards the screenshot route;
-- keep `FIGMA_TOKEN` and `BROWSERLESS_TOKEN` in your host's secret store, never in the repository;
-- remember that saved browser-login sessions (`.sessions/`) contain authentication cookies and must never be committed or shared.
+- keep `FIGMA_TOKEN` in your host's secret store, never in the repository; leave it unset on a public instance, so each user brings their own token;
+- the Chrome extension only talks to the Pixel Perfect addresses it knows (`pixelperfect.fit`, `localhost`) and the ones its user adds in its settings, and asks once per site before capturing it.

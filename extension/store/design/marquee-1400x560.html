@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Marquee promo tile · 1400×560</title>
+    <link rel="stylesheet" href="design.css" />
+    <style>
+      .tile {
+        width: 1400px;
+        height: 560px;
+      }
+      .copy {
+        top: 72px;
+        left: 80px;
+        width: 560px;
+      }
+      .copy .hero-line {
+        margin-top: 24px;
+        font-size: 50px;
+      }
+      .copy .lead {
+        width: 540px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas tile">
+      <div class="press-bar"></div>
+
+      <div class="copy">
+        <div class="kicker"><img src="raw/icon.svg" alt="" />Pixel Perfect</div>
+        <h1 class="hero-line">
+          Your site on top of its Figma design.<br />
+          <span class="magenta">See every pixel</span>
+          <span class="cyan">that doesn’t match.</span>
+        </h1>
+        <p class="lead">
+          Stack the live site on its Figma design, per page and per viewport,
+          and find the drift in seconds. Free and open source.
+        </p>
+      </div>
+
+      <!-- The whole app in split mode, the seam over the product details:
+           title, description and button visibly differ on either side -->
+      <div
+        class="window"
+        style="left: 690px; top: 58px; width: 680px; height: 474px"
+      >
+        <div class="window-bar" style="height: 38px">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="address"><b>pixelperfect.fit</b>/app</div>
+        </div>
+        <div class="viewport" style="height: 434px">
+          <img
+            src="raw/app-split.webp"
+            alt=""
+            style="width: 680px; left: 0; top: 0"
+          />
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

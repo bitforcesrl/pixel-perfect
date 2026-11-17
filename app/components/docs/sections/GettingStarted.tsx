@@ -47,15 +47,13 @@ export default function GettingStarted() {
         ]}
       </Bullets>
       <Note>
-        <strong>Hosted or self-hosted.</strong> The public app works for
-        everyone with drag &amp; drop, the Figma API and cloud captures. Running
-        it on your own machine (<Code>npm run dev</Code>, see{' '}
-        <DocLink to={DOCS.selfHosting}>Self-hosting</DocLink>) adds a few
-        extras: those are marked{' '}
-        <span className="font-mono text-[12px] text-press-amber">
-          Self-hosted only
-        </span>{' '}
-        below. The source is on <ExtLink href={SITE.githubUrl}>GitHub</ExtLink>.
+        <strong>Hosted or self-hosted.</strong> The public app and a copy on
+        your own machine (<Code>npm run dev</Code>, see{' '}
+        <DocLink to={DOCS.selfHosting}>Self-hosting</DocLink>) do the same
+        things: drag &amp; drop, the Figma API and automatic site captures
+        through the{' '}
+        <DocLink to={DOCS.chromeExtension}>Chrome extension</DocLink>. The
+        source is on <ExtLink href={SITE.githubUrl}>GitHub</ExtLink>.
       </Note>
     </DocSection>
   );

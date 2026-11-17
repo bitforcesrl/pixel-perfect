@@ -45,5 +45,5 @@ Dockerfile
 docker-compose.yml
 .dockerignore
 
-# login sessions saved by the browser login window (auth cookies)
-.sessions
+# Chrome extension: not part of the app image
+extension

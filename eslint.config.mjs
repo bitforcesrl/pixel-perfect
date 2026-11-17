@@ -18,8 +18,10 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     // Local-only data and tool output
     'coverage/**',
-    '.sessions/**',
     '.playwright-mcp/**',
+    // The Chrome extension is plain browser JavaScript with its own globals
+    // (`chrome`); it is checked by its own tests, not by the app's lint.
+    'extension/**',
   ]),
 ]);
 

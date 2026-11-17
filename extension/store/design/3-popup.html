@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>3 · Open any page in Pixel Perfect</title>
+    <link rel="stylesheet" href="design.css" />
+  </head>
+  <body>
+    <div class="canvas shot">
+      <div class="press-bar"></div>
+
+      <div class="copy">
+        <div class="kicker">
+          <img src="raw/icon.svg" alt="" />Pixel Perfect Capture
+        </div>
+        <h1>From any page<br />to <em>its design.</em></h1>
+        <p class="lead">
+          On the site you are building, press the toolbar button: Pixel Perfect
+          opens the page that compares it, or creates one, and captures it.
+        </p>
+        <ul class="points">
+          <li style="--dot: var(--cyan)">Localhost, staging or production</li>
+          <li style="--dot: var(--magenta)">Only the address is sent</li>
+          <li style="--dot: var(--violet)">Your project's own viewports</li>
+        </ul>
+      </div>
+
+      <div
+        class="window"
+        style="left: 500px; top: 84px; width: 728px; height: 760px"
+      >
+        <div class="window-bar">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="address"><b>shop.example.com</b>/valdo-28l</div>
+          <div class="toolbar-icon active">
+            <img src="raw/icon.svg" alt="" />
+          </div>
+        </div>
+        <div class="viewport" style="height: 714px">
+          <div class="shop" style="transform: scale(0.4); left: -84px"></div>
+        </div>
+      </div>
+
+      <!-- The real popup, as Chrome shows it under the toolbar button -->
+      <iframe
+        class="ext-frame"
+        src="../../src/ui/popup.html"
+        title="Toolbar popup"
+        style="left: 878px; top: 128px; width: 320px; height: 300px"
+      ></iframe>
+    </div>
+  </body>
+</html>

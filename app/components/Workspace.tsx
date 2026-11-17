@@ -10,8 +10,12 @@ import {
 } from 'react';
 import AnnotationLayer, { type Tool } from './AnnotationLayer';
 import BrandMark from './BrandMark';
-import BrowserlessKeyDialog from './BrowserlessKeyDialog';
-import { CLOUD_CAPTURE_ENABLED } from '@/lib/features';
+import { EXTENSION_STORE_URL } from '@/lib/features';
+import {
+  captureWithExtension,
+  type ExtensionInfo,
+} from '@/lib/extension-bridge';
+import ExtensionRequiredDialog from './ExtensionRequiredDialog';
 import FigmaTokenDialog from './FigmaTokenDialog';
 import ExportProjectDialog from './ExportProjectDialog';
 import HelpDialog from './HelpDialog';
@@ -31,7 +35,7 @@ import SettingsPanel from './SettingsPanel';
 import StorageQuotaBanner from './StorageQuotaBanner';
 import SideBySideViewer from './SideBySideViewer';
 import ViewportCards from './ViewportCards';
-import { useCaptureSource } from './useCaptureSource';
+import { useCaptureExtension } from './useCaptureExtension';
 import { useFigmaSource } from './useFigmaSource';
 import {
   annotationId,
@@ -43,12 +47,6 @@ import {
   type GuideAxis,
   type Stroke,
 } from '@/lib/annotations';
-import {
-  captureHeaders,
-  ensureKeyLoaded,
-  loadKey,
-  subscribeKey,
-} from '@/lib/browserless-key';
 import { generateDiffImage } from '@/lib/diff';
 import { createLiveValue } from '@/lib/live-value';
 import { parseFigmaUrl, type FigmaRender } from '@/lib/figma';
@@ -120,7 +118,7 @@ import {
 } from '@/lib/settings';
 import type { ScreenshotResult } from '@/lib/validation';
 import { renderScaleFor } from '@/lib/render-scale';
-import { DOCS_PATH, openDocs } from '@/lib/docs';
+import { DOCS, DOCS_PATH, openDocs } from '@/lib/docs';
 import {
   findProjectByName,
   MAX_PAGES,
@@ -238,8 +236,12 @@ export interface WorkspaceProps {
   onRenamePage: (id: string, name: string) => void;
   onDeletePage: (id: string) => void;
   onUrlChange: (url: string, pageId?: string) => void;
-  onSitePasswordChange: (sitePassword: string, pageId: string) => void;
   onFigmaUrlChange: (key: ViewportKey, url: string, pageId: string) => void;
+  /**
+   * Capture every viewport of this page as soon as it is ready — a site sent
+   * from the extension's toolbar. A new `nonce` asks again.
+   */
+  autoCapture?: { pageId: string; nonce: number } | null;
 }
 
 /**
@@ -263,8 +265,8 @@ export default function Workspace({
   onRenamePage,
   onDeletePage,
   onUrlChange,
-  onSitePasswordChange,
   onFigmaUrlChange,
+  autoCapture = null,
 }: WorkspaceProps) {
   const projectId = project.id;
   const pageId = page.id;
@@ -307,17 +309,13 @@ export default function Workspace({
   // An export is being dragged over the canvas — it lands on the viewport the
   // canvas is showing
   const [canvasDrop, setCanvasDrop] = useState<DropSide | null>(null);
-  // Where a capture's browser comes from, and whether this machine has one
-  const { source, localAvailable } = useCaptureSource();
-  const [keyDialogOpen, setKeyDialogOpen] = useState(false);
-  const [keyError, setKeyError] = useState<string | null>(null);
-  // Local storage is not readable while rendering on the server, so the key is
-  // subscribed to rather than read: false until the client says otherwise
-  const hasKey = useSyncExternalStore(
-    subscribeKey,
-    () => loadKey() !== null,
-    () => false,
-  );
+  // The Pixel Perfect Capture extension, when installed: every site capture
+  // runs in it, in the user's own browser with their session
+  const { extension, recheck: recheckExtension } = useCaptureExtension();
+  // A capture was asked for and no extension answered: say how to get it
+  const [extensionDialogOpen, setExtensionDialogOpen] = useState(false);
+  // A capture is waiting on `recheckExtension` — a second click is not a second run
+  const extensionCheckRef = useRef(false);
   // Where a Figma export's token comes from, and the dialog that takes one
   const figmaSource = useFigmaSource();
   const [figmaDialogOpen, setFigmaDialogOpen] = useState(false);
@@ -333,10 +331,6 @@ export default function Workspace({
   );
   // The viewports whose Figma frame is being rendered right now
   const [figmaBusy, setFigmaBusy] = useState<Record<ViewportKey, boolean>>({});
-  // Which browser took the last capture — printed in the status bar
-  const [lastBrowser, setLastBrowser] = useState<
-    'local' | 'browserless' | null
-  >(null);
   // ── The annotation tools. Deliberately not persisted: guides and marks are
   //    what you are saying about this screen right now, not part of the page.
   const [tool, setTool] = useState<Tool>('none');
@@ -447,6 +441,11 @@ export default function Workspace({
     }
   }, [slots]);
 
+  // Both read from IndexedDB on mount; an automatic capture waits for them, so
+  // it runs at the project's viewports and asks before replacing captures
+  const [slotsLoaded, setSlotsLoaded] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
   // Bring back the last capture and upload. Object URLs die with the document,
   // so the stored blobs get fresh ones here.
   useEffect(() => {
@@ -454,6 +453,7 @@ export default function Workspace({
     void (async () => {
       const stored = await loadSlots(pageId);
       if (cancelled) return;
+      setSlotsLoaded(true);
       // Built outside the updater: React runs updaters twice under Strict Mode,
       // and creating the URLs in there would leak one per slot per render.
       const patches = new Map<ViewportKey, Partial<ViewportSlot>>();
@@ -543,6 +543,7 @@ export default function Workspace({
       const stored = await loadSettings(projectId);
       if (cancelled) return;
       setSettings(stored);
+      setSettingsLoaded(true);
     })();
     return () => {
       cancelled = true;
@@ -1052,44 +1053,35 @@ export default function Workspace({
   };
 
   /**
-   * Capture the given viewports, one at a time.
+   * The extension to capture with, or null after telling the user to install
+   * it.
    *
-   * The captures used to go out together, which only ever queued somewhere
-   * worse: a Browserless plan allows a set number of concurrent sessions (one on
-   * the free tier), so the extra requests either came back 429 or sat waiting
-   * while the session clock they were waiting on ran down. Serially, each
-   * capture gets a browser to itself and its full time budget. Every tab is
-   * marked up front so the queue is visible, and each settles as its turn ends.
+   * The probe on mount may not have answered yet, and the extension may have
+   * been installed in another tab since, so a capture asks once more before
+   * opening the install dialog. Resolves null without a dialog when a check
+   * is already under way: that click is the one that will answer.
    */
-  const runCaptures = (
-    targets: ViewportPreset[],
-    opts: { local?: boolean } = {},
-  ) => {
-    if (targets.length === 0 || url.trim() === '') return;
-    // The deployment has no key of its own (production): the user's key is
-    // read from IndexedDB first — instant after the first read — so a capture
-    // asked for right after load does not mistake "not read yet" for "none".
-    if (!opts.local && source === 'key') {
-      void ensureKeyLoaded().then((key) => {
-        if (key !== null) {
-          startCaptures(targets, opts);
-          return;
-        }
-        // Nothing to capture with. Asking for the key beats three cards
-        // failing with the same message on them.
-        setKeyError(null);
-        setKeyDialogOpen(true);
-      });
-      return;
+  const ensureExtension = async (): Promise<ExtensionInfo | null> => {
+    if (extension) return extension;
+    if (extensionCheckRef.current) return null;
+    extensionCheckRef.current = true;
+    try {
+      const found = await recheckExtension();
+      if (!found) setExtensionDialogOpen(true);
+      return found;
+    } finally {
+      extensionCheckRef.current = false;
     }
-    startCaptures(targets, opts);
   };
 
-  /** The run itself, once there is something to capture with. */
-  const startCaptures = (
-    targets: ViewportPreset[],
-    opts: { local?: boolean } = {},
-  ) => {
+  /**
+   * Capture the given viewports through the Chrome extension: one window,
+   * every viewport in turn, in the user's own browser session. Results land
+   * as they arrive, re-encoded as WebP strips (or JPEG) — ~10x lighter to hold
+   * and to store, and identical before and after a reload.
+   */
+  const runCaptures = (targets: ViewportPreset[], found: ExtensionInfo) => {
+    if (targets.length === 0 || url.trim() === '') return;
     setUploadError(null);
     // Each viewport's site layer is claimed now, when the run is asked for: a
     // screenshot dropped on one of them while the run is still going is the
@@ -1110,79 +1102,63 @@ export default function Workspace({
       return next;
     });
 
-    // Stop on the overlay aborts the request in flight and skips the rest
+    // Stop on the overlay aborts the run and skips what is left
     const controller = new AbortController();
     captureAbortRef.current = controller;
     const { signal } = controller;
 
-    void (async () => {
-      for (const preset of targets) {
-        if (signal.aborted) break;
-        // Already replaced by a drop: no point shooting it
-        if (!isLatestFor(preset.key)) continue;
-        try {
-          const res = await fetch('/api/screenshot', {
-            method: 'POST',
-            signal,
-            headers: await captureHeaders({ local: opts.local }),
-            body: JSON.stringify({
-              url,
-              viewportWidth: preset.width,
-              viewportHeight: preset.height,
-              sitePassword: page.sitePassword || undefined,
-            }),
-          });
-          const data = await res.json();
-          if (signal.aborted) break;
-          // The key was removed or refused. That is a thing to fix in a dialog,
-          // not an error to leave sitting on every card of the run.
-          if (!res.ok && data?.needsKey) {
-            setKeyError(data.error ?? 'Add a Browserless key to capture');
-            setKeyDialogOpen(true);
-            releaseCapturing(targets);
-            break;
-          }
-          if (!isLatestFor(preset.key)) continue;
-          if (!res.ok) {
-            patchSlot(preset.key, {
-              status: 'error',
-              error: data.error ?? 'Screenshot failed',
-            });
-            continue;
-          }
-          // PNG (local) or JPEG (Browserless) off the wire, WebP strips (or
-          // JPEG) from here on: ~10x lighter to hold and to store, and
-          // identical before and after a reload
-          const captured = data as ScreenshotResult;
-          const compact = await toCompactDataUrl(captured.image);
-          const screenshot = compact
-            ? { ...captured, image: compact }
-            : captured;
-          if (signal.aborted) break;
-          // A drop made while this one was encoding has already landed
-          if (!isLatestFor(preset.key)) continue;
-          // A recapture of the same page keeps its alignment
-          landScreenshot(preset.key, screenshot, { resetOffset: false });
-          void saveScreenshot(pageId, preset.key, screenshot);
-          setLastBrowser(opts.local ? 'local' : 'browserless');
-          // Presets run narrowest first, so the gallery ends up showing the
-          // widest capture this run produced
-          void refreshPreview(screenshot.image);
-        } catch (err) {
-          // Stopped by the user: not an error on any card
-          if (signal.aborted) break;
-          // A drop that replaced this capture is not an error on its card
-          if (!isLatestFor(preset.key)) continue;
-          patchSlot(preset.key, {
-            status: 'error',
-            error: err instanceof Error ? err.message : 'Network error',
-          });
-        }
+    const landing: Promise<void>[] = [];
+    const land = async (key: ViewportKey, captured: ScreenshotResult) => {
+      try {
+        const compact = await toCompactDataUrl(captured.image);
+        const screenshot = compact ? { ...captured, image: compact } : captured;
+        // Stopped, or replaced by a drop while this one was encoding
+        if (signal.aborted || !isLatestFor(key)) return;
+        // A recapture of the same page keeps its alignment
+        landScreenshot(key, screenshot, { resetOffset: false });
+        void saveScreenshot(pageId, key, screenshot);
+        void refreshPreview(screenshot.image);
+      } catch (err) {
+        // An image the browser could not decode fails its own card only
+        if (signal.aborted || !isLatestFor(key)) return;
+        patchSlot(key, {
+          status: 'error',
+          error:
+            err instanceof Error
+              ? err.message
+              : 'The capture could not be read',
+        });
       }
-      // A stopped run leaves the viewports it never reached as they were
-      if (signal.aborted) releaseCapturing(targets);
-      if (captureAbortRef.current === controller) {
-        captureAbortRef.current = null;
+    };
+    void (async () => {
+      try {
+        await captureWithExtension(
+          {
+            url,
+            // Already replaced by a drop: no point shooting it
+            viewports: targets
+              .filter((preset) => isLatestFor(preset.key))
+              .map(({ key, width, height }) => ({ key, width, height })),
+          },
+          {
+            onProgress: () => {},
+            onResult: (key, captured) => {
+              landing.push(land(key, captured));
+            },
+            onError: (key, message) => {
+              if (signal.aborted || !isLatestFor(key)) return;
+              patchSlot(key, { status: 'error', error: message });
+            },
+          },
+          { instance: found.instance, signal },
+        );
+        await Promise.all(landing);
+      } finally {
+        // Whatever never came back (stopped, window closed) is not in flight
+        releaseCapturing(targets);
+        if (captureAbortRef.current === controller) {
+          captureAbortRef.current = null;
+        }
       }
     })();
   };
@@ -1206,23 +1182,32 @@ export default function Workspace({
    * session. Selecting the card as well as shooting it: the capture you just
    * asked for is the one you want to be looking at when it lands.
    */
-  const handleCaptureViewport = (
-    key: ViewportKey,
-    opts: { local?: boolean } = {},
-  ) => {
+  const handleCaptureViewport = (key: ViewportKey) => {
     const preset = presets.find((entry) => entry.key === key);
     if (!preset) return;
-    setPreferredViewport(key);
-    runCaptures([preset], opts);
+    void ensureExtension().then((found) => {
+      if (!found) return;
+      setPreferredViewport(key);
+      runCaptures([preset], found);
+    });
   };
 
   /** Same shot from the keyboard and the Capture menu: whichever card is on. */
-  const handleCaptureCurrent = (opts: { local?: boolean } = {}) => {
-    if (activeViewport) handleCaptureViewport(activeViewport, opts);
+  const handleCaptureCurrent = () => {
+    if (activeViewport) handleCaptureViewport(activeViewport);
   };
 
-  const handleCaptureAll = (opts: { local?: boolean } = {}) =>
-    runCaptures(presets, opts);
+  /**
+   * Every viewport, asking first if that would replace captures. The
+   * extension is checked before that question: there is no point agreeing to
+   * replace captures that cannot be taken.
+   */
+  const handleCaptureAll = () => {
+    void ensureExtension().then((found) => {
+      if (!found) return;
+      runUnlessItOverwrites('site', presets, () => runCaptures(presets, found));
+    });
+  };
 
   /** The frame a viewport is exported from, when its link can be read. */
   const figmaTargetOf = (key: ViewportKey) =>
@@ -1657,9 +1642,8 @@ export default function Workspace({
 
   /**
    * Drop the database: every project, page, capture, export, snapshot and note
-   * in this browser, with the site passwords and the Browserless key stored in
-   * it — and the Figma token and demo marker kept beside it, so nothing the
-   * user typed in survives "delete everything".
+   * in this browser — and the Figma token and demo marker kept beside it, so
+   * nothing the user typed in survives "delete everything".
    *
    * The reload is not a courtesy — this workspace was hydrated from records
    * that no longer exist, and the app has to come up again from an empty
@@ -1796,34 +1780,45 @@ export default function Workspace({
     });
   };
 
+  /**
+   * A site sent from the extension's toolbar lands here with `autoCapture`:
+   * capture every viewport once the page's captures and the project's
+   * viewports have been read, asking first if that would replace captures.
+   */
+  const autoCapturedRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!autoCapture || autoCapture.pageId !== page.id) return;
+    if (autoCapturedRef.current === autoCapture.nonce) return;
+    if (!extension || !slotsLoaded || !settingsLoaded) return;
+    if (url.trim() === '' || isCapturing) return;
+    const { nonce } = autoCapture;
+    // Started from a task, like a click: the run sets state of its own
+    const timer = setTimeout(() => {
+      autoCapturedRef.current = nonce;
+      runUnlessItOverwrites('site', presets, () =>
+        runCaptures(presets, extension),
+      );
+    }, 0);
+    return () => clearTimeout(timer);
+    // Runs on the inputs that make it ready; the handlers are this render's
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCapture, extension, slotsLoaded, settingsLoaded, url, isCapturing]);
+
   const commands = {
-    // Browserless captures — no-ops while the cloud capture is switched off
+    // Site captures, through the Chrome extension. Without it they open the
+    // install dialog instead, so the commands are never hidden.
     captureCurrent: () => {
-      if (CLOUD_CAPTURE_ENABLED && canCapture) handleCaptureCurrent();
+      if (canCapture) handleCaptureCurrent();
     },
     captureAll: () => {
-      if (CLOUD_CAPTURE_ENABLED && url.trim() !== '' && !isCapturing)
-        runUnlessItOverwrites('site', presets, () => handleCaptureAll());
+      if (canCaptureAllSites) handleCaptureAll();
     },
-    captureCurrentLocal: () => {
-      if (canCapture && localAvailable) handleCaptureCurrent({ local: true });
-    },
-    captureAllLocal: () => {
-      if (url.trim() !== '' && !isCapturing && localAvailable)
-        runUnlessItOverwrites('site', presets, () =>
-          handleCaptureAll({ local: true }),
-        );
-    },
-    // The Layers panel's All: the local browser when there is one
-    captureAllSites: () => {
-      if (canCaptureAllSites && (localAvailable || CLOUD_CAPTURE_ENABLED))
-        runUnlessItOverwrites('site', presets, () =>
-          handleCaptureAll({ local: localAvailable }),
-        );
-    },
-    browserlessKey: () => {
-      setKeyError(null);
-      setKeyDialogOpen(true);
+    installExtension: () => {
+      window.open(
+        EXTENSION_STORE_URL ?? `${DOCS_PATH}#${DOCS.chromeExtension}`,
+        '_blank',
+        'noopener',
+      );
     },
     figmaCurrent: () => {
       if (activeViewport && figmaTargetOf(activeViewport))
@@ -1944,7 +1939,7 @@ export default function Workspace({
       newProjectOpen ||
       settingsModalOpen ||
       projectsModalOpen ||
-      keyDialogOpen ||
+      extensionDialogOpen ||
       figmaDialogOpen ||
       exportDialogOpen ||
       helpOpen ||
@@ -2026,10 +2021,6 @@ export default function Workspace({
           return run(c.downloadDiff);
         case 's':
           return run(c.saveSnapshot);
-        // Capture this viewport with the browser on this machine — ⇧L
-        case 'L':
-          if (!e.shiftKey) return;
-          return run(c.captureCurrentLocal);
         // Export this viewport's Figma frame — ⇧M
         case 'M':
           if (!e.shiftKey) return;
@@ -2266,50 +2257,28 @@ export default function Workspace({
       id: 'capture',
       label: 'Capture',
       entries: [
-        // Browserless captures, only while the cloud capture is switched on
-        ...(CLOUD_CAPTURE_ENABLED
+        // Through the Chrome extension; without it they open the install
+        // dialog, so they stay listed either way
+        {
+          label: activePreset
+            ? `Capture ${activePreset.label}`
+            : 'Capture this viewport',
+          shortcut: '⇧C',
+          disabled: !canCapture,
+          onSelect: commands.captureCurrent,
+        },
+        {
+          label: `Capture all ${presets.length} enabled viewports`,
+          disabled: !canCaptureAllSites,
+          onSelect: commands.captureAll,
+        },
+        { kind: 'separator' },
+        // Not needed once the extension captures
+        ...(!extension
           ? ([
               {
-                label: activePreset
-                  ? `Capture ${activePreset.label}`
-                  : 'Capture this viewport',
-                shortcut: '⇧C',
-                disabled: !canCapture,
-                onSelect: commands.captureCurrent,
-              },
-              {
-                label: `Capture all ${presets.length} enabled viewports`,
-                disabled: url.trim() === '' || isCapturing,
-                onSelect: commands.captureAll,
-              },
-              { kind: 'separator' },
-            ] as Menu['entries'])
-          : []),
-        // Only this machine can offer its own browser, and only it needs no key
-        ...(localAvailable
-          ? ([
-              {
-                label: activePreset
-                  ? `Capture ${activePreset.label} on this machine`
-                  : 'Capture this viewport on this machine',
-                shortcut: '⇧L',
-                disabled: !canCapture,
-                onSelect: commands.captureCurrentLocal,
-              },
-              {
-                label: 'Capture all on this machine',
-                disabled: url.trim() === '' || isCapturing,
-                onSelect: commands.captureAllLocal,
-              },
-              { kind: 'separator' },
-            ] as Menu['entries'])
-          : []),
-        ...(CLOUD_CAPTURE_ENABLED && source === 'key'
-          ? ([
-              {
-                label: 'Browserless key…',
-                checked: hasKey,
-                onSelect: commands.browserlessKey,
+                label: 'Install the Chrome extension…',
+                onSelect: commands.installExtension,
               },
               { kind: 'separator' },
             ] as Menu['entries'])
@@ -2550,11 +2519,9 @@ export default function Workspace({
           onRename={onRenamePage}
           onDelete={onDeletePage}
           onUrlChange={onUrlChange}
-          onSitePasswordChange={onSitePasswordChange}
           presets={presets}
           onFigmaUrlChange={onFigmaUrlChange}
           maxPages={MAX_PAGES}
-          localLogin={localAvailable}
         />
 
         <NewProjectDialog
@@ -2563,16 +2530,11 @@ export default function Workspace({
           onCreate={onCreateProject}
         />
 
-        {/* Where the user's own Browserless key is typed, when this deployment
-          carries none of its own */}
-        {keyDialogOpen && (
-          <BrowserlessKeyDialog
-            open
-            onClose={() => setKeyDialogOpen(false)}
-            error={keyError}
-            onSaved={() => setKeyError(null)}
-          />
-        )}
+        {/* A capture was asked for and this browser has no extension */}
+        <ExtensionRequiredDialog
+          open={extensionDialogOpen}
+          onClose={() => setExtensionDialogOpen(false)}
+        />
 
         {/* Where the user's own Figma token is typed, when this deployment
           carries none of its own */}
@@ -2585,11 +2547,7 @@ export default function Workspace({
           />
         )}
 
-        <HelpDialog
-          open={helpOpen}
-          onClose={() => setHelpOpen(false)}
-          localCapture={localAvailable}
-        />
+        <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
 
         <ExportProjectDialog
           open={exportDialogOpen}
@@ -2630,9 +2588,9 @@ export default function Workspace({
               <span className="font-medium text-ink-100">
                 every project, page, capture, Figma export, snapshot and note
               </span>{' '}
-              this browser holds, along with the site passwords, the Browserless
-              key and the Figma token saved in it. It cannot be undone — none of
-              it exists anywhere else. The app reloads empty.
+              this browser holds, along with the Figma token saved in it. It
+              cannot be undone — none of it exists anywhere else. The app
+              reloads empty.
             </>
           }
           onConfirm={handleResetEverything}
@@ -2752,8 +2710,6 @@ export default function Workspace({
                       slot: activeSlot,
                       figmaLinked: figmaTargetOf(activePreset.key) !== null,
                       figmaBusy: figmaBusy[activePreset.key] === true,
-                      showLocalCapture: localAvailable,
-                      showCloudCapture: CLOUD_CAPTURE_ENABLED,
                       captureBlockedReason,
                       figmaAllBlockedReason: canExportAllFigma
                         ? null
@@ -2766,8 +2722,7 @@ export default function Workspace({
               }
               onCapture={commands.captureCurrent}
               onExportAllFigma={() => canExportAllFigma && commands.figmaAll()}
-              onCaptureAllSites={commands.captureAllSites}
-              onCaptureLocal={commands.captureCurrentLocal}
+              onCaptureAllSites={commands.captureAll}
               onExportFigma={() =>
                 activeViewport && handleFigmaExport(activeViewport)
               }
@@ -3176,18 +3131,14 @@ export default function Workspace({
                     <span aria-hidden="true">✎ </span>pen
                   </span>
                 )}
-                {/* Which browser this page's captures come from */}
+                {/* The extension site captures run in, when this browser has it */}
                 <span
                   className="text-ink-500"
-                  title="Where the browser a capture runs in comes from"
+                  title="The Chrome extension site captures run in"
                 >
-                  {lastBrowser === 'local'
-                    ? 'local browser'
-                    : source === 'env'
-                      ? 'browserless (env)'
-                      : hasKey
-                        ? 'browserless (key)'
-                        : 'no browserless key'}
+                  {extension
+                    ? `extension ${extension.channel === 'dev' ? 'dev ' : ''}${extension.version}`
+                    : 'no extension'}
                 </span>
                 <span
                   className={

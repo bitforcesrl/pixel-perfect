@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 import FirstPageDialog from './FirstPageDialog';
+import IncomingCaptureDialog from './IncomingCaptureDialog';
 import RegistrationMark from './RegistrationMark';
 import Workspace from './Workspace';
 import {
@@ -26,6 +27,12 @@ import {
   saveProjects,
 } from '@/lib/storage';
 import type { ViewportKey } from '@/lib/viewports';
+import { subscribeIncoming, type IncomingSite } from '@/lib/extension-bridge';
+import {
+  findPagesByUrl,
+  placeIncoming,
+  type IncomingChoice,
+} from '@/lib/page-match';
 import {
   findDemoCopy,
   forgetDemoImport,
@@ -53,6 +60,16 @@ export default function PixelPerfectApp({
   demoUrl?: string;
 } = {}) {
   const [projects, setProjects] = useState<Project[]>([]);
+  // The stored projects have been read: before that an empty list means
+  // "not yet", not "none"
+  const [hydrated, setHydrated] = useState(false);
+  // A site sent from the extension's toolbar, waiting to be placed
+  const [incoming, setIncoming] = useState<IncomingSite | null>(null);
+  // Tells the workspace of the page it lands on to capture it straight away
+  const [autoCapture, setAutoCapture] = useState<{
+    pageId: string;
+    nonce: number;
+  } | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activePageId, setActivePageId] = useState<string | null>(null);
   // The project just created, waiting to be told what its one page is
@@ -85,6 +102,7 @@ export default function PixelPerfectApp({
     // on rather than jumping to it a moment later
     const storedPage = project ? await loadActivePage(project.id) : null;
     setProjects(list);
+    setHydrated(true);
     setActiveId(project?.id ?? null);
     setActivePageId(
       project
@@ -374,14 +392,6 @@ export default function PixelPerfectApp({
     );
   };
 
-  const handleSitePasswordChange = (sitePassword: string, pageId: string) => {
-    patchPages((pages) =>
-      pages.map((page) =>
-        page.id === pageId ? { ...page, sitePassword } : page,
-      ),
-    );
-  };
-
   const handleFigmaUrlChange = (
     key: ViewportKey,
     url: string,
@@ -395,6 +405,33 @@ export default function PixelPerfectApp({
       ),
     );
   };
+
+  // "Open in Pixel Perfect" from the Chrome extension's toolbar
+  useEffect(() => subscribeIncoming(setIncoming), []);
+
+  const placeIncomingSite = (choice: IncomingChoice) => {
+    if (!incoming) return;
+    const placed = placeIncoming(projectsRef.current, incoming.url, choice);
+    setIncoming(null);
+    if (!placed) return;
+    setProjects(placed.projects);
+    setActiveId(placed.projectId);
+    setActivePageId(placed.pageId);
+    void saveActiveProject(placed.projectId);
+    void saveActivePage(placed.projectId, placed.pageId);
+    setAutoCapture({ pageId: placed.pageId, nonce: Date.now() });
+  };
+
+  const incomingDialog = (
+    <IncomingCaptureDialog
+      incoming={hydrated && demoState === 'ready' ? incoming : null}
+      projects={projects}
+      matches={incoming ? findPagesByUrl(projects, incoming.url) : []}
+      activeProjectId={activeId}
+      onConfirm={placeIncomingSite}
+      onClose={() => setIncoming(null)}
+    />
+  );
 
   if (demoState === 'failed') {
     return (
@@ -454,6 +491,7 @@ export default function PixelPerfectApp({
             </p>
           ) : null}
         </div>
+        {incomingDialog}
       </div>
     );
   }
@@ -475,9 +513,11 @@ export default function PixelPerfectApp({
         onRenamePage={handleRenamePage}
         onDeletePage={handleDeletePage}
         onUrlChange={handleUrlChange}
-        onSitePasswordChange={handleSitePasswordChange}
         onFigmaUrlChange={handleFigmaUrlChange}
+        autoCapture={autoCapture}
       />
+
+      {incomingDialog}
 
       {/* Lives here, not in the workspace: the workspace remounts on the new
           project's page, which would take the dialog down with it */}

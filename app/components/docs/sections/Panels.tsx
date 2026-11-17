@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { DocSection, DocSubsection } from '../DocSection';
 import Figure, { WindowShot } from '../Figure';
 import {
-  Availability,
   Bullets,
   DocLink,
   Fields,
@@ -85,7 +84,7 @@ export default function Panels() {
             <PanelShot
               name="panel-layers"
               height={293}
-              alt="The Layers panel for Tablet 768×1024: a Figma row with Capture, All, upload and delete buttons, and a Site row with Cloud, Local, All, upload and delete."
+              alt="The Layers panel for Tablet 768×1024: a Figma row with Capture, All, upload and delete buttons, and a Site row with Chrome, All, upload and delete."
             />
           }
         >
@@ -114,16 +113,15 @@ export default function Panels() {
                 name: <Layer of="site" />,
                 body: (
                   <>
-                    <strong>Cloud</strong> (<Kbd>⇧</Kbd> <Kbd>C</Kbd>) captures
-                    with <DocLink to={DOCS.browserless}>Browserless</DocLink>,{' '}
-                    <strong>Local</strong> (<Kbd>⇧</Kbd> <Kbd>L</Kbd>) with{' '}
-                    <DocLink to={DOCS.localCapture}>
-                      the browser on your machine
+                    <strong>Chrome</strong> (<Kbd>⇧</Kbd> <Kbd>C</Kbd>) captures
+                    the viewport through the{' '}
+                    <DocLink to={DOCS.chromeExtension}>
+                      Chrome extension
                     </DocLink>
-                    , <strong>All</strong> captures every enabled viewport. The
-                    upload icon and the bin work as above. Either{' '}
-                    <strong>All</strong> asks before replacing layers already in
-                    place.
+                    , <strong>All</strong> every enabled viewport; without the
+                    extension both open the dialog that installs it. The upload
+                    icon and the bin work as above. Either <strong>All</strong>{' '}
+                    asks before replacing layers already in place.
                   </>
                 ),
               },
@@ -135,13 +133,6 @@ export default function Panels() {
             <DocLink to={DOCS.pageFields}>Pages</DocLink>.
           </P>
         </WithAside>
-        <Note>
-          <span className="mr-2 align-middle">
-            <Availability only="self-hosted" />
-          </span>
-          The <strong>Local</strong> button only appears when the app runs on
-          your machine and is opened at <code>localhost</code>.
-        </Note>
       </DocSubsection>
 
       {/* ── Align ── */}

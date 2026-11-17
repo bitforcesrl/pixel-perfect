@@ -87,8 +87,8 @@ const LEVELS = [
   {
     step: '03',
     name: 'Fully automatic',
-    body: 'The site is captured full-page at each exact width in a cloud browser. Self-hosted, localhost and logged-in pages too.',
-    needs: 'A Browserless key, or the app on your machine',
+    body: 'The site is captured full-page at each exact width in your own Chrome, with your session. Localhost, staging and logged-in pages too.',
+    needs: 'The Pixel Perfect Capture extension for Chrome',
   },
 ];
 
@@ -130,16 +130,16 @@ const FAQ: FaqEntry[] = [
     a: 'Your token is saved in your browser’s localStorage and sent with each request to the app’s own API route, which calls Figma for you; it is never stored on the server (see app/api/figma/route.ts in the repository). Use a read-only token (File content: Read-only) and revoke it when you are done, or self-host the app and keep the token in your own .env.',
   },
   {
-    q: 'Why do I need a Browserless key?',
-    a: 'A browser tab cannot take a full-page screenshot of another site at an exact viewport width: something has to drive a real browser. On the public instance that is Browserless, with your own key (the free tier is enough to try it), so nobody uses up anyone else’s quota. When you run Pixel Perfect on your own machine, Playwright captures locally and no key is needed. You can also skip capture entirely and drop in two screenshots.',
+    q: 'Why do I need a Chrome extension to capture the site?',
+    a: 'A browser tab cannot take a full-page screenshot of another site at an exact viewport width: something has to drive a real browser. The free Pixel Perfect Capture extension does it in your own Chrome (or Edge, Brave, Arc): it opens the page in a small window, captures every viewport and sends the screenshots to the app. No key, no account, nothing goes through a server. You can also skip capture entirely and drop in two screenshots.',
   },
   {
     q: 'Can it capture localhost, staging servers or pages behind a login?',
-    a: 'Yes, when it runs on your machine (npm run dev or npm start): local capture reaches localhost, servers on your network and pages behind a login. For a login a script cannot handle, such as a one-time code by email, a visible browser opens, you log in by hand, and later captures reuse the saved session. This is not available on the hosted version or inside Docker.',
+    a: 'Yes. The extension captures in your own Chrome with your session, so whatever you can open there it can capture: localhost, servers on your network, a store behind its password, pages behind a login. Open the site once, sign in or enter the password, then capture. It never types passwords and never clicks cookie banners; it hides them from the screenshot instead.',
   },
   {
     q: 'Where is my data? Are there team accounts?',
-    a: 'Everything stays in your browser (IndexedDB): no account, no sign-up, no project data on our servers. To share a review, export the project as a ZIP and the other person imports it; site passwords are left out. Real-time collaboration is not there yet. If you need it, say so in GitHub Discussions: that is how we decide what comes next.',
+    a: 'Everything stays in your browser (IndexedDB): no account, no sign-up, no project data on our servers. To share a review, export the project as a ZIP and the other person imports it. Real-time collaboration is not there yet. If you need it, say so in GitHub Discussions: that is how we decide what comes next.',
   },
   {
     q: 'What about dynamic content and font rendering?',
@@ -326,14 +326,13 @@ export default function LandingPage() {
             <div>
               <SectionTitle
                 kicker="Self-host"
-                title="Run it on your machine for even more."
+                title="Run it on your own machine."
               />
               <p className="-mt-4 text-sm leading-relaxed text-ink-400">
-                The hosted version covers drag & drop, the Figma API and cloud
-                captures with your own Browserless key. On your machine a local
-                browser captures localhost and pages behind a login too, and the
-                Figma and Browserless keys can be set once for everyone. Docker
-                setup is in the README.
+                A copy on your machine or server does everything the hosted
+                version does: drag & drop, the Figma API and automatic captures
+                through the Chrome extension. The Figma token can be set once
+                for everyone. Docker setup is in the README.
               </p>
             </div>
             <pre className="overflow-x-auto rounded-md border border-ink-800 bg-ink-void p-5 font-mono text-[13px] leading-relaxed text-ink-200">

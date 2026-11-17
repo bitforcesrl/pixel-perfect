@@ -1,13 +1,12 @@
 import ShortcutsReference from '../../ShortcutsReference';
 import { DocSection } from '../DocSection';
-import { Kbd, P } from '../Prose';
+import { DocLink, Kbd, P } from '../Prose';
 import { DOCS } from '@/lib/docs';
 import { shortcutGroups } from '@/lib/shortcuts';
 
 /**
  * The same catalog the app's help dialog reads, so the docs never list a key
- * the app does not answer. Local captures are included, with a word on where
- * they work.
+ * the app does not answer.
  */
 export default function Shortcuts() {
   return (
@@ -23,15 +22,13 @@ export default function Shortcuts() {
         </>
       }
     >
-      <ShortcutsReference
-        groups={shortcutGroups({ localCapture: true })}
-        headingLevel="h3"
-      />
+      <ShortcutsReference groups={shortcutGroups()} headingLevel="h3" />
       <P>
-        <Kbd>⇧</Kbd> <Kbd>L</Kbd> works only on a self-hosted app opened at{' '}
-        <code>localhost</code>. Capturing or exporting every viewport has no key
-        on purpose: use the Capture menu or <strong>All</strong> in the Layers
-        panel.
+        <Kbd>⇧</Kbd> <Kbd>C</Kbd> captures through the{' '}
+        <DocLink to={DOCS.chromeExtension}>Chrome extension</DocLink>; without
+        it, the key opens the dialog that installs it. Capturing or exporting
+        every viewport has no key on purpose: use the Capture menu or{' '}
+        <strong>All</strong> in the Layers panel.
       </P>
     </DocSection>
   );

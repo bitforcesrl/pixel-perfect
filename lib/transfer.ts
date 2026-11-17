@@ -42,8 +42,7 @@ import { createZip, readZip, type ZipEntry } from './zip';
  * Importing is two steps: `readProjectArchive` opens and checks the file
  * without writing anything, so the caller can ask before it replaces a project
  * of the same name; `writeProjectArchive` then unpacks it as a new project
- * with new ids. Site passwords never leave this browser: exports leave them
- * out, so a ZIP can be passed around without handing over a store's password.
+ * with new ids.
  */
 
 const FORMAT = 'pixel-perfect-project';
@@ -92,11 +91,6 @@ type ManifestSnapshot = ImageRef & {
 interface ManifestPage {
   name: string;
   url: string;
-  /**
-   * Written by exports made before passwords were kept out of the archive.
-   * Still read back, so those files import the way they always did.
-   */
-  sitePassword?: string;
   /** Absent from exports made before pages carried Figma links. */
   figmaUrls?: Record<ViewportKey, string>;
   createdAt: number;
@@ -250,8 +244,6 @@ export async function exportProject(
     pages.push({
       name: page.name,
       url: page.url,
-      // The site password is deliberately left out: a ZIP is passed around,
-      // and a store's password should not travel with it
       figmaUrls: page.figmaUrls,
       createdAt: page.createdAt,
       notes,
@@ -382,7 +374,6 @@ export async function writeProjectArchive(
     ) as Partial<ManifestPage>[];
   project.pages = rawPages.map((raw) => ({
     ...createPage(str(raw.name, 'Page'), str(raw.url)),
-    sitePassword: str(raw.sitePassword),
     figmaUrls: sanitizeFigmaUrls(raw.figmaUrls),
     createdAt: num(raw.createdAt, Date.now()),
   }));

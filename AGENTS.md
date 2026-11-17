@@ -37,6 +37,20 @@ Do not write tests; go straight to implementing the code.
 - Do not bump the version or create a dated release section unless asked to
   cut a release.
 
+# To-do list
+
+- Open work lives in `docs/TODO.md`: anything left to do, waiting on
+  something outside the code (a store review, a URL that does not exist yet,
+  a deploy) or planned for later (cleanups after a few releases, follow-ups
+  you decided not to do in this task).
+- Add it there in the same task that leaves it open, never only in the final
+  summary: one checkbox per item, with the file, setting or command it
+  concerns, so it can be picked up without this conversation. Group items
+  under a heading per area.
+- When a task completes an item, delete it from the list in that same task.
+- Before finishing any task, check `docs/TODO.md` for items the task touched
+  or made obsolete.
+
 # Keeping docs and site in sync
 
 Every user-visible change must leave the whole product telling the same

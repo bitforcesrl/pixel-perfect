@@ -9,5 +9,7 @@ next-env.d.ts
 *.tsbuildinfo
 
 # Local-only data
-.sessions/
 .playwright-mcp/
+
+# Agent working notes (git-ignored)
+.superpowers/
