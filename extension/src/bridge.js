@@ -33,8 +33,8 @@
   let port = null;
   /** Captures in flight, so a lost connection can end them. */
   const active = new Set();
-  /** Pieces of large screenshots: `${requestId}:${key}` → string[]. */
-  const pieces = new Map();
+  /** Strips of captures still arriving: `${requestId}:${key}` → strip[]. */
+  const strips = new Map();
 
   function connect() {
     if (port) return port;
@@ -42,7 +42,7 @@
     port.onMessage.addListener(fromWorker);
     port.onDisconnect.addListener(() => {
       port = null;
-      pieces.clear();
+      strips.clear();
       // The service worker stopped (extension reloaded or updated): tell the
       // page instead of leaving its viewports spinning
       for (const requestId of active) {
@@ -58,22 +58,25 @@
   }
 
   function fromWorker(message) {
-    if (message.type === 'result-chunk') {
+    // A capture comes strip by strip: handed to the page once all are here
+    if (message.type === 'result-strip') {
       const id = `${message.requestId}:${message.key}`;
-      const list = pieces.get(id) ?? [];
-      list[message.index] = message.data;
-      pieces.set(id, list);
-      if (list.filter((part) => part !== undefined).length < message.total) {
+      const list = strips.get(id) ?? [];
+      list[message.index] = message.strip;
+      strips.set(id, list);
+      if (list.filter((strip) => strip !== undefined).length < message.total) {
         return;
       }
-      pieces.delete(id);
+      strips.delete(id);
       toPage({
         type: 'result',
         requestId: message.requestId,
         key: message.key,
         width: message.width,
         height: message.height,
-        image: list.join(''),
+        pixelWidth: message.pixelWidth,
+        pixelHeight: message.pixelHeight,
+        strips: list,
       });
       return;
     }

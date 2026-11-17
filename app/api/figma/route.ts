@@ -4,7 +4,7 @@ import {
   type FigmaRect,
   type FigmaRender,
 } from '@/lib/figma';
-import { parseRenderScale, renderScaleFor } from '@/lib/render-scale';
+import { captureScaleFor, parseRenderScale } from '@/lib/render-scale';
 
 export const runtime = 'nodejs';
 
@@ -178,7 +178,8 @@ export async function GET(request: Request) {
 
 /**
  * Render one node at its width's scale (`lib/render-scale.ts`: 2x for a
- * mobile frame, sliding to 1x for a desktop one) and say where the PNG is — or, for a node Figma would
+ * mobile frame, sliding to 1x for a desktop one, never below the density of
+ * the screen that asked) and say where the PNG is — or, for a node Figma would
  * shrink to fit its size limit, where each of its parts is.
  *
  * The images themselves stay on Figma's storage — the browser downloads them
@@ -218,7 +219,13 @@ export async function POST(request: Request) {
     slice,
     maxArea: reported,
     scale: askedScale,
-  } = body as { slice?: unknown; maxArea?: unknown; scale?: unknown };
+    screenScale: askedScreenScale,
+  } = body as {
+    slice?: unknown;
+    maxArea?: unknown;
+    scale?: unknown;
+    screenScale?: unknown;
+  };
   const forceSlice = slice === true;
   const maxArea =
     typeof reported === 'number' && Number.isFinite(reported)
@@ -242,9 +249,13 @@ export async function POST(request: Request) {
 
     const box = node.absoluteBoundingBox ?? null;
     // A part asked for on its own keeps its frame's scale; a frame gets the
-    // one its width calls for
+    // one its width and the asking screen call for (1x screen when unsaid)
     const scale =
-      parseRenderScale(askedScale) ?? renderScaleFor(box?.width ?? Number.NaN);
+      parseRenderScale(askedScale) ??
+      captureScaleFor(
+        box?.width ?? Number.NaN,
+        parseRenderScale(askedScreenScale) ?? 1,
+      );
     const render: FigmaRender = {
       name: typeof node.name === 'string' ? node.name : 'figma',
       x: box?.x ?? null,

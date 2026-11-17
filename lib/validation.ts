@@ -1,8 +1,5 @@
 export interface ScreenshotResult {
-  /**
-   * Data URL of the full-page screenshot, as the Chrome extension sends it.
-   * The workspace re-encodes it as WebP strips before storing it.
-   */
+  /** Data URL of the full-page screenshot as stored: WebP, or WebP strips. */
   image: string;
   /** full-page width in CSS pixels */
   width: number;

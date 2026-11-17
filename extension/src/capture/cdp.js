@@ -50,6 +50,22 @@ export async function attach(tabId) {
       detachListeners.add(listener);
       return () => detachListeners.delete(listener);
     },
+    /**
+     * Put the tab's page zoom back to 100%. The capture tab opens in the
+     * user's profile, so it inherits the zoom they chose for the site (or
+     * their default zoom): at 90% a 1440 px viewport lays out as 1600 CSS px.
+     * The change is scoped to this tab and never saved to the site's zoom,
+     * but a per-tab zoom is reset on every navigation, so call this after
+     * each page load.
+     */
+    async resetZoom() {
+      if (detached) throw new Error(WINDOW_CLOSED);
+      await chrome.tabs.setZoomSettings(tabId, {
+        mode: 'automatic',
+        scope: 'per-tab',
+      });
+      await chrome.tabs.setZoom(tabId, 1);
+    },
     async detach() {
       if (detached) return;
       detached = true;

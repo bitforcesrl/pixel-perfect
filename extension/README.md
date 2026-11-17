@@ -39,12 +39,14 @@ Along the way:
   extension to screenshot, say, your webmail. Allowed sites are listed in the
   extension's settings and can be removed.
 - Below 768 px the page is shown as a phone (mobile viewport, mobile user
-  agent, touch). Density follows the app's rule: 2x on mobile, sliding to 1x at
-  1440 px, the same as the Figma export.
+  agent, touch). Density is the one the app asks for, the same as its Figma
+  export: 2x on mobile sliding to 1x at 1440 px, and never below the density
+  of the screen the app runs on (2x everywhere on a Retina screen).
 - Cookie banners, newsletter pop-ups and the Shopify preview bar are
   **hidden**, never clicked: nothing is decided on the site on your behalf.
 - Lazy images are loaded, smooth-scroll wrappers unwrapped, pages taller than
-  a GPU texture captured in slices and stitched (capped at 30 000 px).
+  a GPU texture captured in slices (capped at 30 000 px). Each slice is cut
+  into WebP strips that the app stores as they are, with no second encoding.
 - A password gate (401/403 with a password field) is reported instead of
   captured: open the site in Chrome, enter the password, capture again. The
   extension never types passwords.
@@ -62,7 +64,7 @@ extension/
     bridge.js              content script on Pixel Perfect pages (postMessage ⇄ Port)
     lib/                   protocol, emulation, slicing, consent, origins (pure, tested)
     capture/               chrome.debugger wrapper, page scripts, one-viewport pipeline,
-                           stitching, the runner (consent → window → viewports → cleanup)
+                           WebP strips, the runner (consent → window → viewports → cleanup)
     ui/                    popup, options, consent window, shared CSS
   icons/                   16/32/48/128 px, built from app/icon.svg
   store/                   listing texts (EN, IT), privacy policy, permission answers,
@@ -250,8 +252,8 @@ Pixel Perfect page ──postMessage──▶ bridge.js ──Port pp-bridge─�
    (lib/extension-bridge.ts)        (content script,              │ consent window (once per site)
                                      app origins only)            │ chrome.windows.create (popup)
                                                                   │ chrome.debugger.attach
-        ◀── progress / result / error / done (chunked if large) ──┤ per viewport: emulate, load,
-                                                                  │ prepare, slice, stitch
+        ◀── progress / result / error / done (strip by strip) ────┤ per viewport: emulate, load,
+                                                                  │ prepare, slice, encode strips
                                                                   └ detach, close window
 ```
 
@@ -277,5 +279,4 @@ Pixel Perfect page ──postMessage──▶ bridge.js ──Port pp-bridge─�
 | "Capture cancelled: … was not allowed"  | The consent window was cancelled or closed. Capture again and press Allow.                                                                                     |
 | A cookie banner is still in the picture | Its markup carries none of the usual names. Answer it once in Chrome: the site then stops showing it.                                                          |
 | Blank areas low on a page               | Content that loads only on interaction. Scroll the page once in Chrome, or raise the waits in `src/capture/capture-viewport.js`.                               |
-| Very tall page comes back at 1x         | Above about 16 000 px at 2x the stitched image would not fit a canvas, so it drops to 1x by design.                                                            |
 | "The extension stopped. Capture again." | The extension was reloaded or updated mid-capture. Capture again.                                                                                              |

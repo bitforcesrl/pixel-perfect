@@ -1,5 +1,5 @@
 /**
- * Put the slices of a tall capture back together as one PNG.
+ * Turn the slices of a capture into the WebP strips the app stores.
  *
  * Runs in the service worker: `OffscreenCanvas` and `createImageBitmap` are
  * available there, `FileReader` and `Image` are not, hence the manual base64.
@@ -24,23 +24,58 @@ async function blobToBase64(blob) {
   return btoa(binary);
 }
 
+const WEBP = 'image/webp';
+
 /**
- * @param slices `{ base64, y, height }` in CSS px, top to bottom
- * @param size the whole page: CSS `width`/`height` and the device `scale`
- * @returns a PNG data URL
+ * Cut the slices of a capture into strips, each its own WebP, without ever
+ * stitching the page: only one slice is held as pixels at a time. The strips
+ * are exactly what the app stores (`lib/tile-container.ts`), so it packs them
+ * as they are, with no decoding and no second lossy pass.
+ *
+ * @param slices `{ base64 }` PNGs, top to bottom, each a whole number of
+ *   strips but the last
+ * @param options `stripRows`: natural px per full strip; `quality` of the WebP
+ * @returns `{ strips: { height, data }[], pixelWidth, pixelHeight }`, natural
+ *   px, `data` base64 WebP
  */
-export async function stitchSlices(slices, { width, height, scale }) {
-  if (slices.length === 1) return `data:image/png;base64,${slices[0].base64}`;
-  const canvas = new OffscreenCanvas(
-    Math.round(width * scale),
-    Math.round(height * scale),
-  );
-  const context = canvas.getContext('2d');
+export async function encodeStrips(slices, { stripRows, quality, signal }) {
+  const strips = [];
+  let pixelWidth = 0;
+  let pixelHeight = 0;
   for (const slice of slices) {
+    signal?.throwIfAborted();
     const bitmap = await createImageBitmap(base64ToBlob(slice.base64));
-    context.drawImage(bitmap, 0, Math.round(slice.y * scale));
-    bitmap.close();
+    try {
+      pixelWidth = Math.max(pixelWidth, bitmap.width);
+      const canvas = new OffscreenCanvas(bitmap.width, stripRows);
+      const context = canvas.getContext('2d');
+      for (let top = 0; top < bitmap.height; top += stripRows) {
+        const rows = Math.min(stripRows, bitmap.height - top);
+        // Resizing also clears; full strips reuse the canvas as it is
+        if (canvas.height !== rows) canvas.height = rows;
+        else context.clearRect(0, 0, canvas.width, rows);
+        context.drawImage(
+          bitmap,
+          0,
+          top,
+          bitmap.width,
+          rows,
+          0,
+          0,
+          bitmap.width,
+          rows,
+        );
+        const blob = await canvas.convertToBlob({ type: WEBP, quality });
+        // Chrome always encodes WebP; anything else would be mislabelled
+        if (blob.type !== WEBP) {
+          throw new Error('This browser could not encode the capture as WebP');
+        }
+        strips.push({ height: rows, data: await blobToBase64(blob) });
+        pixelHeight += rows;
+      }
+    } finally {
+      bitmap.close();
+    }
   }
-  const png = await canvas.convertToBlob({ type: 'image/png' });
-  return `data:image/png;base64,${await blobToBase64(png)}`;
+  return { strips, pixelWidth, pixelHeight };
 }

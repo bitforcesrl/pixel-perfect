@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- On a high-density (Retina) screen, site captures and Figma exports are taken at 2x on every viewport, desktop included, so text stays sharp at 100%; on a standard screen the scale still slides from 2x on mobile to 1x on desktop.
+- Site captures land faster and keep their full sharpness on very tall pages: the Chrome extension now hands over the capture already compressed, with no second compression in the app.
+
+### Fixed
+
+- The Chrome extension captures sites you zoom in or out in Chrome at the viewport's real width, instead of failing with "The page would not render at 1440 px".
+
 ## [2.0.0] - 2026-11-17
 
 ### Added

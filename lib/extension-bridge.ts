@@ -1,4 +1,5 @@
-import type { ScreenshotResult } from './validation';
+import { COMPACT_QUALITY } from './encode';
+import { TILE_HEIGHT, packTiles, type Tile } from './tile-container';
 
 /**
  * The app's side of the Chrome extension ("Pixel Perfect Capture").
@@ -28,11 +29,41 @@ export interface ExtensionViewport {
   key: string;
   width: number;
   height: number;
+  /** Device px per CSS px to shoot at (`captureScaleFor`) */
+  scale: number;
 }
+
+/** One strip of a capture, as the extension encodes it: base64 WebP. */
+export interface ExtensionStrip {
+  /** natural px */
+  height: number;
+  data: string;
+}
+
+/** A capture as the extension hands it over: WebP strips ready to store. */
+export interface ExtensionShot {
+  /** CSS px */
+  width: number;
+  height: number;
+  /** natural px of the whole picture */
+  pixelWidth: number;
+  pixelHeight: number;
+  strips: ExtensionStrip[];
+}
+
+/**
+ * How the extension is asked to encode a capture: WebP strips at the quality
+ * and height the app stores (`encode.ts`, `tile-container.ts`), so they are
+ * packed as they come.
+ */
+const CAPTURE_ENCODING = {
+  quality: COMPACT_QUALITY,
+  stripHeight: TILE_HEIGHT,
+};
 
 export interface CaptureHandlers {
   onProgress: (key: string) => void;
-  onResult: (key: string, shot: ScreenshotResult) => void;
+  onResult: (key: string, shot: ExtensionShot) => void;
   onError: (key: string, message: string) => void;
 }
 
@@ -128,9 +159,13 @@ export function captureWithExtension(
           return;
         case 'result':
           handlers.onResult(key, {
-            image: String(data.image),
             width: Number(data.width),
             height: Number(data.height),
+            pixelWidth: Number(data.pixelWidth),
+            pixelHeight: Number(data.pixelHeight),
+            strips: Array.isArray(data.strips)
+              ? (data.strips as ExtensionStrip[])
+              : [],
           });
           return;
         case 'error':
@@ -156,14 +191,60 @@ export function captureWithExtension(
       type: 'capture',
       requestId,
       url: req.url,
-      viewports: req.viewports.map(({ key, width, height }) => ({
+      viewports: req.viewports.map(({ key, width, height, scale }) => ({
         key,
         width,
         height,
+        scale,
       })),
+      encoding: CAPTURE_ENCODING,
     });
     if (opts.signal.aborted) onAbort();
   });
+}
+
+const isStrip = (value: unknown): value is ExtensionStrip =>
+  value !== null &&
+  typeof value === 'object' &&
+  Number.isInteger((value as ExtensionStrip).height) &&
+  (value as ExtensionStrip).height > 0 &&
+  typeof (value as ExtensionStrip).data === 'string' &&
+  (value as ExtensionStrip).data.length > 0;
+
+function base64ToBytes(base64: string): Uint8Array<ArrayBuffer> {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+/**
+ * The stored form of a capture sent as strips: the one WebP when there is a
+ * single strip, else the strips packed as they are (`tile-container.ts`) — no
+ * decoding, no second lossy pass. Throws on strips that do not add up to the
+ * picture they claim to be, rather than storing a broken layer.
+ */
+export function blobFromStrips(shot: ExtensionShot): Blob {
+  const { strips, pixelWidth, pixelHeight } = shot;
+  const total = strips.reduce(
+    (sum, strip) => (isStrip(strip) ? sum + strip.height : NaN),
+    0,
+  );
+  if (
+    strips.length === 0 ||
+    !(pixelWidth > 0) ||
+    !Number.isInteger(pixelWidth) ||
+    total !== pixelHeight
+  ) {
+    throw new Error('The extension sent a capture that could not be read');
+  }
+  const mime = 'image/webp';
+  const tiles: Tile[] = strips.map((strip) => ({
+    height: strip.height,
+    blob: new Blob([base64ToBytes(strip.data)], { type: mime }),
+  }));
+  if (tiles.length === 1) return tiles[0].blob;
+  return packTiles({ width: pixelWidth, height: pixelHeight, mime, tiles });
 }
 
 /**

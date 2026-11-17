@@ -6,10 +6,10 @@
  * already there. The page is shown at the viewport's size and density (a
  * phone below 768 px), loaded, prepared the way the app's server-side capture
  * prepares it (lazy content, scroll containers, overlays hidden), then shot in
- * slices and stitched.
+ * slices and cut into WebP strips.
  */
 import { emulationFor } from '../lib/emulation.js';
-import { fitScale, MAX_CAPTURE_HEIGHT, planSlices } from '../lib/slices.js';
+import { MAX_CAPTURE_HEIGHT, planStripSlices } from '../lib/slices.js';
 import {
   evalExpression,
   findPasswordGate,
@@ -20,7 +20,7 @@ import {
   scrollUntilSettled,
   unwrapScrollContainers,
 } from './page-scripts.js';
-import { stitchSlices } from './stitch.js';
+import { encodeStrips } from './stitch.js';
 
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_AFTER_LOAD_MS = 1_500;
@@ -70,19 +70,40 @@ function waitForEvent(cdp, method, ms) {
   });
 }
 
+/**
+ * Page zoom back to 100%, when the session can do it. A failure is not fatal
+ * on its own: the width check right after reports a viewport that still came
+ * out wrong, with a way forward.
+ */
+async function resetZoom(cdp) {
+  if (typeof cdp.resetZoom !== 'function') return;
+  try {
+    await cdp.resetZoom();
+  } catch (err) {
+    if (cdp.detached) throw err;
+    console.warn('Pixel Perfect: could not reset the page zoom', err);
+  }
+}
+
 async function applyMetrics(cdp, metrics) {
   await cdp.send('Emulation.setDeviceMetricsOverride', metrics);
 }
 
 /**
  * @param cdp an attached session (see `cdp.js`)
- * @param request `{ url, viewport: { key, width, height } }`
+ * @param request `{ url, viewport: { key, width, height, scale }, encoding:
+ *   { quality, stripHeight } }`
  * @param control `{ deadline, signal }`: steps that are only nice to have are
  *   cut short or skipped once the deadline is near; the screenshot itself is
  *   always taken once the page has loaded, since part of a page beats none.
- * @returns `{ image, width, height }`: PNG data URL, size in CSS px
+ * @returns `{ width, height }` in CSS px, `strips`, `pixelWidth` and
+ *   `pixelHeight` (`stitch.js`)
  */
-export async function captureViewport(cdp, { url, viewport }, control) {
+export async function captureViewport(
+  cdp,
+  { url, viewport, encoding },
+  control,
+) {
   const { deadline, signal } = control;
   const left = () => deadline - Date.now();
   const check = () => {
@@ -121,15 +142,22 @@ export async function captureViewport(cdp, { url, viewport }, control) {
   if (errorText) throw new Error(`The page could not be loaded (${errorText})`);
   await loaded;
   check();
+  // The user's page zoom for this site would scale the CSS viewport (90%
+  // turns 1440 px into 1600 px). Every navigation brings the site's zoom
+  // back, so it is reset after each load
+  await resetZoom(cdp);
   // Some themes resize themselves on load; put the viewport back if so
   await applyMetrics(cdp, metrics);
   let innerWidth = await evaluate(cdp, () => window.innerWidth);
   if (innerWidth !== viewport.width) {
+    await resetZoom(cdp);
     await applyMetrics(cdp, metrics);
+    await sleep(100);
     innerWidth = await evaluate(cdp, () => window.innerWidth);
     if (innerWidth !== viewport.width) {
       throw new Error(
-        `The page would not render at ${viewport.width} px (got ${innerWidth} px)`,
+        `The page would not render at ${viewport.width} px (got ${innerWidth} px). ` +
+          'If Chrome zooms this site, set its zoom back to 100% and capture again.',
       );
     }
   }
@@ -177,20 +205,9 @@ export async function captureViewport(cdp, { url, viewport }, control) {
     await sleep(Math.max(250, within(1_000)));
   }
 
-  // 6. Density the stitched image can hold
-  const scale = fitScale(
-    viewport.width,
-    contentHeight,
-    metrics.deviceScaleFactor,
-  );
-  if (scale !== metrics.deviceScaleFactor) {
-    await applyMetrics(cdp, {
-      ...metrics,
-      height: documentHeight < contentHeight ? contentHeight : metrics.height,
-      deviceScaleFactor: scale,
-    });
-    await sleep(250);
-  }
+  // 6. Final size: the asked density holds at any height, strips are
+  //    never stitched into one picture
+  const scale = metrics.deviceScaleFactor;
   const { cssContentSize } = await cdp.send('Page.getLayoutMetrics');
   const width = Math.max(Math.ceil(cssContentSize.width), viewport.width);
   const height = Math.min(
@@ -198,9 +215,15 @@ export async function captureViewport(cdp, { url, viewport }, control) {
     MAX_CAPTURE_HEIGHT,
   );
 
-  // 7. Shoot, slice by slice
+  // 7. Shoot slice by slice, lossless; then each strip is encoded once,
+  //    straight to what the app stores
+  const { slices: plan, stripCss } = planStripSlices(
+    height,
+    scale,
+    encoding.stripHeight,
+  );
   const slices = [];
-  for (const slice of planSlices(height, scale)) {
+  for (const slice of plan) {
     if (signal?.aborted) throw new CaptureAborted();
     const { data } = await cdp.send('Page.captureScreenshot', {
       format: 'png',
@@ -209,6 +232,14 @@ export async function captureViewport(cdp, { url, viewport }, control) {
     });
     slices.push({ base64: data, ...slice });
   }
-  const image = await stitchSlices(slices, { width, height, scale });
-  return { image, width, height };
+  const encoded = await encodeStrips(slices, {
+    stripRows: Math.round(stripCss * scale),
+    quality: encoding.quality,
+    signal,
+  });
+  if (signal?.aborted) throw new CaptureAborted();
+  if (encoded.strips.length === 0) {
+    throw new Error('The page came out empty: nothing to capture');
+  }
+  return { ...encoded, width, height };
 }

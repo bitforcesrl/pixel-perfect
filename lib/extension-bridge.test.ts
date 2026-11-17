@@ -97,8 +97,8 @@ describe('captureWithExtension', () => {
   const request = {
     url: 'https://shop.com/',
     viewports: [
-      { key: 'mobile', width: 375, height: 812 },
-      { key: 'desktop', width: 1440, height: 900 },
+      { key: 'mobile', width: 375, height: 812, scale: 2 },
+      { key: 'desktop', width: 1440, height: 900, scale: 2 },
     ],
   };
 
@@ -117,7 +117,7 @@ describe('captureWithExtension', () => {
         requestId,
         type: 'result',
         key: 'mobile',
-        image: 'data:m',
+        strips: [{ height: 10, data: 'data:m' }],
         width: 375,
         height: 2000,
       });
@@ -137,7 +137,7 @@ describe('captureWithExtension', () => {
         onProgress: (key) => events.push(`progress ${key}`),
         onResult: (key, shot) =>
           events.push(
-            `result ${key} ${shot.image} ${shot.width}x${shot.height}`,
+            `result ${key} ${shot.strips[0].data} ${shot.width}x${shot.height}`,
           ),
         onError: (key, message) => events.push(`error ${key} ${message}`),
       },
@@ -163,7 +163,7 @@ describe('captureWithExtension', () => {
         requestId,
         type: 'result',
         key: 'mobile',
-        image: 'data:x',
+        strips: [{ height: 10, data: 'data:x' }],
         width: 1,
         height: 1,
       });
@@ -173,7 +173,7 @@ describe('captureWithExtension', () => {
         requestId,
         type: 'result',
         key: 'mobile',
-        image: 'data:m',
+        strips: [{ height: 10, data: 'data:m' }],
         width: 375,
         height: 2000,
       });
@@ -184,7 +184,7 @@ describe('captureWithExtension', () => {
       request,
       {
         onProgress: () => {},
-        onResult: (_, shot) => images.push(shot.image),
+        onResult: (_, shot) => images.push(shot.strips[0].data),
         onError: () => {},
       },
       {

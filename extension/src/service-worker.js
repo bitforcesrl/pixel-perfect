@@ -15,7 +15,6 @@ import {
   isDefaultAppOrigin,
   matchPatternFor,
 } from './lib/app-origins.js';
-import { CHUNK_SIZE, splitIntoChunks } from './lib/chunks.js';
 import { parseCaptureRequest, PORT_NAME, refuseUrl } from './lib/protocol.js';
 
 /** `chrome.storage.local` keys. */
@@ -146,19 +145,21 @@ const runner = createRunner({
   askConsent,
 });
 
-/** Send one message back to the page, cutting a large image into pieces. */
+/**
+ * Send one message back to the page; a capture goes one strip per message,
+ * so no single message carries a whole page.
+ */
 function post(port, message) {
   try {
-    if (message.type === 'result' && message.image.length > CHUNK_SIZE) {
-      const { image, ...rest } = message;
-      const chunks = splitIntoChunks(image);
-      chunks.forEach((data, index) => {
+    if (message.type === 'result') {
+      const { strips, ...rest } = message;
+      strips.forEach((strip, index) => {
         port.postMessage({
           ...rest,
-          type: 'result-chunk',
+          type: 'result-strip',
           index,
-          total: chunks.length,
-          data,
+          total: strips.length,
+          strip,
         });
       });
       return;

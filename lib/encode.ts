@@ -9,12 +9,13 @@ import {
 } from './tile-container';
 
 /**
- * WebP quality for stored layers. Lower than Squoosh's default (libwebp q75):
+ * WebP quality for stored layers — also what the Chrome extension is asked to
+ * encode its strips at, so a capture stored from either path is alike. Lower than Squoosh's default (libwebp q75):
  * at 0.92 a re-encode in Squoosh still shaved ~40% off our output, and even
  * 0.75 spends bytes on detail nobody sees when aligning a screenshot to a
  * design.
  */
-const QUALITY = 0.5;
+export const COMPACT_QUALITY = 0.5;
 
 /**
  * Where WebP is out of reach, JPEG at this quality: a PNG of a full-page 2x
@@ -138,7 +139,7 @@ export async function encodeStrips(
   height: number,
   draw: DrawStrip,
   {
-    quality = QUALITY,
+    quality = COMPACT_QUALITY,
     signal,
   }: { quality?: number; signal?: AbortSignal } = {},
 ): Promise<Blob | null> {
@@ -256,7 +257,7 @@ async function encodeCompact(
  */
 export async function toCompactBlob(
   src: string,
-  quality = QUALITY,
+  quality = COMPACT_QUALITY,
 ): Promise<Blob | null> {
   const encoded = await encodeCompact(src, quality);
   if (!encoded) return null;
@@ -272,7 +273,7 @@ export async function toCompactBlob(
 /** `toCompactBlob` as a data URL, for what is stored as one. Browser only. */
 export async function toCompactDataUrl(
   src: string,
-  quality = QUALITY,
+  quality = COMPACT_QUALITY,
 ): Promise<string | null> {
   const blob = await toCompactBlob(src, quality);
   return blob ? readAsDataUrl(blob) : null;

@@ -17,5 +17,9 @@ them) in the same change that does them.
 - [ ] **Update the hand-written install steps** that still say "load it
       unpacked until it is on the Chrome Web Store": `README.md` (_Optional:
       capture the site automatically_) and `extension/README.md`.
+- [ ] **Check the WebP strip capture in a real Chrome**: a tall desktop page
+      on a Retina screen (comes back 2x, strips line up with no seam) and a
+      page at 90% Chrome zoom (captures at 1440 px). Code:
+      `extension/src/capture/capture-viewport.js`, `stitch.js`.
 - [ ] Optional: publish on Microsoft Edge Add-ons too
       (`extension/README.md` ▸ _Microsoft Edge Add-ons_).

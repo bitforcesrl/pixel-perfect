@@ -10,7 +10,7 @@ const VIEWPORTS = [
 ];
 
 const shot = (viewport) => ({
-  image: `data:image/png;base64,${viewport.key}`,
+  strips: [{ height: 3000, data: viewport.key }],
   width: viewport.width,
   height: 3000,
 });

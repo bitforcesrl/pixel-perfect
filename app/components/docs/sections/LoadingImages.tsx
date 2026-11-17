@@ -92,7 +92,9 @@ export default function LoadingImages() {
             <>
               The scale follows the width: <strong>2x</strong> for mobile,{' '}
               <strong>1x</strong> from 1440 px, in between for tablet (768 px →
-              1.75x). The Capture menu shows the scale for each viewport.
+              1.75x) — but never below your screen&apos;s density, so on a
+              Retina screen every viewport is <strong>2x</strong>. The Capture
+              menu shows the scale for each viewport.
             </>,
             <>
               Frames too big for one render are exported in slices and stitched
@@ -220,10 +222,10 @@ export default function LoadingImages() {
             <>
               The page opens in a small window, is captured at each viewport — a
               real phone layout below 768 px, at the same scale as the Figma
-              export (2x on mobile, 1x from 1440 px) — and the window closes by
-              itself. Chrome shows a &ldquo;started debugging this
-              browser&rdquo; bar meanwhile: that is the extension at work;
-              cancelling it stops the capture.
+              export (2x on mobile, 1x from 1440 px, 2x everywhere on a Retina
+              screen) — and the window closes by itself. Chrome shows a
+              &ldquo;started debugging this browser&rdquo; bar meanwhile: that
+              is the extension at work; cancelling it stops the capture.
             </>,
             <>
               Lazy images are loaded before the shot. Cookie banners and pop-ups

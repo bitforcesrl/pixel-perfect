@@ -22,7 +22,7 @@ const messageOf = (err) => (err instanceof Error ? err.message : String(err));
  * @param deps.openWindow () → Promise<{ windowId, tabId }>
  * @param deps.closeWindow (windowId) → Promise
  * @param deps.attach (tabId) → Promise<Cdp>
- * @param deps.captureViewport (cdp, { url, viewport }, { deadline, signal })
+ * @param deps.captureViewport (cdp, { url, viewport, encoding }, { deadline, signal })
  * @param deps.getAllowList / deps.saveAllowList the consent list
  * @param deps.askConsent ({ appOrigin, targetOrigin }) → Promise<{ allowed, remember }>
  * @param deps.viewportTimeoutMs per-viewport cap, 90 s by default
@@ -50,7 +50,7 @@ export function createRunner(deps) {
    * away. The capture itself is told to stop through its own signal, so a
    * timed-out viewport does not keep driving the tab under the next one.
    */
-  async function oneViewport(cdp, url, viewport, signal, detached) {
+  async function oneViewport(cdp, url, viewport, encoding, signal, detached) {
     const controller = new AbortController();
     const stop = () => controller.abort();
     signal.addEventListener('abort', stop, { once: true });
@@ -59,7 +59,7 @@ export function createRunner(deps) {
       return await Promise.race([
         deps.captureViewport(
           cdp,
-          { url, viewport },
+          { url, viewport, encoding },
           { deadline: Date.now() + timeoutMs, signal: controller.signal },
         ),
         new Promise((_, reject) => {
@@ -89,7 +89,7 @@ export function createRunner(deps) {
    * @param signal aborts the run (Stop in the app, or the app tab went away)
    */
   async function run(request, ctx, emit, signal) {
-    const { url, viewports } = request;
+    const { url, viewports, encoding } = request;
     const targetOrigin = targetKey(url);
     const failAll = (list, message) => {
       for (const viewport of list) {
@@ -134,7 +134,14 @@ export function createRunner(deps) {
         const viewport = viewports[i];
         emit({ type: 'progress', key: viewport.key, status: 'capturing' });
         try {
-          const shot = await oneViewport(cdp, url, viewport, signal, detached);
+          const shot = await oneViewport(
+            cdp,
+            url,
+            viewport,
+            encoding,
+            signal,
+            detached,
+          );
           if (signal.aborted) break;
           emit({ type: 'result', key: viewport.key, ...shot });
         } catch (err) {

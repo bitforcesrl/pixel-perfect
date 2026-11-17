@@ -6,9 +6,10 @@ const valid = () => ({
   requestId: 'r1',
   url: 'https://shop.example.com/products/a',
   viewports: [
-    { key: 'mobile', width: 375, height: 812 },
-    { key: 'desktop', width: 1440, height: 900 },
+    { key: 'mobile', width: 375, height: 812, scale: 2 },
+    { key: 'desktop', width: 1440, height: 900, scale: 1 },
   ],
+  encoding: { quality: 0.5, stripHeight: 2048 },
 });
 
 describe('parseCaptureRequest', () => {
@@ -19,6 +20,7 @@ describe('parseCaptureRequest', () => {
       requestId: 'r1',
       url: 'https://shop.example.com/products/a',
       viewports: valid().viewports,
+      encoding: valid().encoding,
     });
   });
 

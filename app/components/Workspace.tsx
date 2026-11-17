@@ -12,8 +12,10 @@ import AnnotationLayer, { type Tool } from './AnnotationLayer';
 import BrandMark from './BrandMark';
 import { EXTENSION_STORE_URL } from '@/lib/features';
 import {
+  blobFromStrips,
   captureWithExtension,
   type ExtensionInfo,
+  type ExtensionShot,
 } from '@/lib/extension-bridge';
 import ExtensionRequiredDialog from './ExtensionRequiredDialog';
 import FigmaTokenDialog from './FigmaTokenDialog';
@@ -117,7 +119,7 @@ import {
   type ViewportSettings,
 } from '@/lib/settings';
 import type { ScreenshotResult } from '@/lib/validation';
-import { renderScaleFor } from '@/lib/render-scale';
+import { captureScaleFor, currentScreenScale } from '@/lib/render-scale';
 import { DOCS, DOCS_PATH, openDocs } from '@/lib/docs';
 import {
   findProjectByName,
@@ -251,6 +253,12 @@ export interface WorkspaceProps {
  * it again: every hydration effect below runs once per page and none of the
  * previous page's state can leak across.
  */
+/** A capture from the extension as it is stored: its WebP strips, packed. */
+async function storedFormOf(shot: ExtensionShot): Promise<ScreenshotResult> {
+  const { width, height } = shot;
+  return { image: await readAsDataUrl(blobFromStrips(shot)), width, height };
+}
+
 export default function Workspace({
   project,
   page,
@@ -1076,9 +1084,11 @@ export default function Workspace({
 
   /**
    * Capture the given viewports through the Chrome extension: one window,
-   * every viewport in turn, in the user's own browser session. Results land
-   * as they arrive, re-encoded as WebP strips (or JPEG) — ~10x lighter to hold
-   * and to store, and identical before and after a reload.
+   * every viewport in turn, in the user's own browser session, at the
+   * density of this screen (`captureScaleFor`). Results land as they arrive,
+   * as WebP strips encoded by the extension and stored as they come: ~10x
+   * lighter to hold and to store than a PNG, and identical before and after
+   * a reload.
    */
   const runCaptures = (targets: ViewportPreset[], found: ExtensionInfo) => {
     if (targets.length === 0 || url.trim() === '') return;
@@ -1102,16 +1112,18 @@ export default function Workspace({
       return next;
     });
 
+    // Every viewport of the run is shot for the screen it is asked from
+    const screenScale = currentScreenScale();
+
     // Stop on the overlay aborts the run and skips what is left
     const controller = new AbortController();
     captureAbortRef.current = controller;
     const { signal } = controller;
 
     const landing: Promise<void>[] = [];
-    const land = async (key: ViewportKey, captured: ScreenshotResult) => {
+    const land = async (key: ViewportKey, shot: ExtensionShot) => {
       try {
-        const compact = await toCompactDataUrl(captured.image);
-        const screenshot = compact ? { ...captured, image: compact } : captured;
+        const screenshot = await storedFormOf(shot);
         // Stopped, or replaced by a drop while this one was encoding
         if (signal.aborted || !isLatestFor(key)) return;
         // A recapture of the same page keeps its alignment
@@ -1138,7 +1150,12 @@ export default function Workspace({
             // Already replaced by a drop: no point shooting it
             viewports: targets
               .filter((preset) => isLatestFor(preset.key))
-              .map(({ key, width, height }) => ({ key, width, height })),
+              .map(({ key, width, height }) => ({
+                key,
+                width,
+                height,
+                scale: captureScaleFor(width, screenScale),
+              })),
           },
           {
             onProgress: () => {},
@@ -1242,8 +1259,8 @@ export default function Workspace({
 
   /**
    * Render each viewport's Figma frame at its width's scale (2x on mobile,
-   * sliding to 1x on desktop — `lib/render-scale.ts`) and land it as that viewport's
-   * Figma layer.
+   * sliding to 1x on desktop, never below this screen's density —
+   * `lib/render-scale.ts`) and land it as that viewport's Figma layer.
    *
    * Figma renders the frame and hands back where the PNG is; the browser
    * downloads it from there and it goes through the same path as a dropped
@@ -1313,7 +1330,9 @@ export default function Workspace({
                 nodeId,
                 slice,
                 ...(learnedArea !== null ? { maxArea: learnedArea } : {}),
-                ...(frameScale !== null ? { scale: frameScale } : {}),
+                ...(frameScale !== null
+                  ? { scale: frameScale }
+                  : { screenScale: currentScreenScale() }),
               }),
             });
             const data = await res.json();
@@ -2285,7 +2304,7 @@ export default function Workspace({
           : []),
         {
           label: activePreset
-            ? `Export ${activePreset.label} Figma frame at ${renderScaleFor(activePreset.width)}x`
+            ? `Export ${activePreset.label} Figma frame at ${captureScaleFor(activePreset.width, currentScreenScale())}x`
             : "Export this viewport's Figma frame",
           shortcut: '⇧M',
           disabled:
