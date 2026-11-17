@@ -45,10 +45,10 @@ export default function Pages() {
       <Figure
         src="/docs/pages-gallery.webp"
         width={1640}
-        height={1312}
+        height={1166}
         displayWidth={820}
-        alt="The Pages gallery: a page card with its preview, capture URL and one Figma frame URL per viewport, next to the New page card."
-        caption="File ▸ Pages… — one card per page, plus a card to add a new one."
+        alt="The Pages gallery on its Figma tab: the New page card first, then a page card with its preview, capture URL and one Figma frame URL per viewport."
+        caption="File ▸ Pages… — a card to add a new page, then one card per page. The Claude tab imports a Claude Design export."
       />
 
       <DocSubsection id={DOCS.pageFields} title="Page fields">

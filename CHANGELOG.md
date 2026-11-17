@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The docs show the app in the Bulk upload and Claude Design sections, and the Pages screenshot now has the Figma and Claude tabs.
+
 ## [2.1.0] - 2026-11-17
 
 ### Added

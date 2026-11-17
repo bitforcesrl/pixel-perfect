@@ -60,19 +60,32 @@ export default function LoadingImages() {
       </DocSubsection>
 
       <DocSubsection id={DOCS.bulkUpload} title="Bulk upload">
-        <P>
-          The upload icons in the{' '}
-          <DocLink to={DOCS.Layers}>Layers panel</DocLink> take several files at
-          once — one for Figma exports (<Kbd>I</Kbd>), one for site screenshots.
-          Each file goes to the viewport whose width it matches at{' '}
-          <strong>1x or 2x</strong>: a 750 px export lands on Mobile 375, a 2880
-          px one on Desktop 1440.
-        </P>
-        <P>
-          The closest width wins; when two files match the same viewport, the
-          last one is kept. To place a file on a viewport regardless of its
-          width, <DocLink to={DOCS.dragAndDrop}>drop it</DocLink> instead.
-        </P>
+        <WithAside
+          aside={
+            <Figure
+              src="/docs/bulk-upload.webp"
+              width={576}
+              height={294}
+              displayWidth={288}
+              alt="The Layers panel with the upload buttons of the Figma and Site rows outlined."
+              caption="The upload buttons in the Layers panel: Figma exports on the first row, site screenshots on the second."
+            />
+          }
+        >
+          <P>
+            The upload icons in the{' '}
+            <DocLink to={DOCS.Layers}>Layers panel</DocLink> take several files
+            at once — one for Figma exports (<Kbd>I</Kbd>), one for site
+            screenshots. Each file goes to the viewport whose width it matches
+            at <strong>1x or 2x</strong>: a 750 px export lands on Mobile 375, a
+            2880 px one on Desktop 1440.
+          </P>
+          <P>
+            The closest width wins; when two files match the same viewport, the
+            last one is kept. To place a file on a viewport regardless of its
+            width, <DocLink to={DOCS.dragAndDrop}>drop it</DocLink> instead.
+          </P>
+        </WithAside>
       </DocSubsection>
 
       <DocSubsection
@@ -91,6 +104,14 @@ export default function LoadingImages() {
           A <strong>Claude Design</strong> file can bring in a whole site at
           once, pages included:
         </P>
+        <Figure
+          src="/docs/claude-import.webp"
+          width={1664}
+          height={692}
+          displayWidth={832}
+          alt="File ▸ Pages on the Claude tab: a dashed drop zone, lit up while a .zip is dragged over it, with a Choose file button."
+          caption="File ▸ Pages ▸ Claude — drop the .zip here."
+        />
         <Steps>
           {[
             <>
@@ -113,6 +134,14 @@ export default function LoadingImages() {
             </>,
           ]}
         </Steps>
+        <Figure
+          src="/docs/claude-import-review.webp"
+          width={1664}
+          height={642}
+          displayWidth={832}
+          alt="The screens found in the export, each ticked, with its viewports (Desktop, Mobile, Tablet) and a New or Updates badge; below, 3 new pages, 23 free of 24, and the Cancel and Import 4 screens buttons."
+          caption="Before importing: one row per screen, the viewports its images go to, and whether it adds a page or updates one."
+        />
         <Bullets>
           {[
             <>
