@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-17
+
 ### Added
 
 - Pages can be created from a Claude Design file: drop its PNG export (Export ▸ All artboards (.png)) in File ▸ Pages ▸ Claude, pick the screens, and each becomes a page with its design already loaded, stored as WebP, on the viewport its title names (`Home – Desktop`, `Home – Mobile`). Importing again updates the pages with the same name.
@@ -154,7 +156,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project export and import as ZIP, and diff map download.
 - Optional password gate for public deployments.
 
-[Unreleased]: https://github.com/bitforcesrl/pixel-perfect/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/bitforcesrl/pixel-perfect/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/bitforcesrl/pixel-perfect/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/bitforcesrl/pixel-perfect/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.4.0-beta.1...v1.0.0
 [0.4.0-beta.1]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.3.0-beta.1...v0.4.0-beta.1
