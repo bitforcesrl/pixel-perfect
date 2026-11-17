@@ -88,6 +88,9 @@ export default function PixelPerfectApp({
     pageName: string;
   } | null>(null);
   // Only the demo route ever sets these
+  // Bumped to remount the workspace on the same page, so it reads its slots
+  // again from storage
+  const [workspaceReload, setWorkspaceReload] = useState(0);
   const [demoState, setDemoState] = useState<
     'loading' | 'choose' | 'ready' | 'failed'
   >(demoUrl ? 'loading' : 'ready');
@@ -364,6 +367,35 @@ export default function PixelPerfectApp({
     void saveActivePage(activeId, page.id);
   };
 
+  /**
+   * A Claude Design import: its images are already stored under these pages'
+   * ids, so the list is saved at once rather than after the usual debounce —
+   * a tab closed in between would leave the images with no page. The open
+   * page stays open; if it got new designs, its workspace remounts to read
+   * them.
+   */
+  const handleDesignPagesImported = (
+    newPages: Page[],
+    updatedIds: string[],
+  ) => {
+    if (!activeId) return;
+    if (newPages.length > 0) {
+      // Read now, not from this render: the import took a while, and pages
+      // may have been renamed or edited meanwhile
+      const next = projectsRef.current.map((project) =>
+        project.id === activeId
+          ? { ...project, pages: [...project.pages, ...newPages] }
+          : project,
+      );
+      savedRef.current = next;
+      setProjects(next);
+      void saveProjects(next);
+    }
+    if (activePage && updatedIds.includes(activePage.id)) {
+      setWorkspaceReload((n) => n + 1);
+    }
+  };
+
   const handleRenamePage = (pageId: string, name: string) => {
     patchPages((pages) =>
       pages.map((page) =>
@@ -499,7 +531,7 @@ export default function PixelPerfectApp({
   return (
     <>
       <Workspace
-        key={activePage.id}
+        key={`${activePage.id}:${workspaceReload}`}
         project={active}
         page={activePage}
         projects={projects}
@@ -514,6 +546,7 @@ export default function PixelPerfectApp({
         onDeletePage={handleDeletePage}
         onUrlChange={handleUrlChange}
         onFigmaUrlChange={handleFigmaUrlChange}
+        onDesignPagesImported={handleDesignPagesImported}
         autoCapture={autoCapture}
       />
 

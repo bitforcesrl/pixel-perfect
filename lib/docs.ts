@@ -37,6 +37,7 @@ export const DOCS = {
   loadingImages: 'loading-images',
   dragAndDrop: 'drag-and-drop',
   bulkUpload: 'bulk-upload',
+  claudeDesign: 'claude-design',
   figmaExport: 'figma-export',
   figmaToken: 'figma-token',
   chromeExtension: 'chrome-extension',
@@ -59,6 +60,10 @@ export const DOCS_TOC: DocsTocEntry[] = [
     children: [
       { id: DOCS.dragAndDrop, title: 'Drag & drop' },
       { id: DOCS.bulkUpload, title: 'Bulk upload' },
+      {
+        id: DOCS.claudeDesign,
+        title: 'Claude Design and other tools',
+      },
       { id: DOCS.figmaExport, title: 'Figma export' },
       {
         id: DOCS.chromeExtension,

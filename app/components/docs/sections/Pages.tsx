@@ -31,7 +31,14 @@ export default function Pages() {
         </P>
         <P>
           In the pages gallery every page is a card: click its preview to open
-          it, and edit its fields in place — they save as you type.
+          it, and edit its fields in place — they save as you type. The{' '}
+          <strong>New page</strong> card comes first.
+        </P>
+        <P>
+          The gallery has two tabs: <strong>Figma</strong>, with the page cards,
+          and <strong>Claude</strong>, which creates pages from a{' '}
+          <DocLink to={DOCS.claudeDesign}>Claude Design export</DocLink>, each
+          with its design already loaded.
         </P>
       </WithAside>
 

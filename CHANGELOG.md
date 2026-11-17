@@ -12,10 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Pages can be created from a Claude Design file: drop its PNG export (Export ▸ All artboards (.png)) in File ▸ Pages ▸ Claude, pick the screens, and each becomes a page with its design already loaded, stored as WebP, on the viewport its title names (`Home – Desktop`, `Home – Mobile`). Importing again updates the pages with the same name.
+- The docs explain that the design layer can come from Claude Design or any tool that exports images, not only Figma.
 - The Layers panel can delete a layer on every viewport at once: the bin's ▾ menu ▸ All viewports, after a confirmation.
 
 ### Changed
 
+- A project holds up to 24 pages instead of 6.
+- File ▸ Pages has two tabs, Figma (the page cards) and Claude (the Claude Design import), and the New page card is now the first in the grid, so it stays in reach with many pages.
 - The Layers panel's Capture buttons have a ▾ menu with This viewport and All viewports, replacing the separate All buttons; the site row's Chrome button is now called Capture.
 - On a high-density (Retina) screen, site captures and Figma exports are taken at 2x on every viewport, desktop included, so text stays sharp at 100%; on a standard screen the scale still slides from 2x on mobile to 1x on desktop.
 - The dialog shown when capturing without the extension, Capture ▸ Install the Chrome extension… and the docs now send you to the Chrome Web Store to add the extension.

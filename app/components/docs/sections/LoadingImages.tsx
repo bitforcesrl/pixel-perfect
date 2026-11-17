@@ -25,7 +25,7 @@ export default function LoadingImages() {
       id={DOCS.loadingImages}
       number="05"
       title="Loading images"
-      lead="Each viewport needs two layers: the Figma design and a screenshot of the site. Get them by hand or let the app fetch them — mix freely, a dropped layer and a fetched one behave the same."
+      lead="Each viewport needs two layers: the design and a screenshot of the site. The design can come from Figma, from Claude Design or from any tool that exports images. Get the layers by hand or let the app fetch them — mix freely, a dropped layer and a fetched one behave the same."
     >
       <DocSubsection id={DOCS.dragAndDrop} title="Drag & drop">
         <WindowShot
@@ -73,6 +73,72 @@ export default function LoadingImages() {
           last one is kept. To place a file on a viewport regardless of its
           width, <DocLink to={DOCS.dragAndDrop}>drop it</DocLink> instead.
         </P>
+      </DocSubsection>
+
+      <DocSubsection
+        id={DOCS.claudeDesign}
+        title="Claude Design and other tools"
+      >
+        <P>
+          The <Layer of="figma" /> layer is named after Figma, but it takes the
+          design from anywhere: an image exported from Claude Design, Penpot,
+          Sketch, Framer or any other tool works the same once it is{' '}
+          <DocLink to={DOCS.dragAndDrop}>dropped</DocLink> or{' '}
+          <DocLink to={DOCS.bulkUpload}>uploaded</DocLink>, and can be saved in
+          snapshots like a Figma export.
+        </P>
+        <P>
+          A <strong>Claude Design</strong> file can bring in a whole site at
+          once, pages included:
+        </P>
+        <Steps>
+          {[
+            <>
+              In Claude Design, choose <strong>Export</strong> ▸{' '}
+              <strong>All artboards (.png)</strong>. It saves a .zip with one
+              PNG per artboard, named after the artboard.
+            </>,
+            <>
+              In Pixel Perfect, open <Menu path={['File', 'Pages…']} /> (
+              <Kbd>P</Kbd>), switch to the <strong>Claude</strong> tab and drop
+              the .zip (or choose it).
+            </>,
+            <>
+              Check the list of screens it found — untick the ones you do not
+              want — and press <strong>Import</strong>.
+            </>,
+            <>
+              Back in the <strong>Figma</strong> tab, fill in each new
+              page&apos;s <DocLink to={DOCS.pageFields}>Capture URL</DocLink>.
+            </>,
+          ]}
+        </Steps>
+        <Bullets>
+          {[
+            <>
+              <strong>One page per screen.</strong> An artboard title that ends
+              with a viewport name — <Code>Home – Desktop</Code>,{' '}
+              <Code>Home – Mobile</Code> — puts that image on that viewport, and
+              both land on the same page, <Code>Home</Code>. A title with no
+              viewport is placed by its width, at 1x or 2x, like a{' '}
+              <DocLink to={DOCS.bulkUpload}>bulk upload</DocLink>.
+            </>,
+            <>
+              <strong>Importing again updates.</strong> A screen whose name
+              matches a page already in the project is marked{' '}
+              <strong>Updates</strong> and replaces that page&apos;s design on
+              the viewports it brings; new screens are marked{' '}
+              <strong>New</strong>. Save a{' '}
+              <DocLink to={DOCS.History}>snapshot</DocLink> first to keep the
+              previous version.
+            </>,
+            <>
+              The PNGs are stored as compressed WebP, as any dropped image is. A
+              project holds up to 24 pages: when the new screens do not fit,
+              Import stays off until you untick some or delete pages.
+            </>,
+          ]}
+        </Bullets>
       </DocSubsection>
 
       <DocSubsection id={DOCS.figmaExport} title="Figma export">

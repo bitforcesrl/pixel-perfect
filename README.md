@@ -14,7 +14,7 @@
 
 Pixel Perfect is a web app for **design QA**. For each page and each viewport (mobile, tablet, desktop or your own sizes) it stacks a screenshot of the website over the matching Figma frame, then gives you four ways to compare them, plus tools to align, measure, annotate and share what you find.
 
-Start with two images dragged onto the canvas. Add a Figma token and the design frames are fetched for you. Install the [Pixel Perfect Capture](https://chromewebstore.google.com/detail/pixel-perfect-capture/EXTENSION_ID) extension for Chrome, and the site is captured for you too.
+Start with two images dragged onto the canvas: the design can come from Figma, Claude Design or any tool that exports images. Add a Figma token and the design frames are fetched for you, or drop a Claude Design export and every screen becomes a page with its design already loaded. Install the [Pixel Perfect Capture](https://chromewebstore.google.com/detail/pixel-perfect-capture/EXTENSION_ID) extension for Chrome, and the site is captured for you too.
 
 📖 **User guide:** the app ships its own documentation at **`/docs`**, with screenshots of every panel. Each panel's `?` icon opens its section.
 
@@ -83,26 +83,27 @@ Pixel Perfect keeps the whole loop in one place:
 | **2. Figma API**          | Fetched automatically | Drop a screenshot                          | A Figma personal access token                         |
 | **3. Fully automatic**    | Fetched automatically | Captured automatically, in your own Chrome | A Figma token and the Pixel Perfect Capture extension |
 
-You can mix them freely: a layer you drop and a layer the app fetched behave exactly the same.
+You can mix them freely: a layer you drop and a layer the app fetched behave exactly the same. The Figma layer is just the design layer: an export from Claude Design, Penpot, Sketch or any other tool goes there too.
 
 ---
 
 ## Features
 
-| Area                 | What it does                                                                                                                                                                                                                                     |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Drag & drop**      | Drop images on the canvas (left half = Figma, right half = site) or on a viewport tab, split the same way. PNG, JPEG, WebP, AVIF, GIF and BMP are accepted; a retina screenshot is recognised by its width and shown at the viewport's CSS size. |
-| **Figma export**     | Renders a frame through the Figma REST API (2x on mobile, down to 1x on desktop; 2x everywhere on a Retina screen), for the current viewport (`⇧M`) or all of them (**▾ ▸ All viewports** or the menu).                                          |
-| **Site capture**     | Full-page screenshots at each viewport's exact width, taken by the Pixel Perfect Capture Chrome extension in your own browser and session. Viewports under 768 px are captured as a phone; every capture is at the Figma export's scale.         |
-| **Projects & pages** | Up to 6 projects of up to 6 pages each. Each page has a URL and one Figma link per viewport. Gallery with thumbnails.                                                                                                                            |
-| **Viewports**        | Mobile, Tablet and Desktop by default. Add, rename, resize or disable them in the settings.                                                                                                                                                      |
-| **Comparison modes** | **Split**, **Overlay** (opacity + `normal` or `difference` blending), **Tap**, **Side by side** (synced scroll).                                                                                                                                 |
-| **Alignment**        | Pixel vertical offset, align top/bottom, drag the Figma layer, zoom and fit.                                                                                                                                                                     |
-| **Annotations**      | Vertical and horizontal guides, a pen with colors and widths, per-page text notes.                                                                                                                                                               |
-| **History**          | Save Figma exports as named snapshots to compare design versions over time.                                                                                                                                                                      |
-| **Sharing**          | Export/import a whole project as a ZIP: layers, snapshots, notes and settings (guides and drawings stay in the session).                                                                                                                         |
-| **Diff map**         | Download the difference image to attach to a ticket.                                                                                                                                                                                             |
-| **Persistence**      | Everything is kept in the browser (IndexedDB). Reload and pick up where you left off.                                                                                                                                                            |
+| Area                     | What it does                                                                                                                                                                                                                                                            |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Drag & drop**          | Drop images on the canvas (left half = Figma, right half = site) or on a viewport tab, split the same way. PNG, JPEG, WebP, AVIF, GIF and BMP are accepted; a retina screenshot is recognised by its width and shown at the viewport's CSS size.                        |
+| **Figma export**         | Renders a frame through the Figma REST API (2x on mobile, down to 1x on desktop; 2x everywhere on a Retina screen), for the current viewport (`⇧M`) or all of them (**▾ ▸ All viewports** or the menu).                                                                 |
+| **Site capture**         | Full-page screenshots at each viewport's exact width, taken by the Pixel Perfect Capture Chrome extension in your own browser and session. Viewports under 768 px are captured as a phone; every capture is at the Figma export's scale.                                |
+| **Projects & pages**     | Up to 6 projects of up to 24 pages each. Each page has a URL and one Figma link per viewport. Gallery with thumbnails.                                                                                                                                                  |
+| **Claude Design import** | Drop the PNG export of a Claude Design file (**Export ▸ All artboards (.png)**) in **File ▸ Pages ▸ Claude**: one page per screen, each image on the viewport its title names (`Home – Desktop`), stored as WebP. Importing again updates the pages with the same name. |
+| **Viewports**            | Mobile, Tablet and Desktop by default. Add, rename, resize or disable them in the settings.                                                                                                                                                                             |
+| **Comparison modes**     | **Split**, **Overlay** (opacity + `normal` or `difference` blending), **Tap**, **Side by side** (synced scroll).                                                                                                                                                        |
+| **Alignment**            | Pixel vertical offset, align top/bottom, drag the Figma layer, zoom and fit.                                                                                                                                                                                            |
+| **Annotations**          | Vertical and horizontal guides, a pen with colors and widths, per-page text notes.                                                                                                                                                                                      |
+| **History**              | Save Figma exports as named snapshots to compare design versions over time.                                                                                                                                                                                             |
+| **Sharing**              | Export/import a whole project as a ZIP: layers, snapshots, notes and settings (guides and drawings stay in the session).                                                                                                                                                |
+| **Diff map**             | Download the difference image to attach to a ticket.                                                                                                                                                                                                                    |
+| **Persistence**          | Everything is kept in the browser (IndexedDB). Reload and pick up where you left off.                                                                                                                                                                                   |
 
 ## Core concepts
 
@@ -140,7 +141,16 @@ Open the deployment URL and go to `/app`, or start from `/demo` to explore a rea
 
 The drop always goes to the viewport it was aimed at, whatever the image's width. You can also press `I` to pick Figma exports from disk; those are routed to a viewport by their width.
 
-### 4. Optional: fetch Figma frames automatically
+### 4. Optional: import a Claude Design file
+
+If the design lives in Claude Design, bring in every screen at once:
+
+1. In Claude Design, choose **Export ▸ All artboards (.png)**.
+2. In **File ▸ Pages** (`P`), open the **Claude** tab and drop the .zip.
+3. Untick any screen you do not want and press **Import**: each screen becomes a page, with its image on the viewport its title ends with (`Home – Desktop`, `Home – Mobile`).
+4. In the **Figma** tab, fill in each page's site URL.
+
+### 5. Optional: fetch Figma frames automatically
 
 Instead of exporting from Figma by hand, add a Figma token once:
 
@@ -152,7 +162,7 @@ Instead of exporting from Figma by hand, add a Figma token once:
 
 > Figma's image-rendering endpoint is tightly rate limited for _View_ and _Collab_ seats. Use a _Dev_ or _Full_ seat.
 
-### 5. Optional: capture the site automatically
+### 6. Optional: capture the site automatically
 
 Instead of taking screenshots by hand, install the **Pixel Perfect Capture** extension in Chrome (or Edge, Brave, Arc):
 
@@ -163,7 +173,7 @@ Instead of taking screenshots by hand, install the **Pixel Perfect Capture** ext
 
 The first capture of a site asks you to allow it, once. The page opens in a small window, is captured full-page at each viewport, and the window closes by itself. Without the extension, **Capture** and its menu open a dialog with the link to install it. Details in [`extension/README.md`](extension/README.md).
 
-### 6. Compare, annotate, share
+### 7. Compare, annotate, share
 
 1. Pick a comparison mode (`1`–`4`).
 2. Align with **Offset Y**, zoom and dragging the Figma layer.
@@ -207,8 +217,8 @@ Open **http://localhost:7654**.
 
 ### Set up automatic capture
 
-1. **Chrome extension**: install it as described [above](#5-optional-capture-the-site-automatically).
-2. **Figma token**: set `FIGMA_TOKEN` in `.env`, or paste your own token in the app (see [above](#4-optional-fetch-figma-frames-automatically)).
+1. **Chrome extension**: install it as described [above](#6-optional-capture-the-site-automatically).
+2. **Figma token**: set `FIGMA_TOKEN` in `.env`, or paste your own token in the app (see [above](#5-optional-fetch-figma-frames-automatically)).
 3. **Pages**: in **File ▸ Pages**, give each page its **Capture URL** and one **Figma frame link** per viewport.
 4. **Viewports**: adjust sizes or add new ones under **Capture ▸ Viewport settings…** (`,`).
 

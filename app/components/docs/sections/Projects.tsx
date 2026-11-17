@@ -48,7 +48,7 @@ export default function Projects() {
         </P>
         <P>
           A browser keeps up to <strong>6 projects</strong>, each with up to{' '}
-          <strong>6 pages</strong>. Everything is stored in the browser, and a
+          <strong>24 pages</strong>. Everything is stored in the browser, and a
           banner warns you when that storage is nearly full: export the projects
           you are done with, then delete them to make room.
         </P>

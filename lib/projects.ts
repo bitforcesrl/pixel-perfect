@@ -54,8 +54,13 @@ export const MAX_NAME_LENGTH = 60;
  */
 export const MAX_PROJECTS = 6;
 
-/** How many pages one project holds — the same reasoning as {@link MAX_PROJECTS}. */
-export const MAX_PAGES = 6;
+/**
+ * How many pages one project holds — the same reasoning as
+ * {@link MAX_PROJECTS}. Higher than it, since a Claude Design export brings a
+ * whole site's screens at once; design images are stored as WebP, so a page
+ * costs little until it is captured.
+ */
+export const MAX_PAGES = 24;
 
 /** A name the list can render: trimmed, bounded, never blank. */
 export function sanitizeName(raw: string): string {

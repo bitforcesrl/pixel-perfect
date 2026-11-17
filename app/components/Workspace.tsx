@@ -241,6 +241,8 @@ export interface WorkspaceProps {
   onDeletePage: (id: string) => void;
   onUrlChange: (url: string, pageId?: string) => void;
   onFigmaUrlChange: (key: ViewportKey, url: string, pageId: string) => void;
+  /** Pages and design images brought in from a Claude Design export. */
+  onDesignPagesImported: (newPages: Page[], updatedIds: string[]) => void;
   /**
    * Capture every viewport of this page as soon as it is ready — a site sent
    * from the extension's toolbar. A new `nonce` asks again.
@@ -276,6 +278,7 @@ export default function Workspace({
   onDeletePage,
   onUrlChange,
   onFigmaUrlChange,
+  onDesignPagesImported,
   autoCapture = null,
 }: WorkspaceProps) {
   const projectId = project.id;
@@ -2595,6 +2598,8 @@ export default function Workspace({
           presets={presets}
           onFigmaUrlChange={onFigmaUrlChange}
           maxPages={MAX_PAGES}
+          allPresets={allPresets(settings)}
+          onDesignPagesImported={onDesignPagesImported}
         />
 
         <NewProjectDialog

@@ -44,8 +44,8 @@ export default function Sharing() {
               <Menu path={['File', 'Import project from ZIP…']} /> opens it as
               it was left, as a new project. If a project with the same name is
               already here, you are asked before it is <strong>replaced</strong>
-              . A browser holds up to 6 projects of 6 pages each; past that,
-              only the first 6 pages are imported.
+              . A browser holds up to 6 projects of 24 pages each; past that,
+              only the first 24 pages are imported.
             </>,
             <>
               <Menu path={['File', 'Download diff map']} /> (<Kbd>E</Kbd>) saves

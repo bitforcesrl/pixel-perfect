@@ -159,7 +159,7 @@ const FAQ: FaqEntry[] = [
   },
   {
     q: 'What are the limits?',
-    a: 'It compares pixels, not the DOM: it shows where something is off, not which CSS property is wrong. It is a manual review tool, not a CI check, so there are no baselines or pull request status. One browser holds up to 6 projects of up to 6 pages each. Figma’s image endpoint is heavily rate-limited for View and Collab seats; a Dev or Full seat works much better.',
+    a: 'It compares pixels, not the DOM: it shows where something is off, not which CSS property is wrong. It is a manual review tool, not a CI check, so there are no baselines or pull request status. One browser holds up to 6 projects of up to 24 pages each. Figma’s image endpoint is heavily rate-limited for View and Collab seats; a Dev or Full seat works much better.',
   },
 ];
 
