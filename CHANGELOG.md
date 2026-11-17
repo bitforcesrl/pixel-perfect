@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-17
+
 ### Added
 
 - Sites are captured automatically by the new Pixel Perfect Capture extension for Chrome, in your own browser and session: logins, store passwords and cookie choices carry over, and localhost, staging and logged-in pages work from the hosted app too.
@@ -132,7 +134,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project export and import as ZIP, and diff map download.
 - Optional password gate for public deployments.
 
-[Unreleased]: https://github.com/bitforcesrl/pixel-perfect/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/bitforcesrl/pixel-perfect/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/bitforcesrl/pixel-perfect/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.4.0-beta.1...v1.0.0
 [0.4.0-beta.1]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.3.0-beta.1...v0.4.0-beta.1
 [0.3.0-beta.1]: https://github.com/bitforcesrl/pixel-perfect/compare/v0.2.0-beta.1...v0.3.0-beta.1

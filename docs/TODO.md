@@ -19,11 +19,3 @@ them) in the same change that does them.
       capture the site automatically_) and `extension/README.md`.
 - [ ] Optional: publish on Microsoft Edge Add-ons too
       (`extension/README.md` ▸ _Microsoft Edge Add-ons_).
-
-## Release
-
-- [ ] **Cut the release** after the extension branch is merged into `main`
-      (and ideally after the store URL is set): bump type to decide —
-      `## [Unreleased]` holds removals (Browserless, local capture, browser
-      login, site password), which argues for a major (2.0.0). Follow
-      _Releases_ in `AGENTS.md`.
