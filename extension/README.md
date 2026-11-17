@@ -1,5 +1,7 @@
 # Pixel Perfect Capture — Chrome extension
 
+**Install:** [Chrome Web Store](https://chromewebstore.google.com/detail/pixel-perfect-capture/EXTENSION_ID) (Chrome, Edge, Brave, Arc).
+
 Full-page screenshots of a site at every viewport, taken **in your own
 Chrome with your session**, delivered straight into Pixel Perfect. It is the
 app's only automatic site capture: no key, no server-side browser, no
@@ -13,7 +15,7 @@ already there.
 - [Automated tests](#automated-tests)
 - [Build the release zip](#build-the-release-zip)
 - [Publish to the Chrome Web Store](#publish-to-the-chrome-web-store)
-- [After publishing](#after-publishing)
+- [Store URL](#store-url)
 - [Release an update](#release-an-update)
 - [Microsoft Edge Add-ons (optional)](#microsoft-edge-add-ons-optional)
 - [How it works](#how-it-works)
@@ -21,9 +23,9 @@ already there.
 
 ## What it does
 
-1. **Capture from the app.** The **Chrome** button on the Site row of the
+1. **Capture from the app.** The **Capture** button on the Site row of the
    Layers panel (without the extension it opens a dialog with the install
-   link). Pressing it (or
+   link). Pressing it (or its **▾ ▸ All viewports**, or
    _Capture ▸ Capture all enabled viewports_) opens the page in a small window
    of your Chrome, shows it at each viewport of the project, takes full-page
    screenshots and closes the window. The results land on the page like any
@@ -86,8 +88,10 @@ The app side is `lib/extension-bridge.ts` (talks to the bridge),
 
 ## Load it locally (developer mode)
 
-The same folder is what the store version is built from. Loaded unpacked it
-shows **dev** next to its version in the popup and in the app's status bar.
+For working on the extension itself; to simply use it, install it from the
+[Chrome Web Store](https://chromewebstore.google.com/detail/pixel-perfect-capture/EXTENSION_ID). The same folder is what the store version is built
+from. Loaded unpacked it shows **dev** next to its version in the popup and in
+the app's status bar.
 
 1. Open `chrome://extensions` in Chrome (or Edge, Brave, Arc).
 2. Turn on **Developer mode** (top right).
@@ -104,8 +108,8 @@ the first that replies. While testing a local copy, turn the store copy off in
 
 ## Test the full loop
 
-The app needs this branch's code, so test against the app running locally
-(pixelperfect.fit only gains extension support once this code is deployed).
+Test against the app running locally, so app and extension changes are
+tried together.
 
 1. `npm run dev` (http://localhost:7654).
 2. Load the extension unpacked (above) and open http://localhost:7654/app.
@@ -115,7 +119,7 @@ The app needs this branch's code, so test against the app running locally
 3. In Chrome, open the site you want to test, log in, enter the store
    password, answer the cookie banner, as a visitor would.
 4. In Pixel Perfect, set that address on a page (File ▸ Pages) and press
-   **Chrome** or _Capture ▸ Capture all enabled viewports_.
+   **Capture** or _Capture ▸ Capture all enabled viewports_.
 5. First time for that site: the consent window opens, press **Allow**.
 6. A small window opens, goes through the viewports, closes; the screenshots
    land in the app.
@@ -153,7 +157,9 @@ override for a try-out). `extension/dist/` is git-ignored.
 
 ## Publish to the Chrome Web Store
 
-Everything to paste is in `store/`. Google's own guides:
+How the listing was set up, kept for reference (a new item, a fork, a
+second publisher account). Everything to paste is in `store/`. Google's own
+guides:
 [register](https://developer.chrome.com/docs/webstore/register),
 [publish](https://developer.chrome.com/docs/webstore/publish),
 [review process](https://developer.chrome.com/docs/webstore/review-process).
@@ -215,16 +221,14 @@ At install, Chrome warns that the extension can **"Read and change all your
 data on all websites"** and **"Access the page debugger backend"**: that is
 what the `debugger` permission shows, not a sign of extra permissions.
 
-## After publishing
+## Store URL
 
-1. Copy the item's store URL
-   (`https://chromewebstore.google.com/detail/pixel-perfect-capture/<id>`).
-2. Set it in `lib/features.ts`:
-   `export const EXTENSION_STORE_URL: string | null = 'https://…';`
-   The app's install dialog (what **Chrome** / **All** open without the
-   extension), _Capture ▸ Install the Chrome extension…_ and the docs then
-   link to the store instead of the docs' manual install steps.
-3. Deploy the app.
+The published item lives at
+`https://chromewebstore.google.com/detail/pixel-perfect-capture/EXTENSION_ID`.
+The app reads it from `EXTENSION_STORE_URL` in `lib/features.ts`: the install
+dialog (what **Capture** opens without the extension), _Capture ▸ Install the
+Chrome extension…_ and the docs all link there. `README.md` and the top of
+this file repeat it as plain text.
 
 ## Release an update
 

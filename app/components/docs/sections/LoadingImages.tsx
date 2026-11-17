@@ -180,21 +180,12 @@ export default function LoadingImages() {
         </P>
         <Steps>
           {[
-            EXTENSION_STORE_URL ? (
-              <>
-                Install it from the{' '}
-                <ExtLink href={EXTENSION_STORE_URL}>Chrome Web Store</ExtLink>{' '}
-                (Chrome, Edge, Brave, Arc) and reload Pixel Perfect.
-              </>
-            ) : (
-              <>
-                Until it is on the Chrome Web Store, load it from the{' '}
-                <Code>extension/</Code> folder of the repository: open{' '}
-                <Code>chrome://extensions</Code>, turn on Developer mode, choose{' '}
-                <strong>Load unpacked</strong> and pick the folder. Then reload
-                Pixel Perfect.
-              </>
-            ),
+            <>
+              Add it from the{' '}
+              <ExtLink href={EXTENSION_STORE_URL}>Chrome Web Store</ExtLink>{' '}
+              (Chrome, Edge, Brave, Arc) and reload Pixel Perfect: an extension
+              only reaches the pages opened after it was installed.
+            </>,
             <>
               Open the site in Chrome once and get it ready the way a visitor
               would: log in, enter the password, answer the cookie banner.

@@ -14,7 +14,7 @@
 
 Pixel Perfect is a web app for **design QA**. For each page and each viewport (mobile, tablet, desktop or your own sizes) it stacks a screenshot of the website over the matching Figma frame, then gives you four ways to compare them, plus tools to align, measure, annotate and share what you find.
 
-Start with two images dragged onto the canvas. Add a Figma token and the design frames are fetched for you. Install the Pixel Perfect Capture extension for Chrome, and the site is captured for you too.
+Start with two images dragged onto the canvas. Add a Figma token and the design frames are fetched for you. Install the [Pixel Perfect Capture](https://chromewebstore.google.com/detail/pixel-perfect-capture/EXTENSION_ID) extension for Chrome, and the site is captured for you too.
 
 📖 **User guide:** the app ships its own documentation at **`/docs`**, with screenshots of every panel. Each panel's `?` icon opens its section.
 
@@ -92,7 +92,7 @@ You can mix them freely: a layer you drop and a layer the app fetched behave exa
 | Area                 | What it does                                                                                                                                                                                                                                     |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Drag & drop**      | Drop images on the canvas (left half = Figma, right half = site) or on a viewport tab, split the same way. PNG, JPEG, WebP, AVIF, GIF and BMP are accepted; a retina screenshot is recognised by its width and shown at the viewport's CSS size. |
-| **Figma export**     | Renders a frame through the Figma REST API (2x on mobile, down to 1x on desktop; 2x everywhere on a Retina screen), for the current viewport (`⇧M`) or all of them (menu or **All**).                                                            |
+| **Figma export**     | Renders a frame through the Figma REST API (2x on mobile, down to 1x on desktop; 2x everywhere on a Retina screen), for the current viewport (`⇧M`) or all of them (**▾ ▸ All viewports** or the menu).                                          |
 | **Site capture**     | Full-page screenshots at each viewport's exact width, taken by the Pixel Perfect Capture Chrome extension in your own browser and session. Viewports under 768 px are captured as a phone; every capture is at the Figma export's scale.         |
 | **Projects & pages** | Up to 6 projects of up to 6 pages each. Each page has a URL and one Figma link per viewport. Gallery with thumbnails.                                                                                                                            |
 | **Viewports**        | Mobile, Tablet and Desktop by default. Add, rename, resize or disable them in the settings.                                                                                                                                                      |
@@ -148,7 +148,7 @@ Instead of exporting from Figma by hand, add a Figma token once:
 2. Create a token with the **File content: Read-only** scope.
 3. Paste it when the app asks, or via **Capture ▸ Figma token…**. It is stored only in your browser.
 4. In **File ▸ Pages**, paste each viewport's frame link (right-click the frame in Figma ▸ **Copy link to selection**).
-5. Press **Capture** on the _Figma_ row of the **Layers** panel (`⇧M`), or **All** for every viewport.
+5. Press **Capture** on the _Figma_ row of the **Layers** panel (`⇧M`), or its **▾ ▸ All viewports** for every viewport.
 
 > Figma's image-rendering endpoint is tightly rate limited for _View_ and _Collab_ seats. Use a _Dev_ or _Full_ seat.
 
@@ -156,12 +156,12 @@ Instead of exporting from Figma by hand, add a Figma token once:
 
 Instead of taking screenshots by hand, install the **Pixel Perfect Capture** extension in Chrome (or Edge, Brave, Arc):
 
-1. Install it. Until it is published on the Chrome Web Store, load the [`extension/`](extension) folder unpacked: `chrome://extensions` ▸ **Developer mode** ▸ **Load unpacked**. Then reload Pixel Perfect.
+1. Add it from the [Chrome Web Store](https://chromewebstore.google.com/detail/pixel-perfect-capture/EXTENSION_ID), then reload Pixel Perfect.
 2. Open the site in Chrome once and get it ready as a visitor would: log in, enter the store password, answer the cookie banner.
 3. In **File ▸ Pages**, give the page its **Capture URL**.
-4. Press **Chrome** on the _Site_ row of the **Layers** panel (`⇧C`), or **All** for every viewport.
+4. Press **Capture** on the _Site_ row of the **Layers** panel (`⇧C`), or its **▾ ▸ All viewports** for every viewport.
 
-The first capture of a site asks you to allow it, once. The page opens in a small window, is captured full-page at each viewport, and the window closes by itself. Without the extension, **Chrome** and **All** open a dialog with the link to install it. Details in [`extension/README.md`](extension/README.md).
+The first capture of a site asks you to allow it, once. The page opens in a small window, is captured full-page at each viewport, and the window closes by itself. Without the extension, **Capture** and its menu open a dialog with the link to install it. Details in [`extension/README.md`](extension/README.md).
 
 ### 6. Compare, annotate, share
 
@@ -214,16 +214,16 @@ Open **http://localhost:7654**.
 
 ### Capture
 
-The _Site_ row in the **Layers** panel always shows **Chrome** and **All**: with the extension installed they capture in your Chrome, without it they open a dialog with the link to install it. The status bar, bottom right, shows the extension version that answers (or _no extension_).
+The _Site_ row in the **Layers** panel always shows **Capture** and its **▾** menu: with the extension installed they capture in your Chrome, without it they open a dialog with the link to install it. The status bar, bottom right, shows the extension version that answers (or _no extension_).
 
 Anything that replaces a layer needs **Shift**, so a stray key never overwrites a good capture, and the every-viewport runs have **no key at all**. When an every-viewport run would replace captures or exports already in place, the app asks first.
 
 | Action                             | Button                  | Key  | Menu                                    |
 | ---------------------------------- | ----------------------- | ---- | --------------------------------------- |
-| Capture the site, current viewport | **Chrome**              | `⇧C` | Capture ▸ Capture _viewport_            |
-| Capture the site, every viewport   | **All** (Site row)      | —    | Capture ▸ Capture all enabled viewports |
+| Capture the site, current viewport | **Capture** (Site row)  | `⇧C` | Capture ▸ Capture _viewport_            |
+| Capture the site, every viewport   | **▾ ▸ All viewports**   | —    | Capture ▸ Capture all enabled viewports |
 | Export Figma, current viewport     | **Capture** (Figma row) | `⇧M` | Capture ▸ Export _viewport_ Figma frame |
-| Export Figma, every viewport       | **All** (Figma row)     | —    | Capture ▸ Export every Figma frame      |
+| Export Figma, every viewport       | **▾ ▸ All viewports**   | —    | Capture ▸ Export every Figma frame      |
 
 A site capture opens the page in a small Chrome window at each viewport's exact width, loads lazy images, hides cookie banners and pop-ups (never clicking them) and saves a full-page screenshot. While captures or Figma exports run, the app is locked behind a progress sheet listing every viewport; **Stop** ends the run and keeps what is already done. Since it runs in your own browser, you can capture:
 
@@ -279,7 +279,7 @@ Every variable is optional. See [`.env.example`](.env.example) for details.
 
 On a public deployment, leave `FIGMA_TOKEN` unset: the instance is open to anyone, and a server-wide token would be spent by every visitor. Each user then brings their own.
 
-The Chrome Web Store link the app offers is set in [`lib/features.ts`](lib/features.ts) (`EXTENSION_STORE_URL`); until it is set, the app links to the docs section on loading the extension by hand.
+The Chrome Web Store link the app offers is set in [`lib/features.ts`](lib/features.ts) (`EXTENSION_STORE_URL`). Working on the extension itself? Load it unpacked from [`extension/`](extension) as described in [`extension/README.md`](extension/README.md).
 
 ### Routes and the demo project
 

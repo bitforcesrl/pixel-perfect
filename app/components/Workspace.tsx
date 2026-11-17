@@ -120,7 +120,7 @@ import {
 } from '@/lib/settings';
 import type { ScreenshotResult } from '@/lib/validation';
 import { captureScaleFor, currentScreenScale } from '@/lib/render-scale';
-import { DOCS, DOCS_PATH, openDocs } from '@/lib/docs';
+import { DOCS_PATH, openDocs } from '@/lib/docs';
 import {
   findProjectByName,
   MAX_PAGES,
@@ -1878,11 +1878,7 @@ export default function Workspace({
       if (canCaptureAllSites) handleCaptureAll();
     },
     installExtension: () => {
-      window.open(
-        EXTENSION_STORE_URL ?? `${DOCS_PATH}#${DOCS.chromeExtension}`,
-        '_blank',
-        'noopener',
-      );
+      window.open(EXTENSION_STORE_URL, '_blank', 'noopener');
     },
     figmaCurrent: () => {
       if (activeViewport && figmaTargetOf(activeViewport))

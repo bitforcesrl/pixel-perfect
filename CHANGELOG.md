@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The Layers panel's Capture buttons have a ▾ menu with This viewport and All viewports, replacing the separate All buttons; the site row's Chrome button is now called Capture.
 - On a high-density (Retina) screen, site captures and Figma exports are taken at 2x on every viewport, desktop included, so text stays sharp at 100%; on a standard screen the scale still slides from 2x on mobile to 1x on desktop.
+- The dialog shown when capturing without the extension, Capture ▸ Install the Chrome extension… and the docs now send you to the Chrome Web Store to add the extension.
 - Site captures land faster and keep their full sharpness on very tall pages: the Chrome extension now hands over the capture already compressed, with no second compression in the app.
 
 ### Fixed
