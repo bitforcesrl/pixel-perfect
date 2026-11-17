@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Capturing with an older copy of the Chrome extension (1.0.0) now asks you to update it, instead of failing every viewport with "The extension sent a capture that could not be read". The extension is now 1.1.0.
 - The Chrome extension captures sites you zoom in or out in Chrome at the viewport's real width, instead of failing with "The page would not render at 1440 px".
 
 ## [2.0.0] - 2026-11-17

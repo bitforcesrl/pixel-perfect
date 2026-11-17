@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Pixel Perfect Capture",
   "short_name": "Pixel Perfect",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Your site on top of its Figma design: see every pixel that doesn't match. Every viewport, captured in your own Chrome.",
   "homepage_url": "https://pixelperfect.fit",
   "minimum_chrome_version": "120",

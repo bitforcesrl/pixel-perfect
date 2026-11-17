@@ -113,7 +113,7 @@ tried together.
 
 1. `npm run dev` (http://localhost:7654).
 2. Load the extension unpacked (above) and open http://localhost:7654/app.
-   The status bar, bottom right, reads **extension dev 1.0.0** (it reads
+   The status bar, bottom right, reads **extension dev 1.1.0** (it reads
    **no extension** while none answers); the Capture menu no longer offers
    "Install the Chrome extension…".
 3. In Chrome, open the site you want to test, log in, enter the store
@@ -180,7 +180,7 @@ guides:
 
 ### 2. Create the item
 
-1. Dashboard ▸ **New item** ▸ upload `extension/dist/pixel-perfect-capture-1.0.0.zip`.
+1. Dashboard ▸ **New item** ▸ upload `extension/dist/pixel-perfect-capture-1.1.0.zip`.
 2. **Store listing** tab, from `store/listing.en.md`:
    - Description (the summary comes from the manifest's `description`)
    - Category: **Developer Tools**, language: English

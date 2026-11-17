@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  OUTDATED_EXTENSION_MESSAGE,
   captureWithExtension,
   detectExtension,
+  extensionOutdated,
   subscribeIncoming,
 } from './extension-bridge';
 
@@ -154,6 +156,38 @@ describe('captureWithExtension', () => {
     ]);
   });
 
+  it('reports an outdated extension that sends one PNG as image', async () => {
+    const win = fakeWindow((data, w) => {
+      if (data.type !== 'capture') return;
+      const requestId = data.requestId;
+      w.fromExtension({
+        instance: 'abc',
+        requestId,
+        type: 'result',
+        key: 'mobile',
+        image: 'data:image/png;base64,AAAA',
+        width: 375,
+        height: 2000,
+      });
+      w.fromExtension({ instance: 'abc', requestId, type: 'done' });
+    });
+    const events: string[] = [];
+    await captureWithExtension(
+      request,
+      {
+        onProgress: () => {},
+        onResult: (key) => events.push(`result ${key}`),
+        onError: (key, message) => events.push(`error ${key} ${message}`),
+      },
+      {
+        instance: 'abc',
+        signal: new AbortController().signal,
+        target: asWindow(win),
+      },
+    );
+    expect(events).toEqual([`error mobile ${OUTDATED_EXTENSION_MESSAGE}`]);
+  });
+
   it('ignores a second extension during a capture', async () => {
     const win = fakeWindow((data, w) => {
       if (data.type !== 'capture') return;
@@ -274,5 +308,26 @@ describe('subscribeIncoming', () => {
       source: 'pixel-perfect-app',
       type: 'incoming-ack',
     });
+  });
+});
+
+describe('extensionOutdated', () => {
+  const info = (version: string) => ({
+    version,
+    channel: 'store' as const,
+    instance: 'abc',
+  });
+
+  it('flags versions older than the capture protocol', () => {
+    expect(extensionOutdated(info('1.0.0'))).toBe(true);
+    expect(extensionOutdated(info('0.9.9'))).toBe(true);
+    expect(extensionOutdated(info(''))).toBe(true);
+  });
+
+  it('accepts the minimum version and newer', () => {
+    expect(extensionOutdated(info('1.1.0'))).toBe(false);
+    expect(extensionOutdated(info('1.1'))).toBe(false);
+    expect(extensionOutdated(info('1.10.0'))).toBe(false);
+    expect(extensionOutdated(info('2.0.0'))).toBe(false);
   });
 });

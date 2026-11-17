@@ -25,6 +25,29 @@ export interface ExtensionInfo {
   instance: string;
 }
 
+/**
+ * Oldest extension that speaks this app's capture protocol (per-viewport
+ * `scale`, WebP `strips`). 1.0.0 sends one PNG as `image` instead.
+ */
+export const MIN_EXTENSION_VERSION = '1.1.0';
+
+export const OUTDATED_EXTENSION_MESSAGE = `Pixel Perfect Capture is out of date: update it to ${MIN_EXTENSION_VERSION} or later, then capture again.`;
+
+/** Numeric parts of `1.2.3`; anything unreadable counts as 0. */
+const versionParts = (version: string) =>
+  version.split('.').map((part) => Number.parseInt(part, 10) || 0);
+
+/** True when `info` is older than {@link MIN_EXTENSION_VERSION}. */
+export function extensionOutdated(info: ExtensionInfo): boolean {
+  const have = versionParts(info.version);
+  const need = versionParts(MIN_EXTENSION_VERSION);
+  for (let i = 0; i < need.length; i++) {
+    const a = have[i] ?? 0;
+    if (a !== need[i]) return a < need[i];
+  }
+  return false;
+}
+
 export interface ExtensionViewport {
   key: string;
   width: number;
@@ -158,6 +181,11 @@ export function captureWithExtension(
           handlers.onProgress(key);
           return;
         case 'result':
+          // An extension older than this protocol sends one PNG as `image`
+          if (!Array.isArray(data.strips) && typeof data.image === 'string') {
+            handlers.onError(key, OUTDATED_EXTENSION_MESSAGE);
+            return;
+          }
           handlers.onResult(key, {
             width: Number(data.width),
             height: Number(data.height),

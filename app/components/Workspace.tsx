@@ -14,6 +14,8 @@ import { EXTENSION_STORE_URL } from '@/lib/features';
 import {
   blobFromStrips,
   captureWithExtension,
+  extensionOutdated,
+  OUTDATED_EXTENSION_MESSAGE,
   type ExtensionInfo,
   type ExtensionShot,
 } from '@/lib/extension-bridge';
@@ -1132,6 +1134,17 @@ export default function Workspace({
   const runCaptures = (targets: ViewportPreset[], found: ExtensionInfo) => {
     if (targets.length === 0 || url.trim() === '') return;
     setUploadError(null);
+    // An older extension would shoot every viewport and send a picture this
+    // app no longer reads: say so before a window is opened
+    if (extensionOutdated(found)) {
+      for (const preset of targets) {
+        patchSlot(preset.key, {
+          status: 'error',
+          error: OUTDATED_EXTENSION_MESSAGE,
+        });
+      }
+      return;
+    }
     // Each viewport's site layer is claimed now, when the run is asked for: a
     // screenshot dropped on one of them while the run is still going is the
     // newer choice, and the capture must not land over it
